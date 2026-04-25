@@ -1,0 +1,29 @@
+# Dependencies
+node_modules
+
+# Build
+dist
+build
+
+# Logs
+logs
+*.log
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Editor
+.DS_Store
+.idea
+.vscode/*
+!.vscode/settings.json
+
+# Coverage
+coverage
+*.lcov
+
+# Vercel / Render artifacts
+.vercel
+.render
