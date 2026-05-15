@@ -5,7 +5,7 @@ dotenv.config()
 
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  PORT: z.coerce.number().default(3000),
+  PORT: z.coerce.number().default(5000),
   MONGO_URI: z.string().url(),
   JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 chars'),
   JWT_EXPIRES_IN: z.string().default('7d'),

@@ -35,12 +35,12 @@ cp .env.example .env
 yarn dev
 ```
 
-Server chạy tại http://localhost:3000
+Server chạy tại http://localhost:5000
 
 Test health check:
 
 ```bash
-curl http://localhost:3000/health
+curl http://localhost:5000/health
 # → {"success":true,"data":{"status":"ok"}}
 ```
 
@@ -84,7 +84,7 @@ src/
 | Var              | Mô tả                     | Required                       |
 | ---------------- | ------------------------- | ------------------------------ |
 | `NODE_ENV`       | development / production  | default: development           |
-| `PORT`           | listen port               | default: 3000                  |
+| `PORT`           | listen port               | default: 5000                  |
 | `MONGO_URI`      | MongoDB connection string | ✅                             |
 | `JWT_SECRET`     | >=32 chars random string  | ✅                             |
 | `JWT_EXPIRES_IN` | token lifetime            | default: 7d                    |
