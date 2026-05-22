@@ -1,17 +1,18 @@
-import { RequestPasswordResetInput, ResetPasswordInput } from '../schemas/passwordReset.schema.js'
+import { RequestPasswordResetInput, ResetPasswordInput } from '../schemas/password-reset.schema.js'
 import { env } from '../config/env.js'
 import { Resend } from 'resend'
-import { rawResetToken, hashedResetToken } from '../utils/cryptoHash.js'
+import { rawResetToken, hashedResetToken } from '../utils/crypto-hash.js'
 import { User } from '../models/user.model.js'
 import { PasswordResetToken } from '../models/password-reset-token.model.js'
 import mongoose from 'mongoose'
 import { ApiError } from '../utils/api-error.js'
+import { hashPassword } from '../utils/password.js'
 
 const resend = new Resend(env.RESEND_API_KEY)
 
 export const requestPasswordReset = async (input: RequestPasswordResetInput) => {
   const { email } = input
-  const user = await User.findOne({ email, isActive: true })
+  const user = await User.findOne({ email })
   if (!user) {
     return { message: 'If the email exists, a reset link has been sent to it.' }
   }
@@ -23,7 +24,7 @@ export const requestPasswordReset = async (input: RequestPasswordResetInput) => 
     from: env.RESEND_FROM_EMAIL,
     to: email,
     subject: 'Reset Password',
-    text: `Click on the link to reset your password: ${env.BASE_URL}/reset-password?token=${token}`,
+    text: `Click on the link to reset your password: ${env.CLIENT_URL}/auth/reset-password?token=${token}`,
   })
   return { message: 'If the email exists, a reset link has been sent to it.' }
 }
@@ -34,18 +35,20 @@ export const resetPassword = async (input: ResetPasswordInput) => {
   try {
     const { token, newPassword } = input
     const hashedToken = hashedResetToken(token)
-    const passwordResetToken = await PasswordResetToken.findOne({ tokenHash: hashedToken }).session(
-      session,
-    )
+    const passwordResetToken = await PasswordResetToken.findOne({
+      tokenHash: hashedToken,
+      expiresAt: { $gt: new Date() },
+      usedAt: null,
+    }).session(session)
 
-    if (!passwordResetToken || passwordResetToken.expiresAt < new Date()) {
+    if (!passwordResetToken) {
       throw new ApiError(400, 'Invalid or expired reset token.', 'INVALID_RESET_TOKEN')
     }
     const user = await User.findById(passwordResetToken.userId).session(session)
     if (!user) {
       throw new ApiError(400, 'Invalid or expired reset token.', 'INVALID_RESET_TOKEN')
     }
-    user.passwordHash = newPassword
+    user.passwordHash = await hashPassword(newPassword)
     await user.save()
     passwordResetToken.usedAt = new Date()
 

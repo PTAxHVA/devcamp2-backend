@@ -11,7 +11,6 @@ const envSchema = z.object({
   JWT_EXPIRES_IN: z.string().default('7d'),
   GEMINI_API_KEY: z.string().min(1),
   CLIENT_URL: z.string().url().default('http://localhost:5173'),
-  BASE_URL: z.string().url().default('http://localhost:5000'),
   RESEND_API_KEY: z.string().min(1),
   RESEND_FROM_EMAIL: z.string().email(),
 })
