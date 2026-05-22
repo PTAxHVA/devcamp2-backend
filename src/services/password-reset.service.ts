@@ -1,0 +1,65 @@
+import { RequestPasswordResetInput, ResetPasswordInput } from '../schemas/password-reset.schema.js'
+import { env } from '../config/env.js'
+import { Resend } from 'resend'
+import { rawResetToken, hashedResetToken } from '../utils/crypto-hash.js'
+import { User } from '../models/user.model.js'
+import { PasswordResetToken } from '../models/password-reset-token.model.js'
+import mongoose from 'mongoose'
+import { ApiError } from '../utils/api-error.js'
+import { hashPassword } from '../utils/password.js'
+
+const resend = new Resend(env.RESEND_API_KEY)
+
+export const requestPasswordReset = async (input: RequestPasswordResetInput) => {
+  const { email } = input
+  const user = await User.findOne({ email })
+  if (!user) {
+    return { message: 'If the email exists, a reset link has been sent to it.' }
+  }
+  const token = rawResetToken()
+  const hashedToken = hashedResetToken(token)
+  const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24) // 24 hours from now
+  await PasswordResetToken.create({ userId: user._id, tokenHash: hashedToken, expiresAt })
+  await resend.emails.send({
+    from: env.RESEND_FROM_EMAIL,
+    to: email,
+    subject: 'Reset Password',
+    text: `Click on the link to reset your password: ${env.CLIENT_URL}/auth/reset-password?token=${token}`,
+  })
+  return { message: 'If the email exists, a reset link has been sent to it.' }
+}
+
+export const resetPassword = async (input: ResetPasswordInput) => {
+  const session = await mongoose.startSession()
+  session.startTransaction()
+  try {
+    const { token, newPassword } = input
+    const hashedToken = hashedResetToken(token)
+    const passwordResetToken = await PasswordResetToken.findOne({
+      tokenHash: hashedToken,
+      expiresAt: { $gt: new Date() },
+      usedAt: null,
+    }).session(session)
+
+    if (!passwordResetToken) {
+      throw new ApiError(400, 'Invalid or expired reset token.', 'INVALID_RESET_TOKEN')
+    }
+    const user = await User.findById(passwordResetToken.userId).session(session)
+    if (!user) {
+      throw new ApiError(400, 'Invalid or expired reset token.', 'INVALID_RESET_TOKEN')
+    }
+    user.passwordHash = await hashPassword(newPassword)
+    await user.save()
+    passwordResetToken.usedAt = new Date()
+
+    await passwordResetToken.save()
+    await session.commitTransaction()
+
+    return { message: 'Password reset successfully.' }
+  } catch (err) {
+    await session.abortTransaction()
+    throw err
+  } finally {
+    await session.endSession()
+  }
+}

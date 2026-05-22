@@ -6,6 +6,7 @@ export interface IUser {
   passwordHash: string
   createdAt?: Date
   updatedAt?: Date
+  isActive?: boolean
 }
 
 const userSchema = new Schema<IUser>(
@@ -19,6 +20,7 @@ const userSchema = new Schema<IUser>(
       trim: true,
     },
     passwordHash: { type: String, required: true, select: false },
+    isActive: { type: Boolean, default: true },
   },
   { timestamps: true },
 )
