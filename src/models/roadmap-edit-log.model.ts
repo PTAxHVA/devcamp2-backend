@@ -1,9 +1,5 @@
 import { Schema, model, Types } from 'mongoose'
-
-export enum EditAction {
-  ADD = 'ADD',
-  REMOVE = 'REMOVE',
-}
+import { EditAction } from '../types/enums.js'
 
 export interface IRoadmapEditLog {
   userRoadmapId: Types.ObjectId

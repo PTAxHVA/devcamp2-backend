@@ -1,9 +1,5 @@
 import { Schema, model, Types } from 'mongoose'
-
-export enum QuestionType {
-  MULTIPLE_CHOICE = 'MULTIPLE_CHOICE',
-  FILL_IN_BLANK = 'FILL_IN_BLANK',
-}
+import { QuestionType } from '../types/enums.js'
 
 export interface IQuestion {
   quizId: Types.ObjectId

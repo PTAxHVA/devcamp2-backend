@@ -1,10 +1,5 @@
 import { Schema, model, Types } from 'mongoose'
-
-export enum SkillLevel {
-  BEGINNER = 'BEGINNER',
-  INTERMEDIATE = 'INTERMEDIATE',
-  ADVANCED = 'ADVANCED',
-}
+import { SkillLevel } from '../types/enums.js'
 
 export interface IUserProfile {
   userId: Types.ObjectId

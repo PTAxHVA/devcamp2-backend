@@ -1,10 +1,5 @@
 import { Schema, model, Types } from 'mongoose'
-
-export enum TopicStatus {
-  NOT_STARTED = 'NOT_STARTED',
-  IN_PROGRESS = 'IN_PROGRESS',
-  COMPLETED = 'COMPLETED',
-}
+import { TopicStatus } from '../types/enums.js'
 
 export interface IUserTopic {
   userRoadmapId: Types.ObjectId
