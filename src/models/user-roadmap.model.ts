@@ -1,9 +1,5 @@
 import { Schema, model, Types } from 'mongoose'
-
-export enum RoadmapSource {
-  SUGGESTED = 'SUGGESTED',
-  CUSTOMIZED = 'CUSTOMIZED',
-}
+import { RoadmapSource } from '../types/enums.js'
 
 export interface IUserRoadmap {
   userId: Types.ObjectId
