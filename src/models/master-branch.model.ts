@@ -1,7 +1,7 @@
 import { Schema, model, Types } from 'mongoose'
 
 export interface IMasterBranch {
-  masterRoadmapId: Types.ObjectId
+  roadmapId: Types.ObjectId
   name: string
   description: string
   selectionGroup: string | null
@@ -14,7 +14,7 @@ export interface IMasterBranch {
 
 const masterBranchSchema = new Schema<IMasterBranch>(
   {
-    masterRoadmapId: {
+    roadmapId: {
       type: Schema.Types.ObjectId,
       ref: 'MasterRoadmap',
       required: true,
@@ -29,5 +29,8 @@ const masterBranchSchema = new Schema<IMasterBranch>(
   },
   { timestamps: true },
 )
+
+// Unique branch name within a roadmap.
+masterBranchSchema.index({ roadmapId: 1, name: 1 }, { unique: true })
 
 export const MasterBranch = model<IMasterBranch>('MasterBranch', masterBranchSchema)
