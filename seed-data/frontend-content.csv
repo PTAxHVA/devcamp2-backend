@@ -1,0 +1,2760 @@
+"Topic_ID","Topic_Name","Section_ID","Section_Name","Summary","Q1_Type","Q1_Text","Q1_A","Q1_B","Q1_C","Q1_D","Q1_Correct","Q1_Alternates","Q2_Type","Q2_Text","Q2_A","Q2_B","Q2_C","Q2_D","Q2_Correct","Q2_Alternates","Q3_Type","Q3_Text","Q3_A","Q3_B","Q3_C","Q3_D","Q3_Correct","Q3_Alternates","Q4_Type","Q4_Text","Q4_A","Q4_B","Q4_C","Q4_D","Q4_Correct","Q4_Alternates","Q5_Type","Q5_Text","Q5_A","Q5_B","Q5_C","Q5_D","Q5_Correct","Q5_Alternates","Notes"
+"1","HTML","1.1","Document structure","Every HTML page starts with a foundational skeleton browsers need to parse the document. 4 required parts:
+
+1. **`<!DOCTYPE html>`** — declares HTML5. Must be the very first line. Browsers use this to render in ""standards mode"" instead of legacy ""quirks mode"" (which has weird CSS bugs).
+2. **`<html lang=""en"">`** — root element wrapping everything. The `lang` attribute helps screen readers, search engines, and translation tools.
+3. **`<head>`** — invisible metadata: title (browser tab), character encoding, viewport, CSS links, SEO tags. Content here does NOT appear on the page.
+4. **`<body>`** — everything visible: headings, paragraphs, images, forms.
+
+```html
+<!DOCTYPE html>
+<html lang=""en"">
+  <head>
+    <meta charset=""UTF-8"">
+    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+    <title>My Page</title>
+  </head>
+  <body>
+    <h1>Hello, world!</h1>
+  </body>
+</html>
+```
+
+Common mistakes: forgetting `<!DOCTYPE>`, putting visible content in `<head>`, missing `lang`.","mc","What is the purpose of `<!DOCTYPE html>`?","Tells the browser this is an HTML5 document so it renders in standards mode","Declares the language of the document","Imports HTML5 features as a library","Optional — can be safely removed in modern browsers","A","","typed","Which attribute on the `<html>` tag declares the page's primary language?","","","","","lang","lang=""en""","mc","Given this HTML, what displays in the browser's TAB title?
+
+```html
+<head>
+  <title>Welcome</title>
+  <meta name=""description"" content=""My homepage"">
+</head>
+<body><h1>Hello</h1></body>
+```","Welcome","Hello","My homepage","Welcome | My homepage","A","","typed","Which HTML tag contains page metadata like `<title>`, `<meta>`, and CSS `<link>` elements?","","","","","head","<head>","mc","Which line below is INCORRECTLY placed?
+
+```
+1: <!DOCTYPE html>
+2: <html lang=""en"">
+3:   <body>
+4:     <title>My Page</title>
+5:     <h1>Hello</h1>
+6:   </body>
+7: </html>
+```","Line 1","Line 2","Line 4 — `<title>` should be inside `<head>`, not `<body>`","Line 5","C","","Topic 1 batch v4"
+"1","HTML","1.2","Text elements","HTML provides specific tags for marking up text content. **Choosing the right tag matters** for accessibility, SEO, and readability — not just visual appearance.
+
+**Headings** (`<h1>` to `<h6>`) establish a document outline. Use them sequentially (don't skip from h1 to h3) — screen readers and search engines rely on hierarchy. Usually only ONE `<h1>` per page.
+
+**Paragraphs** (`<p>`) — block-level text containers. Don't use `<br>` for spacing — use CSS margin.
+
+**Inline emphasis:**
+- `<strong>` — semantic importance (bold visually, emphasized by screen readers)
+- `<em>` — semantic emphasis like spoken stress (italic visually)
+- `<b>` / `<i>` — purely visual, no semantic meaning. Prefer `<strong>` / `<em>` when meaning matters.
+
+**`<span>`** — inline grouping with no semantic meaning, used as CSS/JS hook.
+
+```html
+<h1>Title</h1>
+<p>This is <strong>important</strong>, and <span class=""x"">styled</span>.</p>
+```","mc","How many `<h1>` elements should typically be on a single page?","As many as needed for visual emphasis","Exactly 6 (one per heading level)","1 (the main page title)","Multiple — at least 1 per section","C","","mc","What's the semantic difference between `<strong>` and `<b>`?","They're identical","`<strong>` signals semantic importance; `<b>` is purely visual","`<strong>` is larger; `<b>` is darker","`<b>` is deprecated","B","","typed","Which HTML tag is used for **semantic emphasis** (stress, like in spoken language)?","","","","","em","<em>","mc","Given this HTML, how will it display visually?
+
+```html
+<p>I am <em>very</em> excited about <strong>this</strong>!</p>
+```","All bold","""very"" italic and ""this"" bold","""very"" bold and ""this"" italic","No formatting","B","","typed","Which HTML tag is used as an inline grouping with no semantic meaning (typically a hook for CSS or JavaScript)?","","","","","span","<span>","Topic 1 batch v4"
+"1","HTML","1.3","Lists","HTML provides 3 list types:
+
+1. **`<ul>`** — unordered list, rendered as bullets
+2. **`<ol>`** — ordered list, rendered as numbers (1, 2, 3...)
+3. **`<dl>`** — description list (term-definition pairs)
+
+List items:
+- `<li>` for items in `<ul>` and `<ol>`
+- `<dt>` (term) + `<dd>` (description) for `<dl>`
+
+`<ol>` accepts `type=""1|A|a|I|i""` to change numbering, and `start=""N""` to begin at a number.
+
+**Nesting** is allowed (and common for nav menus, outlines):
+
+```html
+<ol>
+  <li>First</li>
+  <li>Second
+    <ul>
+      <li>Sub-item A</li>
+      <li>Sub-item B</li>
+    </ul>
+  </li>
+</ol>
+```
+
+**Don't fake lists with `<br>`** — screen readers won't announce ""list of N items"". Always use proper list elements for accessibility.","mc","What does `<ol>` create?","An unordered (bulleted) list","An ordered (numbered) list","A description list","An outline list","B","","typed","Which HTML tag represents a single item inside a `<ul>` or `<ol>` list?","","","","","li","<li>","mc","What's the main difference between `<ul>` and `<ol>`?","`<ul>` is uppercase, `<ol>` is lowercase","`<ul>` uses bullets, `<ol>` uses numbers","`<ul>` is for navigation, `<ol>` is for content","`<ul>` allows nesting, `<ol>` doesn't","B","","mc","Given this code, what does the browser display?
+
+```html
+<ol start=""5"">
+  <li>Apple</li>
+  <li>Banana</li>
+</ol>
+```","1. Apple, 2. Banana","5. Apple, 6. Banana","Apple, Banana (no numbers)","5. Apple, 5. Banana","B","","mc","Why use `<ul>` for a navigation menu instead of multiple `<a>` tags separated by `<br>`?","It looks better visually","Screen readers announce ""list of N items"" — improves accessibility","`<br>` is deprecated","SEO penalty for using `<br>`","B","","Topic 1 batch v4"
+"1","HTML","1.4","Links and images","**Links** use `<a href="""">`. The `href` can be:
+- Absolute URL: `https://example.com`
+- Relative path: `/about`, `../page.html`
+- Fragment (jump to section): `#section-id`
+- Email/phone: `mailto:x@y.com`, `tel:+84...`
+
+For new-tab links, use `target=""_blank""` **always with** `rel=""noopener noreferrer""` (prevents security risk where new page can manipulate opener).
+
+**Images** use `<img src="""" alt="""">`. The `alt` attribute is **REQUIRED** for accessibility:
+- Screen readers read it aloud
+- Shown when image fails to load
+- Empty `alt=""""` for purely decorative images (tells screen reader to skip)
+
+`<figure>` semantically wraps an image with `<figcaption>` for captions. Add `loading=""lazy""` for below-the-fold images (better performance).
+
+```html
+<a href=""https://docs.com"" target=""_blank"" rel=""noopener noreferrer"">Docs</a>
+<img src=""cat.jpg"" alt=""Orange tabby cat sleeping"" loading=""lazy"">
+<figure>
+  <img src=""chart.png"" alt=""Q3 sales chart"">
+  <figcaption>Q3 Sales Report</figcaption>
+</figure>
+```","mc","What does the `href` attribute on `<a>` do?","Sets the display text of the link","Specifies the destination URL the link navigates to","Defines the link's hover color","Marks the link as required","B","","typed","Which `<img>` attribute holds the alternative text for screen readers and broken images?","","","","","alt","alt=""""","mc","What's the SECURE way to open a link in a new tab?","`<a target=""_blank"">`","`<a target=""_blank"" rel=""noopener noreferrer"">`","`<a onclick=""window.open(url)"">`","`<a href="""" newtab>`","B","","mc","What's wrong with `<img src=""logo.png"">`?","Missing `alt` attribute — fails accessibility","`src` should be `source`","`<img>` requires a closing tag","Nothing — it's fully valid","A","","typed","Which HTML tag semantically wraps an image with a caption?","","","","","figure","<figure>","Topic 1 batch v4"
+"1","HTML","1.5","Forms","`<form>` collects user input. Key attributes:
+- `action=""URL""` — where the data is sent
+- `method=""GET""` (data in URL) or `""POST""` (data in body)
+
+**Common inputs:**
+- `<input type=""text|email|password|number|date|file|checkbox|radio|..."">`
+- `<textarea>` — multi-line text
+- `<select>` with `<option>` — dropdown
+- `<button type=""submit|button|reset"">`
+
+**Accessibility is critical:**
+- `<label for=""id"">` associates text with input — increases click target, screen reader support
+- `name=""...""` attribute is what gets sent to the server
+- `required`, `pattern=""regex""`, `min`, `max` provide native validation
+
+**Use specific input types** — `<input type=""email"">` triggers email keyboard on mobile + browser validates format.
+
+```html
+<form action=""/submit"" method=""POST"">
+  <label for=""email"">Email:</label>
+  <input type=""email"" id=""email"" name=""email"" required>
+
+  <label for=""msg"">Message:</label>
+  <textarea id=""msg"" name=""message""></textarea>
+
+  <button type=""submit"">Send</button>
+</form>
+```","mc","What does the `action` attribute on `<form>` define?","The button label","The URL where form data is submitted","The validation rules","The visual style of the form","B","","typed","Which HTML tag associates a text label with a form input (improves accessibility and clickable area)?","","","","","label","<label>","mc","What's the difference between `method=""GET""` and `method=""POST""`?","GET is faster than POST","GET sends data in URL params; POST sends data in request body","POST is encrypted; GET is plaintext","GET is for desktop, POST is for mobile","B","","mc","Which input type triggers an email-format keyboard on mobile and validates the format automatically?","`<input type=""text"">`","`<input type=""email"">`","`<input type=""mail"">`","`<input type=""address"">`","B","","mc","Why use `<input type=""email"">` instead of `<input type=""text"">` for email collection?","It looks different visually","Browser validates email format + better mobile keyboard","It's required by HTML5","`type=""text""` is deprecated","B","","Topic 1 batch v4"
+"1","HTML","1.6","Semantic HTML","**Semantic tags describe MEANING**, not just visual appearance. Browsers, screen readers, and search engines use them to understand page structure automatically.
+
+Key semantic tags:
+- **`<header>`** — page or section top (logo, nav, title area)
+- **`<nav>`** — navigation links group
+- **`<main>`** — primary content (only ONE per page)
+- **`<section>`** — thematic grouping with a heading
+- **`<article>`** — self-contained content (blog post, news item, comment) — could stand alone
+- **`<aside>`** — sidebar / related but secondary content
+- **`<footer>`** — page or section bottom (copyright, links)
+
+vs **`<div>`** which has NO meaning — purely a styling/layout wrapper.
+
+**Rule:** Use a semantic tag when one fits. Fall back to `<div>` only when no semantic tag applies (purely styling wrapper).
+
+```html
+<body>
+  <header><nav>...</nav></header>
+  <main>
+    <article>
+      <h1>Post title</h1>
+      <p>Content...</p>
+    </article>
+    <aside>Related posts</aside>
+  </main>
+  <footer>© 2026</footer>
+</body>
+```","mc","What's the problem with using `<div>` for everything (instead of semantic tags)?","Slower rendering performance","No semantic meaning — hurts SEO and screen reader users","Larger file size","Older browsers can't render `<div>`","B","","typed","Which HTML tag wraps the primary content of a page (should appear only once per page)?","","","","","main","<main>","mc","What's the difference between `<section>` and `<article>`?","`<article>` is for blog posts only","`<article>` is self-contained content that could stand alone; `<section>` is a thematic group inside something","They're identical","`<section>` is for headers only","B","","typed","Which HTML tag groups navigation links (menu, breadcrumbs)?","","","","","nav","<nav>","mc","Where would `<aside>` be most appropriate?","For the main article content","For a sidebar of related links or a pull-quote secondary to main content","As the page's main navigation","At the very bottom for copyright","B","","Topic 1 batch v4"
+"1","HTML","1.7","Tables","`<table>` is for **TABULAR data only** — NEVER for page layout (use CSS Grid/Flexbox for layout).
+
+**Structure:**
+- `<thead>` — header row(s)
+- `<tbody>` — data rows
+- `<tfoot>` — summary row(s)
+- `<tr>` — table row
+- `<th>` — header cell (bold + centered by default, announced as header by screen readers)
+- `<td>` — data cell
+- `<caption>` — first child of `<table>`, gives the table a title (accessibility)
+
+**Accessibility:** Add `scope=""col""` or `scope=""row""` on `<th>` so screen readers know if a header applies to a column or a row.
+
+**Cell merging:** `colspan=""N""` spans across columns; `rowspan=""N""` spans down rows.
+
+```html
+<table>
+  <caption>Sales Q3 2026</caption>
+  <thead>
+    <tr><th scope=""col"">Month</th><th scope=""col"">Revenue</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>July</td><td>$12k</td></tr>
+    <tr><td>August</td><td>$15k</td></tr>
+  </tbody>
+</table>
+```","mc","When should you use `<table>`?","For any 2D layout (e.g. card grids)","ONLY for tabular data (rows × columns of related values)","For navigation menus","For form layouts","B","","typed","Which HTML tag represents a single row inside a table?","","","","","tr","<tr>","mc","What's the difference between `<th>` and `<td>`?","`<th>` is header cell (bold, semantic header); `<td>` is data cell","`<th>` is for top row only; `<td>` is for others","They're identical","`<th>` is deprecated","A","","mc","What's wrong with using `<table>` to lay out a 3-column page design?","Tables can't have 3 columns","Hurts accessibility (screen readers announce it as a data table) and is hard to make responsive","Tables only support text content","Nothing — that's the standard approach","B","","typed","Which `<th>` attribute tells screen readers whether the header applies to a column or a row?","","","","","scope","","Topic 1 batch v4"
+"1","HTML","1.8","Media","**`<video>`** embeds video files. Common attributes:
+- `controls` — show play/pause buttons (almost always include this)
+- `autoplay` — auto-start (often blocked by browsers; use sparingly)
+- `muted` — required if you want autoplay to work in most browsers
+- `loop`, `poster=""thumb.jpg""`, `width`, `height`
+
+Use `<source>` inside for multiple formats (mp4 for compatibility + webm for size):
+
+```html
+<video controls width=""640"" height=""360"" poster=""thumb.jpg"">
+  <source src=""video.mp4"" type=""video/mp4"">
+  <source src=""video.webm"" type=""video/webm"">
+</video>
+```
+
+**`<audio>`** — same pattern, for sound.
+
+**`<iframe>`** — embeds external content (YouTube, Google Maps, payment widgets). Always set `width`/`height` to prevent layout shift, add `title` for accessibility, and use `loading=""lazy""` for off-screen iframes.
+
+```html
+<iframe src=""https://youtube.com/embed/abc""
+        title=""Tutorial: HTML basics""
+        width=""560"" height=""315"" loading=""lazy""></iframe>
+```","mc","What's the purpose of `<source>` elements inside `<video>`?","To provide subtitle files","To offer multiple video formats so browsers can pick the supported one","To set the video title","To define the poster image","B","","typed","Which attribute on `<video>` shows the built-in play/pause/volume buttons to the user?","","","","","controls","","mc","You want a video to autoplay when the page loads. What's REQUIRED in modern browsers?","The `autoplay` attribute is enough","Add `muted` along with `autoplay` (most browsers block sound-on autoplay)","Add `playsinline` attribute","Autoplay is impossible — must use JavaScript","B","","typed","Which HTML tag embeds external content like a YouTube video or Google Map?","","","","","iframe","<iframe>","mc","What does the `poster` attribute on `<video>` do?","Sets the title shown above the video","Specifies a preview image shown before the video plays","Defines the video author","Adds advertising","B","","Topic 1 batch v4"
+"1","HTML","1.9","Meta tags, SEO, Open Graph","`<meta>` tags live in `<head>` and give browsers + crawlers + social platforms info about the page.
+
+**Essentials (every page):**
+- `<meta charset=""UTF-8"">` — character encoding
+- `<meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">` — mobile responsive
+
+**SEO basics:**
+- `<title>` — appears as the headline in Google results (~60 chars)
+- `<meta name=""description"" content=""..."">` — snippet under the title in search results (~155-160 chars)
+- `<meta name=""robots"" content=""index,follow"">` — controls crawler behavior (use `noindex` to hide from Google)
+
+**Open Graph** (for Facebook, LinkedIn, etc. when shared):
+- `<meta property=""og:title"" content=""..."">`
+- `<meta property=""og:description"" content=""..."">`
+- `<meta property=""og:image"" content=""https://..."">` — preview thumbnail
+- `<meta property=""og:url"" content=""https://..."">`
+
+**Twitter Cards:** `<meta name=""twitter:card"" content=""summary_large_image"">` etc.
+
+```html
+<head>
+  <meta charset=""UTF-8"">
+  <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+  <title>My Article — Site Name</title>
+  <meta name=""description"" content=""A 160-char summary for Google."">
+  <meta property=""og:title"" content=""My Article"">
+  <meta property=""og:image"" content=""https://example.com/preview.jpg"">
+</head>
+```","mc","Where in the HTML document do `<meta>` tags belong?","Anywhere in the document","Inside `<head>`","Inside `<body>`, at the top","Just before `</body>`","B","","typed","The character encoding declaration looks like: `<meta charset=""____"">`. Type the standard recommended value:","","","","","UTF-8","utf-8|utf8","mc","What are Open Graph (`og:`) meta tags primarily for?","Search engine ranking","Browser tab title","How the page appears when shared on social media (Facebook, LinkedIn, etc.)","Email signatures","C","","mc","What's the recommended approximate length for `<meta name=""description"">`?","50 characters","~155-160 characters (so Google doesn't truncate)","300 characters","As long as possible","B","","mc","A mobile page renders text at desktop size (tiny on phone). What's likely missing?","`<meta charset>`","`<meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">`","`<meta name=""description"">`","`<meta name=""robots"">`","B","","Topic 1 batch v4 — STRICT CASE: Q2 canonical is `UTF-8`, alternates allow lowercase variants"
+"1","HTML","1.10","Accessibility fundamentals","**Accessibility (a11y)** ensures everyone — including users with visual, hearing, motor, or cognitive disabilities — can use your site.
+
+**Core principles (mostly free if you do them right):**
+
+1. **Semantic HTML** (Section 1.6) does 80% of the work automatically — `<button>` is keyboard-accessible by default; a styled `<div>` is not.
+2. **`alt` text** on images (Section 1.4) — required.
+3. **`<label>` for form inputs** (Section 1.5) — required.
+4. **Keyboard navigation** — every interactive element must be reachable via Tab and activated via Enter/Space.
+5. **`aria-label`** / **`aria-labelledby`** — adds an accessible name to elements that lack visible text (e.g. icon-only buttons).
+6. **`role=""...""`** — adds semantic meaning when the native tag can't (rare; prefer semantic HTML first).
+7. **Color contrast** — normal text needs ≥ **4.5:1** contrast ratio against background (WCAG AA).
+8. **Heading hierarchy** (Section 1.2) — sequential, no skipping.
+
+**Test with:**
+- Chrome Lighthouse (built-in audit)
+- axe DevTools extension
+- Real screen readers: VoiceOver (Mac), NVDA (Windows)","mc","Web accessibility (a11y) primarily helps which users?","Only blind users","Users with visual, hearing, motor, or cognitive disabilities — and improves usability for everyone","Only mobile users","Search engine crawlers","B","","typed","Which ARIA attribute adds an accessible name to an element that has no visible text (e.g. an icon-only button)?","","","","","aria-label","","mc","What's the minimum WCAG AA color contrast ratio for normal text against its background?","2:1","3:1","4.5:1","7:1","C","","mc","What's the MOST accessible way to make a clickable button?","A styled `<div>` with a click handler","The native `<button>` element (keyboard + screen reader work automatically)","An `<a>` tag with no `href`","A `<span>` with `onclick`","B","","mc","An icon-only ""close"" button has no visible text. Screen reader users hear nothing. What's missing?","`<title>` attribute","An accessible name — add `aria-label=""Close""` or visually-hidden text","The `alt` attribute (only works on images)","Nothing — screen readers detect icons automatically","B","","Topic 1 batch v4"
+"2","CSS","2.1","Selectors","CSS selectors target HTML elements to apply styles. Main types:
+
+- **Element:** `p { ... }` — all `<p>` tags
+- **Class:** `.btn { ... }` — elements with `class=""btn""`
+- **ID:** `#header { ... }` — element with `id=""header""` (only one per page)
+- **Attribute:** `[type=""email""] { ... }` — elements with that attribute
+- **Pseudo-class:** `a:hover { ... }`, `input:focus`, `li:nth-child(odd)` — state or position
+- **Pseudo-element:** `p::first-line`, `::before`, `::after` — part of an element
+
+**Specificity** decides which rule wins when multiple match: inline > ID > class/attribute/pseudo-class > element. Avoid `!important` and over-specific selectors — they're hard to override.
+
+```css
+.card { padding: 1rem; }
+.card:hover { background: #eee; }
+input[type=""email""]:focus { border-color: blue; }
+```","mc","Which selector targets all elements with `class=""btn""`?","`#btn`","`.btn`","`btn`","`*btn`","B","","typed","Type the CSS pseudo-class selector used to style a link when the mouse is over it (include the colon, e.g. `:something`):","","","","",":hover","hover","mc","Which selector has the HIGHEST specificity?","`p`","`.btn`","`#header`","`input[type=""text""]`","C","","mc","What's the problem with using `!important` everywhere?","It's slower to render","It breaks the cascade and is very hard to override later","It's invalid CSS","It only works in some browsers","B","","typed","Type the CSS selector (one character) that matches EVERY element on the page:","","","","","*","","Topic 2 batch v4"
+"2","CSS","2.2","Box model","Every HTML element is a **box** with 4 layers (inside to outside):
+
+1. **Content** — the actual text/image
+2. **Padding** — space INSIDE the border, around content
+3. **Border** — line around padding
+4. **Margin** — space OUTSIDE the border, between elements
+
+**Default `box-sizing: content-box`** is annoying: setting `width: 200px` only sizes the CONTENT — padding/border ADD to total width. So a 200px wide box with 20px padding becomes 240px total.
+
+**Always add this reset** at top of CSS:
+```css
+*, *::before, *::after { box-sizing: border-box; }
+```
+
+With `border-box`, `width: 200px` INCLUDES padding and border. Total stays 200px. Much easier to reason about.
+
+`margin` collapses vertically (two stacked elements: smaller margin disappears). `padding` never collapses.","mc","Which CSS property creates space OUTSIDE the element's border, between it and neighboring elements?","padding","margin","border","spacing","B","","typed","Type the CSS property name that creates space INSIDE the element's border, around its content:","","","","","padding","","mc","With default `box-sizing: content-box`, what's the total rendered width of this element?
+
+```css
+.box {
+  width: 200px;
+  padding: 20px;
+  border: 5px solid;
+}
+```","200px","240px","250px","260px","C","","mc","Why is `box-sizing: border-box` recommended for all elements?","It's faster","`width` includes padding and border, so total size stays predictable","It's required by HTML5","Older browsers can't render content-box","B","","typed","Type the CSS value (one word) that makes `width` include padding and border in the box-sizing calculation:","","","","","border-box","","Topic 2 batch v4"
+"2","CSS","2.3","Display","The `display` property controls how an element renders:
+
+- **`block`** — takes full width, starts on new line (`<div>`, `<p>`, `<h1>` default)
+- **`inline`** — fits content width, flows in text line (`<span>`, `<a>` default). Cannot set width/height.
+- **`inline-block`** — flows like inline BUT accepts width/height/padding properly
+- **`none`** — element disappears (not just hidden — removed from layout). Different from `visibility: hidden` (keeps space)
+- **`flex`** — turns element into flex container (see Section 2.4)
+- **`grid`** — turns element into grid container (see Section 2.5)
+
+```css
+nav a { display: inline-block; padding: 10px; }
+.modal { display: none; }
+.modal.open { display: block; }
+```","mc","What's the default `display` value for `<div>` and `<p>` elements?","inline","block","inline-block","flex","B","","mc","What's the difference between `display: none` and `visibility: hidden`?","They're identical","`display: none` removes from layout; `visibility: hidden` keeps space but invisible","`visibility: hidden` removes from layout; `display: none` keeps space","Both keep space, only color changes","B","","typed","Type the `display` value that lets an element flow inline BUT still accept width and height properly:","","","","","inline-block","","mc","Why can't you set `width` on an `<a>` tag by default?","`<a>` is reserved for text only","Its default `display` is `inline`, which ignores width/height","Width on links is a security risk","Older browsers don't support it","B","","typed","Type the `display` value used to hide an element completely (not just visually — removes from layout):","","","","","none","","Topic 2 batch v4"
+"2","CSS","2.4","Flexbox","Flexbox is a 1-dimensional layout system — perfect for rows or columns. Set `display: flex` on the PARENT to make it a flex container. All direct children become flex items automatically.
+
+**Container properties (on parent):**
+- `flex-direction: row | column` — main axis direction (default `row`)
+- `justify-content: flex-start | center | space-between | space-around | space-evenly` — aligns along MAIN axis
+- `align-items: stretch | flex-start | center | flex-end` — aligns along CROSS axis
+- `flex-wrap: nowrap | wrap` — single line or wrap to multiple
+- `gap: 1rem` — spacing between items (better than margins)
+
+**Item properties (on children):**
+- `flex: 1` shorthand for `flex-grow: 1; flex-shrink: 1; flex-basis: 0`
+- `align-self` — override `align-items` for individual item
+
+```css
+.nav { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+```","mc","Which CSS property turns an element into a flex container?","`flexbox: true`","`display: flex`","`layout: flexbox`","`type: flex`","B","","mc","Where do you apply flex properties like `justify-content`?","On flex items (children)","On the flex container (parent)","On both parent and children","On `<body>` only","B","","typed","Type the `justify-content` value that distributes items with EQUAL space between them (no space on either end):","","","","","space-between","","mc","Which axis does `justify-content` align items along when `flex-direction: row`?","Vertical","Horizontal (main axis)","Both axes","Diagonal","B","","typed","Type the CSS property (on the flex container) used to create equal spacing between flex items, replacing manual margins:","","","","","gap","","Topic 2 batch v4"
+"2","CSS","2.5","CSS Grid","Grid is a 2-dimensional layout system — for rows AND columns simultaneously. Set `display: grid` on the parent.
+
+**Key properties:**
+- `grid-template-columns: 1fr 1fr 1fr` — 3 equal columns (`fr` = fractional unit of available space)
+- `grid-template-rows: 100px auto` — explicit row sizes
+- `grid-template-columns: repeat(3, 1fr)` — shorthand for 3 columns of 1fr
+- `grid-template-columns: repeat(auto-fit, minmax(200px, 1fr))` — responsive grid, items reflow based on container width
+- `gap: 1rem` — spacing between grid cells
+- `grid-column: 1 / 3` (on item) — span columns 1 to 3
+
+**Grid vs Flexbox:** Use Grid for 2D layouts (page layout, card galleries). Use Flexbox for 1D (navigation, button rows).
+
+```css
+.gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; }
+```","mc","Which CSS property turns an element into a grid container?","`display: grid`","`grid: true`","`layout: grid`","`type: grid`","A","","mc","What's the main difference between CSS Grid and Flexbox?","Grid is faster","Grid is 2-dimensional (rows + columns); Flexbox is 1-dimensional (row or column)","Flexbox is deprecated","Grid only works on mobile","B","","typed","Type the CSS unit (one word, lowercase) used in grid templates to represent a fraction of available space (e.g. `1fr 2fr`):","","","","","fr","","mc","What does `grid-template-columns: repeat(3, 1fr)` create?","3 rows of equal height","3 columns of equal width","A 3x3 grid","1 column with 3 rows","B","","mc","Which approach creates a responsive grid where items reflow based on container width?","`grid-template-columns: 1fr 1fr 1fr`","`grid-template-columns: repeat(auto-fit, minmax(200px, 1fr))`","`grid-template-columns: 200px 200px 200px`","`grid-auto-flow: dense`","B","","Topic 2 batch v4"
+"2","CSS","2.6","Positioning","The `position` property controls how an element is placed:
+
+- **`static`** (default) — normal document flow. `top/right/bottom/left` have NO effect.
+- **`relative`** — same position in flow, but `top/right/bottom/left` shift it visually (other elements still see original spot). Often used to create a positioning context for absolute children.
+- **`absolute`** — REMOVED from normal flow. Positioned relative to nearest ancestor with `position: relative` (or to viewport if none). Other elements ignore it.
+- **`fixed`** — positioned relative to the VIEWPORT (always visible, even when scrolling). Useful for sticky headers, chat widgets.
+- **`sticky`** — acts like `relative` until you scroll past it, then becomes `fixed`. Great for table headers that stick at the top.
+
+`z-index: N` controls stacking order (higher = on top) — only works on positioned elements.","mc","What is the default `position` value for elements?","relative","absolute","static","fixed","C","","mc","An element with `position: absolute` positions itself relative to what?","The viewport","The document body","The nearest ancestor with `position: relative` (or viewport if none)","Its parent only","C","","typed","Type the `position` value for an element that stays visible at the same spot on screen even when scrolling (like a sticky header):","","","","","fixed","","mc","What does `position: sticky` do?","Same as `fixed`","Acts like `relative` until you scroll past, then becomes `fixed`","Makes the element undraggable","Pins to bottom of page","B","","mc","When does `z-index` have an effect?","Always","Only on positioned elements (not `static`)","Only on flex items","Only with `display: grid`","B","","Topic 2 batch v4"
+"2","CSS","2.7","Responsive design","Responsive design adapts the layout to different screen sizes. Approach: **mobile-first** — write base styles for mobile, then `@media` queries for larger screens.
+
+```css
+.container { padding: 1rem; }  /* mobile */
+@media (min-width: 768px) {
+  .container { padding: 2rem; }  /* tablet+ */
+}
+@media (min-width: 1024px) {
+  .container { padding: 4rem; }  /* desktop+ */
+}
+```
+
+**Responsive units:**
+- `%` — relative to parent
+- `vw` / `vh` — 1% of viewport width/height
+- `rem` — relative to root font size (typically 16px) — best for spacing/typography
+- `em` — relative to parent font size
+- `clamp(min, preferred, max)` — fluid scaling with bounds: `font-size: clamp(1rem, 2vw, 1.5rem)`
+
+**Don't forget:** `<meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">` in `<head>` (covered in HTML 1.9).","mc","What does ""mobile-first"" responsive design mean?","Only design for mobile, ignore desktop","Write base styles for mobile, then use media queries to scale UP for larger screens","Test on mobile first before desktop","Use only mobile-friendly fonts","B","","typed","Type the CSS at-rule (include the `@` symbol) used to apply styles conditionally based on screen size:","","","","","@media","","mc","What does `1vw` equal?","1 pixel","1% of the viewport WIDTH","1% of the parent width","1 character width","B","","mc","Which unit is BEST for typography spacing in responsive design?","`px` (pixels)","`rem` (relative to root font size)","`pt` (points)","`cm` (centimeters)","B","","typed","Type the CSS function (one word) that scales fluidly between a minimum, preferred, and maximum value (used like `font-size: ___(1rem, 2vw, 1.5rem)`):","","","","","clamp","","Topic 2 batch v4"
+"2","CSS","2.8","Typography","Typography on the web:
+
+- **`font-family`** — list fonts in preference order with fallback: `font-family: 'Inter', system-ui, sans-serif;`
+- **Web fonts** — Google Fonts (free, easy), Adobe Fonts, or self-hosted with `@font-face`. Best practice: preload critical font in `<head>`.
+- **`font-size`** — prefer `rem` for scalability. Default browser size is 16px = 1rem.
+- **`line-height`** — unit-less (e.g. `1.5`) is best — scales with font-size. 1.4-1.6 is readable for body text.
+- **`font-weight`** — 400 (normal), 700 (bold), or specific weights (300, 600) if font supports them
+- **`letter-spacing`** — tiny adjustments for headlines (negative for tight headlines, positive for caps)
+- **`text-align`**, **`text-transform: uppercase|lowercase|capitalize`**
+
+Load minimum font weights you need — each weight is a separate file download.","mc","Why is `rem` preferred over `px` for `font-size`?","It's faster","It scales with the user's root font size preference (better accessibility)","It's required by HTML5","`px` is deprecated","B","","mc","What's the best value type for `line-height` to keep it proportional to font-size?","Pixels (e.g. `24px`)","Unit-less number (e.g. `1.5`)","Em (e.g. `1.5em`)","Percent (e.g. `150%`)","B","","typed","Type the CSS property name for the spacing between individual letters (often used for caps and headlines):","","","","","letter-spacing","","mc","Why list multiple fonts in `font-family` (e.g. `'Inter', system-ui, sans-serif`)?","Browser picks the best-looking one","Fallback chain — if first font is unavailable, browser uses next","Required for accessibility","To support multiple languages","B","","mc","What's the typical `font-weight` value for `normal` text?","100","400","700","900","B","","Topic 2 batch v4"
+"2","CSS","2.9","Colors","CSS color values:
+
+- **Named colors:** `red`, `blue`, `tomato` (140+ named colors)
+- **Hex:** `#ff0000` (red), `#000` (shorthand for `#000000` black), `#ff000080` (with alpha)
+- **rgb / rgba:** `rgb(255, 0, 0)`, `rgba(255, 0, 0, 0.5)` (50% transparent)
+- **hsl / hsla:** `hsl(0, 100%, 50%)` — Hue (0-360°), Saturation, Lightness. EASIER to reason about: change one channel without recalculating
+- **Modern oklch:** `oklch(70% 0.2 25)` — perceptually uniform color space, great for design systems
+
+**CSS Custom Properties (variables)** are key for color systems:
+```css
+:root {
+  --color-primary: hsl(220 90% 50%);
+  --color-text: hsl(0 0% 15%);
+}
+.btn { background: var(--color-primary); color: white; }
+```
+
+Update one variable → entire site re-themes. Essential for dark mode.","mc","Which color notation makes it EASIER to programmatically change just brightness without recalculating?","Hex (#rrggbb)","RGB","HSL (hue, saturation, lightness)","Named colors","C","","typed","Type the CSS function used to apply the value of a custom property, e.g. `color: ___(--color-primary)`:","","","","","var","","mc","What does `rgba(255, 0, 0, 0.5)` represent?","Red at 50% opacity","Red at full opacity","50% red mix","Invalid CSS","A","","mc","Where should you define a global color custom property like `--color-primary`?","On `<body>`","On `:root` (so all elements can access it via `var()`)","On `<html>` only","Wherever you use it","B","","typed","Type the CSS pseudo-class that targets the document root element (used like `___ { --color-primary: blue; }`):","","","","",":root","root","Topic 2 batch v4"
+"2","CSS","2.10","Transitions","CSS transitions animate property changes smoothly between states.
+
+**Syntax:**
+```css
+.btn {
+  background: blue;
+  transition: background 200ms ease, transform 150ms ease;
+}
+.btn:hover {
+  background: red;
+  transform: scale(1.05);
+}
+```
+
+**Key transition properties:**
+- `transition-property` — what to animate (e.g. `opacity`, `transform`, `all`)
+- `transition-duration` — how long (`200ms`, `0.3s`)
+- `transition-timing-function` — easing curve (`ease`, `linear`, `ease-in-out`, `cubic-bezier(...)`)
+- `transition-delay` — wait before starting
+
+**Animate compositor-friendly properties:** `transform` and `opacity` are HARDWARE accelerated — smooth 60fps. Avoid animating `width`, `height`, `top`, `left` (causes layout recalc — janky).
+
+For more complex sequences, use `@keyframes` + `animation` instead.","mc","Which CSS property triggers smooth animation between value changes?","`animate`","`transition`","`motion`","`smooth`","B","","mc","Which properties are MOST PERFORMANT to animate (60fps smooth)?","`width` and `height`","`top` and `left`","`transform` and `opacity`","`margin` and `padding`","C","","typed","Type the CSS unit (lowercase, 2 letters) for milliseconds, used in `transition-duration: 200___`:","","","","","ms","","mc","Why avoid animating `width` and `height`?","They cause layout recalculation each frame — janky animation","CSS doesn't support it","Browsers ignore those properties","Only `transform` is allowed in CSS","A","","mc","What does `cubic-bezier(...)` allow in `transition-timing-function`?","Random easing","Custom easing curve defined by 4 control points","Only used for color transitions","Speeds up animations","B","","Topic 2 batch v4"
+"2","CSS","2.11","CSS custom properties (variables)","CSS custom properties (often called ""CSS variables"") let you define reusable values:
+
+```css
+:root {
+  --color-primary: #3b82f6;
+  --space-md: 1rem;
+  --font-heading: 'Inter', sans-serif;
+}
+
+.btn {
+  background: var(--color-primary);
+  padding: var(--space-md);
+}
+```
+
+**Why use them:**
+- **DRY** — define once, use everywhere
+- **Theming** — change `--color-primary` once → updates EVERYWHERE
+- **Dark mode** — override in `@media (prefers-color-scheme: dark) { :root { --color-bg: black; } }`
+- **JS-readable/writable** — `element.style.setProperty('--color-primary', 'red')` dynamically
+
+**Scoping:** Variables cascade like other CSS — define on `:root` for global, on a class for scoped.
+
+**Fallback:** `var(--missing-color, blue)` — uses `blue` if `--missing-color` undefined.","mc","Which prefix marks a CSS custom property (variable)?","`$` (like SCSS)","`@`","`--` (two hyphens)","`#`","C","","typed","Type the CSS function used to READ a custom property value, e.g. `color: ___(--color-primary)`:","","","","","var","","mc","Where should you define a GLOBAL CSS variable (accessible from any element)?","On `body`","On `:root`","Inside each component","In a `<script>` tag","B","","mc","What does `var(--bg, white)` do?","Sets `--bg` to white","Reads `--bg`, but if undefined uses `white` as fallback","Throws an error","Creates a new variable named `bg`","B","","typed","Type the CSS at-rule (include `@`) used to detect user's dark-mode preference, allowing different variable values:","","","","","@media","","Topic 2 batch v4"
+"3","Tailwind CSS","3.1","Installation and setup with Vite","**Prerequisites:** New to Node.js or Yarn? Complete Topic 0.1 and 0.2 first.
+
+Tailwind v4 setup with Vite (3 steps):
+
+1. **Install packages:**
+```bash
+yarn add -D tailwindcss @tailwindcss/vite
+```
+
+2. **Add Tailwind plugin** to `vite.config.ts`:
+```js
+import tailwindcss from '@tailwindcss/vite'
+export default { plugins: [tailwindcss()] }
+```
+
+3. **Import Tailwind in main CSS** (e.g. `src/index.css`):
+```css
+@import ""tailwindcss"";
+```
+
+That's it — no `tailwind.config.js` needed in v4 unless you customize. Tailwind v4 auto-scans your source files for utility classes used.
+
+**Recommended VS Code extension:** Tailwind CSS IntelliSense — autocomplete for class names + previews colors inline.","mc","Which CSS directive (in v4) imports Tailwind into your stylesheet?","`@tailwind base;`","`@import ""tailwindcss"";`","`@use 'tailwind';`","`<link rel=""tailwind"">`","B","","typed","Type the npm/yarn package name (lowercase, no `@`) for the official Tailwind Vite plugin:","","","","","@tailwindcss/vite","","mc","Why install the Tailwind IntelliSense VS Code extension?","Required for Tailwind to work","Provides autocomplete, color previews, and class name hints","Compiles Tailwind faster","Adds dark mode automatically","B","","mc","What does Tailwind do at build time?","Generates a giant CSS file with every possible utility","Scans your source files and includes only the utility classes you actually use","Replaces your HTML with inline styles","Compiles to SCSS","B","","typed","Type the name of the build tool we pair Tailwind with in this project (already used in our React setup, 5 letters lowercase):","","","","","vite","","Topic 3 batch v4"
+"3","Tailwind CSS","3.2","Utility-first approach","Tailwind is **utility-first**: instead of writing custom CSS, you compose styles from small single-purpose classes directly on HTML elements.
+
+```html
+<!-- Traditional CSS -->
+<button class=""primary-btn"">Click</button>
+<style>.primary-btn { padding: 0.5rem 1rem; background: #3b82f6; color: white; border-radius: 0.25rem; }</style>
+
+<!-- Tailwind utility-first -->
+<button class=""px-4 py-2 bg-blue-500 text-white rounded"">Click</button>
+```
+
+**Naming pattern:** `<property>-<value>` shorthand:
+- Spacing: `p-4` (padding), `m-2` (margin), `px-4` (padding x-axis), `py-2`, `pt-`, `pr-`, `pb-`, `pl-`
+- Colors: `bg-blue-500` (background), `text-white`, `border-red-300`
+- Sizing: `w-full`, `h-screen`, `max-w-md`
+- Layout: `flex`, `grid`, `block`, `hidden`
+
+**When utilities aren't enough:** rarely use `@apply` to compose utilities into a class. Better: extract a React component.","mc","What's the core idea of Tailwind's ""utility-first"" approach?","Write all CSS in one big file","Compose styles from small single-purpose classes directly on HTML elements","Generate CSS automatically from designs","Use only inline styles","B","","typed","Type the Tailwind class name (lowercase, with hyphen) that sets padding 1rem (16px) on all sides:","","","","","p-4","","mc","What does `px-4 py-2` mean?","Pixels 4, 2","Padding-left 4 and padding-top 2","Padding x-axis (left+right) 4, padding y-axis (top+bottom) 2","Position x:4, y:2","C","","mc","When should you reach for `@apply` to bundle utilities into a custom class?","Always — keep HTML clean","Rarely. Prefer extracting a component (React/Vue) instead","Only for colors","Never","B","","typed","Type the Tailwind class for `background-color: white` (lowercase, with hyphen):","","","","","bg-white","","Topic 3 batch v4"
+"3","Tailwind CSS","3.3","Responsive prefixes","Tailwind is **mobile-first**: unprefixed classes apply at all sizes. Use breakpoint prefixes to apply at LARGER widths.
+
+**Default breakpoints:**
+- `sm:` — ≥ 640px (large phones, small tablets)
+- `md:` — ≥ 768px (tablets)
+- `lg:` — ≥ 1024px (laptops)
+- `xl:` — ≥ 1280px (desktops)
+- `2xl:` — ≥ 1536px (large desktops)
+
+**Example: stack on mobile, row on desktop:**
+```html
+<div class=""flex flex-col md:flex-row gap-4"">
+  <div class=""w-full md:w-1/3"">Sidebar</div>
+  <div class=""w-full md:w-2/3"">Content</div>
+</div>
+```
+
+Mobile: vertical stack, full width. Tablet+: horizontal split 1/3 + 2/3.
+
+Rule: write base styles for MOBILE first, then add `md:` / `lg:` overrides for larger.","mc","Tailwind's responsive prefixes follow which approach?","Desktop-first (larger screens by default, scale DOWN with prefixes)","Mobile-first (base styles for mobile, scale UP with prefixes for larger)","Tablet-first","Random order","B","","typed","Type the Tailwind responsive prefix (with the colon) that targets screens ≥ 768px (tablets and up):","","","","","md:","md","mc","What does `text-sm md:text-lg` mean?","Text is small on mobile, large on tablet (≥ 768px) and bigger","Text is medium and large simultaneously","Text size varies randomly","Invalid Tailwind","A","","mc","Which Tailwind prefix targets the LARGEST default breakpoint (≥ 1536px)?","`xl:`","`lg:`","`xxl:`","`2xl:`","D","","typed","Type the Tailwind prefix (with colon) for the smallest breakpoint (≥ 640px):","","","","","sm:","sm","Topic 3 batch v4"
+"3","Tailwind CSS","3.4","Flexbox/Grid utilities","Tailwind ships utilities for Flexbox and Grid layout — no need to write `display: flex` manually.
+
+**Flexbox:**
+```html
+<div class=""flex items-center justify-between gap-4"">
+  <span>Logo</span>
+  <nav class=""flex gap-2"">...</nav>
+</div>
+```
+- `flex` → `display: flex`
+- `flex-col` → `flex-direction: column`
+- `justify-{start|center|end|between|around|evenly}` → main-axis alignment
+- `items-{start|center|end|stretch}` → cross-axis alignment
+- `gap-4` → spacing between items
+
+**Grid:**
+```html
+<div class=""grid grid-cols-3 gap-4"">
+  <div>Card 1</div><div>Card 2</div><div>Card 3</div>
+</div>
+```
+- `grid grid-cols-3` → 3-column grid
+- `grid-cols-[200px_1fr_100px]` → arbitrary template
+- `col-span-2` (on item) → span 2 columns","mc","Which Tailwind class turns an element into a flex container?","`display-flex`","`flex`","`d-flex`","`flexbox`","B","","typed","Type the Tailwind class to make a flex container use COLUMN direction (lowercase, with hyphen):","","","","","flex-col","","mc","Which class creates equal spacing of 1rem between flex/grid items (replaces manual margins)?","`spacing-4`","`gap-4`","`margin-4`","`pad-4`","B","","mc","What does `grid grid-cols-3` create?","A 3-row grid","A grid with 3 equal-width columns","A 3D grid","A 3x3 grid","B","","typed","Type the Tailwind class that vertically centers items in a flex row (cross-axis):","","","","","items-center","","Topic 3 batch v4"
+"3","Tailwind CSS","3.5","State variants","Tailwind prefixes apply styles based on element STATE (interaction, position, etc.):
+
+- `hover:` — mouse over: `hover:bg-blue-600`
+- `focus:` — focused (keyboard/click): `focus:ring-2 focus:ring-blue-500`
+- `active:` — being pressed: `active:bg-blue-700`
+- `disabled:` — disabled state: `disabled:opacity-50 disabled:cursor-not-allowed`
+- `group-hover:` — when PARENT with class `group` is hovered (style child based on parent state)
+- `peer-checked:` — when sibling with class `peer` is checked (style based on sibling)
+- `dark:` — when dark mode active (covered in 3.6)
+
+**Combine prefixes:** `md:hover:bg-blue-500` → only on tablet+ AND on hover.
+
+```html
+<button class=""bg-blue-500 hover:bg-blue-600 focus:ring-2 focus:ring-blue-300 active:bg-blue-700 disabled:opacity-50"">Save</button>
+```","mc","Which Tailwind prefix triggers styles only when the user hovers with the mouse?","`mouse:`","`hover:`","`onmouseover:`","`on:`","B","","typed","Type the Tailwind prefix (with colon) that applies styles only when an element is focused (e.g. by tab navigation):","","","","","focus:","focus","mc","What does `group-hover:` do?","Hovers on the entire group of elements","Styles a child element when its parent (with class `group`) is hovered","Activates when multiple elements are hovered","Invalid Tailwind","B","","mc","Which combination ONLY applies on tablets and up, ONLY when hovering?","`md:hover:bg-blue-500`","`hover:md:bg-blue-500`","`md.hover.bg-blue-500`","`md-hover-bg-blue-500`","A","","typed","Type the Tailwind prefix (with colon) for styling an element that is `disabled`:","","","","","disabled:","disabled","Topic 3 batch v4"
+"3","Tailwind CSS","3.6","Dark mode","Tailwind supports dark mode out of the box via the `dark:` prefix.
+
+**v4 default:** uses `prefers-color-scheme` media query — automatically follows user's OS setting.
+
+**Manual toggle** (recommended for user control): add `dark` class to `<html>` element. In v4, configure via CSS:
+
+```css
+@import ""tailwindcss"";
+@custom-variant dark (&:where(.dark, .dark *));
+```
+
+Now toggling `<html class=""dark"">` switches all `dark:` utilities.
+
+**Pattern:**
+```html
+<body class=""bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100"">
+  <button class=""bg-blue-500 dark:bg-blue-400 hover:bg-blue-600 dark:hover:bg-blue-300"">Action</button>
+</body>
+```
+
+**JS toggle:**
+```js
+document.documentElement.classList.toggle('dark')
+```
+
+**Persist preference** in `localStorage`. On load, read it back BEFORE first paint to avoid flash.","mc","Which Tailwind prefix applies styles when dark mode is active?","`night:`","`dark:`","`theme-dark:`","`mode-dark:`","B","","typed","Type the HTML class name (just the word, no dot, lowercase) typically added to `<html>` to enable manual dark mode toggling:","","","","","dark","","mc","How do you toggle dark mode programmatically with JS (manual mode)?","`document.body.style.dark = true`","`document.documentElement.classList.toggle('dark')`","`window.theme = 'dark'`","`<html>` doesn't support classes","B","","mc","Why persist the dark mode preference in `localStorage` AND read it before first paint?","Improves SEO","Prevents a flash of wrong theme (e.g. light flash before dark loads)","Reduces bundle size","Required by Tailwind","B","","mc","What does Tailwind's v4 default dark mode use without config?","`localStorage` only","CSS `prefers-color-scheme` media query (follows OS setting)","Always dark","Never dark","B","","Topic 3 batch v4"
+"3","Tailwind CSS","3.7","Custom configuration","In Tailwind v4, customization is done in CSS (no `tailwind.config.js` required):
+
+```css
+@import ""tailwindcss"";
+
+@theme {
+  --color-brand: oklch(60% 0.2 250);
+  --color-brand-hover: oklch(55% 0.2 250);
+  --font-display: ""Cal Sans"", sans-serif;
+  --breakpoint-3xl: 1920px;
+}
+```
+
+Now you can use `bg-brand`, `text-brand`, `font-display`, `3xl:flex` etc. as utility classes.
+
+**Common customizations:**
+- Brand colors (named after your design system)
+- Font families (display vs body)
+- Custom breakpoints (`3xl:`, `4k:`)
+- Custom spacing scale extensions
+
+**Don't over-customize.** Tailwind's defaults are intentional. Override only what your brand truly needs.
+
+**Arbitrary values** (when defaults don't fit, but rarely needed): `text-[#1a2b3c]`, `w-[437px]`, `bg-[url('/img/hero.png')]`.","mc","Where do you customize Tailwind v4 (add brand colors, fonts, etc.)?","In a JavaScript `tailwind.config.js` file","Directly in CSS using `@theme { ... }` block","In `package.json`","In each component","B","","typed","Type the Tailwind v4 at-rule (include `@`) used inside CSS to define custom theme tokens like colors and fonts:","","","","","@theme","","mc","After defining `--color-brand` in `@theme`, what utility classes can you use?","Only `var(--color-brand)`","`bg-brand`, `text-brand`, `border-brand`, etc. (full utility set)","Just `color-brand`","No utilities — must use raw CSS","B","","mc","When should you use arbitrary values like `w-[437px]`?","Always — gives more control","Rarely. Defaults usually suffice; use only when truly needed","Never — it's invalid Tailwind","Only for colors","B","","mc","Why avoid over-customizing Tailwind?","Slower builds","Defaults are intentional, well-balanced, and consistent — over-customizing breaks the design system","Customizing is paid","Tailwind doesn't allow it","B","","Topic 3 batch v4"
+"3","Tailwind CSS","3.8","Component patterns","Common UI patterns built with Tailwind utility classes:
+
+**Card:**
+```html
+<div class=""rounded-lg border bg-white p-6 shadow-sm hover:shadow-md transition"">
+  <h3 class=""text-lg font-semibold"">Title</h3>
+  <p class=""mt-2 text-gray-600"">Description</p>
+</div>
+```
+
+**Navbar:**
+```html
+<header class=""sticky top-0 bg-white border-b"">
+  <nav class=""mx-auto max-w-7xl flex items-center justify-between px-4 py-3"">
+    <a href=""/"" class=""font-bold"">Logo</a>
+    <ul class=""flex gap-6""><li><a>Docs</a></li>...</ul>
+  </nav>
+</header>
+```
+
+**Form input:**
+```html
+<input type=""text"" class=""w-full rounded-md border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"" />
+```
+
+**Pattern: extract to React component** when you reuse the same class string 3+ times. Don't fight DRY with `@apply` — use components.","mc","When should you EXTRACT a Tailwind pattern into a React component?","Always","When you reuse the same class string 3+ times","Never — keep all utilities inline","Only for forms","B","","typed","Type the Tailwind class that makes the corners rounded with a 0.375rem radius (medium rounding, common for cards):","","","","","rounded-md","","mc","Which class set creates a centered max-width container with horizontal padding?","`mx-auto max-w-7xl px-4`","`center max-7xl`","`align-center w-7xl`","`text-center w-full`","A","","typed","Type the Tailwind class that adds a small shadow under an element (light box-shadow):","","","","","shadow-sm","","mc","Inside a card, which class adds smooth shadow transition on hover?","`animate-shadow`","`hover:shadow-md transition`","`hover-shadow-md`","`shadow-hover`","B","","Topic 3 batch v4"
+"4","Git & GitHub","4.1","Core commands","Git tracks changes to your code over time. Workflow:
+
+1. **`git init`** — turn a folder into a Git repository
+2. **`git status`** — see what's changed
+3. **`git add <file>`** — stage a file for the next commit (or `git add .` for all)
+4. **`git commit -m ""message""`** — save staged changes as a snapshot with a message
+5. **`git log`** — see commit history
+6. **`git push`** — upload commits to remote (e.g. GitHub)
+7. **`git pull`** — download + merge remote changes
+
+**Important distinction:**
+- Modified — file edited but not yet staged
+- Staged — `git add`-ed, ready for next commit
+- Committed — saved as a snapshot
+
+A commit is a SNAPSHOT, not just changes. Every commit has a unique SHA hash (e.g. `a3f72c8`).","mc","Which Git command stages a modified file for the next commit?","`git stage`","`git add`","`git commit -a`","`git push`","B","","typed","Type the Git command (just the verb after `git`) to see what files have been modified, staged, or untracked:","","","","","status","","mc","What does `git commit -m ""msg""` do?","Uploads changes to GitHub","Saves all staged changes as a new snapshot with the given message","Stages all files","Reverts the last commit","B","","mc","What's the difference between `git push` and `git commit`?","Identical","`commit` saves locally; `push` uploads commits to remote (GitHub)","`push` saves locally; `commit` uploads","Both upload to GitHub","B","","typed","Type the Git command (verb only) to download AND merge changes from the remote repository:","","","","","pull","","Topic 4 batch v4"
+"4","Git & GitHub","4.2","Branching","A **branch** is an independent line of development. Default branch is `main` (or `master` historically).
+
+**Workflow for features:**
+```bash
+git checkout -b feat/login        # create and switch to new branch
+# ... make changes, commit ...
+git push -u origin feat/login     # push branch to remote (first time)
+# ... create Pull Request on GitHub, get review ...
+git checkout main
+git pull
+git branch -d feat/login          # delete merged local branch
+```
+
+**Key commands:**
+- `git branch` — list branches
+- `git branch <name>` — create a branch
+- `git checkout <name>` (or `git switch <name>`) — switch to a branch
+- `git checkout -b <name>` (or `git switch -c <name>`) — create AND switch
+- `git merge <name>` — merge another branch into current
+- `git rebase <name>` — re-apply current branch commits on top of another (cleaner history but rewrites SHAs — never on shared branches!)","mc","Which command creates AND switches to a new branch in one step?","`git branch new-feature`","`git checkout -b new-feature`","`git switch new-feature`","`git create new-feature`","B","","typed","Type the Git command (verb only) that lists all local branches:","","","","","branch","","mc","What's the difference between `git merge` and `git rebase`?","Identical","`merge` creates a merge commit; `rebase` re-applies commits cleanly on top of another branch","`rebase` is for first-time only","`merge` is deprecated","B","","mc","When is `git rebase` DANGEROUS?","Never","When used on shared branches — it rewrites commit history (others may have based work on old commits)","Always — never use it","Only on Windows","B","","typed","Type the Git flag (one character with dash) used with `git branch` to delete a branch (e.g. `git branch __ old-feature`):","","","","","-d","","Topic 4 batch v4"
+"4","Git & GitHub","4.3","Remote repos","A **remote** is a Git repository hosted elsewhere (GitHub, GitLab, your own server).
+
+**Common commands:**
+- `git remote -v` — list configured remotes (URLs)
+- `git remote add origin <URL>` — link local repo to remote (typically named `origin`)
+- `git clone <URL>` — download a remote repo + set up `origin` automatically
+- `git fetch` — download remote commits WITHOUT merging (safe inspection)
+- `git pull` — `fetch` + `merge` in one step
+- `git push origin <branch>` — upload branch to remote
+
+**First push of a new branch:** use `-u` flag to set upstream:
+```bash
+git push -u origin feat/new-thing
+```
+Sets `feat/new-thing` to track `origin/feat/new-thing`. Future `git push` and `git pull` work without specifying remote/branch.","mc","What's the default name for the primary remote when you clone a repo?","`main`","`origin`","`source`","`upstream`","B","","typed","Type the Git command (verb only) that downloads a remote repository to your local machine for the first time:","","","","","clone","","mc","What does `git fetch` do (vs `git pull`)?","Same as pull","Downloads remote commits but does NOT merge them — safe for inspecting before merging","Uploads commits","Deletes the branch","B","","mc","What does the `-u` flag do in `git push -u origin feat/x`?","Uploads urgently","Sets upstream tracking — future `git push` / `pull` know which remote branch to use","Force pushes","Updates the README","B","","typed","Type the Git flag (one character with dash) used to make output VERBOSE (e.g. `git remote ___`) showing remote URLs:","","","","","-v","","Topic 4 batch v4"
+"4","Git & GitHub","4.4","GitHub (PRs, issues, README)","**GitHub** is the most popular Git hosting platform. Key concepts:
+
+- **Repository** — your project hosted on GitHub
+- **Issue** — bug report, feature request, or discussion thread tied to the repo
+- **Pull Request (PR)** — proposal to merge changes from one branch into another. Triggers CODE REVIEW workflow. Other devs comment, approve, request changes.
+- **README.md** — the front page of your repo, written in Markdown. ALWAYS include: project name, what it does, how to install/run, screenshot, license.
+
+**PR best practices:**
+- Keep PRs SMALL (< 500 lines diff)
+- Write a clear description: what changed, why, how to test
+- Link related issues with `Closes #42`
+- Run tests locally before pushing
+
+**README sections** (recommended):
+1. Project name + 1-line description
+2. Demo / screenshot
+3. Features list
+4. Installation steps
+5. Usage examples
+6. Tech stack
+7. License","mc","What is a Pull Request (PR) on GitHub?","Pulling code from another repo","A proposal to merge changes from one branch into another, with code review","Downloading a repo","Deleting a branch","B","","typed","Type the filename (with extension, e.g. xxx.md) that GitHub displays as the front page of a repository:","","","","","README.md","","mc","What's the purpose of GitHub Issues?","To request access","To track bug reports, feature requests, and discussions tied to the repo","To delete commits","To pay GitHub","B","","mc","In a PR description, what does `Closes #42` do when merged?","Adds #42 to title","Automatically closes Issue #42 when the PR is merged","Comments on Issue #42","Forks issue #42","B","","mc","Why keep Pull Requests SMALL (< 500 lines)?","Required by GitHub","Easier to review, faster to merge, fewer bugs slip through","Faster to push","No reason","B","","Topic 4 batch v4"
+"4","Git & GitHub","4.5",".gitignore","`.gitignore` is a plain-text file at your repo root listing files/folders Git should IGNORE — never track or commit.
+
+**Typical entries for a Node/web project:**
+```
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+.next/
+
+# Environment secrets (NEVER COMMIT)
+.env
+.env.local
+.env.*.local
+
+# Editor / OS files
+.DS_Store
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+```
+
+**Patterns:**
+- `node_modules/` — folder
+- `*.log` — all files ending in `.log`
+- `!important.log` — exception: track this one
+- `secrets/*.txt` — only `.txt` files inside `secrets/`
+
+**Critical:** Always set up `.gitignore` BEFORE first commit. If you already committed something you shouldn't have (like `.env` with secrets), use `git rm --cached <file>` + add to `.gitignore`. And **rotate the leaked secrets immediately**.","mc","What does `.gitignore` do?","Hides files from your computer","Tells Git which files/folders to ignore (never track or commit)","Encrypts files","Required to use Git","B","","typed","Type the folder name (lowercase, no slash) that should ALWAYS be in `.gitignore` for Node/web projects (contains installed npm packages):","","","","","node_modules","","mc","What's the pattern `*.log` in `.gitignore`?","Tracks all log files","Ignores all files ending in `.log`","Compresses log files","Invalid syntax","B","","mc","You accidentally committed `.env` with API secrets. Best response?","Just delete from next commit","Use `git rm --cached .env`, add to `.gitignore`, AND rotate the leaked secrets immediately","Hope no one notices","Force-push to overwrite","B","","mc","Which file should NEVER be committed to a public repo?","`README.md`","`.env` (contains secrets/API keys)","`.gitignore`","`package.json`","B","","Topic 4 batch v4"
+"4","Git & GitHub","4.6","Commit messages (conventional)","**Conventional Commits** is a standard for commit messages that improves readability and enables tooling (changelog generation, semantic versioning).
+
+**Format:**
+```
+<type>: <short summary in present tense, lowercase, no period>
+
+[optional longer body]
+[optional footer]
+```
+
+**Common types:**
+- `feat:` — new feature
+- `fix:` — bug fix
+- `docs:` — documentation only
+- `refactor:` — code change that doesn't add a feature or fix a bug
+- `test:` — adding/updating tests
+- `chore:` — maintenance (deps, build config)
+- `perf:` — performance improvement
+- `ci:` — CI/CD config changes
+- `style:` — formatting (no logic change)
+
+**Good examples:**
+- `feat: add user login form`
+- `fix: correct rounding error in cart total`
+- `docs: update README install steps`
+
+**Bad examples:**
+- `update`
+- `fixes`
+- `WIP`
+- `asdf`","mc","Which is a VALID Conventional Commit message?","`update stuff`","`feat: add user login form`","`Updated the user login`","`changes`","B","","typed","Type the Conventional Commits TYPE (lowercase, no colon) used for a bug fix:","","","","","fix","","mc","What type would you use for a commit that only updates the README?","`feat:`","`fix:`","`docs:`","`chore:`","C","","mc","Why use Conventional Commits?","Required by Git","Improves readability + enables tools to auto-generate changelogs and version bumps","Faster pushes","Hides commits","B","","typed","Type the Conventional Commits TYPE (lowercase, no colon) used for adding a new feature:","","","","","feat","","Topic 4 batch v4"
+"4","Git & GitHub","4.7","Resolving merge conflicts","A **merge conflict** happens when Git can't auto-merge changes because two branches modified the same lines.
+
+**When you see this:**
+```
+<<<<<<< HEAD
+your version
+=======
+their version
+>>>>>>> feat/their-branch
+```
+
+**Resolve manually:**
+1. Open conflicted file in editor (VS Code highlights conflicts)
+2. Decide: keep yours, keep theirs, or combine
+3. Delete conflict markers (`<<<<<<<`, `=======`, `>>>>>>>`)
+4. Save file
+5. `git add <file>` to mark as resolved
+6. `git commit` (no `-m` needed during merge — Git fills in a message)
+7. If rebasing: `git rebase --continue` instead of commit
+
+**Avoid conflicts:**
+- Pull often (`git pull` regularly)
+- Keep branches short-lived
+- Communicate with teammates about who's editing what
+- Use small focused PRs
+
+**Abort a merge** that's gone wrong: `git merge --abort` (or `git rebase --abort`).","mc","What causes a merge conflict?","Network issues","Two branches modified the same lines of the same file, and Git can't auto-decide","Wrong commit message","Missing `.gitignore`","B","","typed","Type the conflict marker (7 characters including `<` symbols) that appears BEFORE your version in a conflicted file:","","","","","<<<<<<<","","mc","After manually fixing a conflict, what do you do next?","Push immediately","`git add <file>` to mark resolved, then `git commit`","Delete the file","Force push","B","","mc","How can you ABORT a merge that's gone wrong?","Close terminal","`git merge --abort` returns to pre-merge state","Delete `.git/` folder","Force push","B","","mc","Best way to AVOID merge conflicts in a team?","Never branch","Pull often, keep branches short-lived, use small focused PRs","Work on only one branch","Disable Git","B","","Topic 4 batch v4"
+"4","Git & GitHub","4.8","GitHub Pages","**GitHub Pages** is FREE static site hosting directly from a GitHub repo. Great for personal sites, project demos, documentation.
+
+**Limits:** Only static files (HTML/CSS/JS). No backend/database. Free for public repos (Pro plan needed for private).
+
+**Setup (UI):**
+1. Push your built static files (HTML/CSS/JS) to a branch (typically `main` or `gh-pages`)
+2. Repo Settings → Pages
+3. Source: pick branch + folder (`/` root or `/docs`)
+4. Click Save
+5. Wait ~1 min — site available at `https://<username>.github.io/<repo-name>/`
+
+**For Vite/React app:** add `base: '/repo-name/'` in `vite.config.js`, then `yarn build` → push the `dist/` folder.
+
+**Custom domain:** add a `CNAME` file with your domain (e.g. `mysite.com`) to the deployed folder, configure DNS to point to GitHub Pages.
+
+**GitHub Actions** can auto-deploy on every push to `main`.","mc","What can you host on GitHub Pages?","Full-stack apps with database","Static sites (HTML/CSS/JS only) — no backend or database","Only Markdown files","Docker containers","B","","typed","Type the default URL pattern for GitHub Pages (replace USER and REPO; just the domain part before `/REPO/`, e.g. `something.github.io`):","","","","","<username>.github.io","username.github.io","mc","For a Vite-built React app deployed to GitHub Pages at `username.github.io/my-app/`, what must be set in `vite.config.js`?","Nothing","`base: '/my-app/'` so asset URLs work correctly under the sub-path","`port: 4000`","`mode: 'production'`","B","","mc","How do you set up a CUSTOM DOMAIN (e.g. mysite.com) for GitHub Pages?","Pay GitHub","Add a `CNAME` file with your domain to the deployed folder + configure DNS to point to GitHub Pages","Use a different hosting","Not possible","B","","typed","Type the GitHub feature/tool name (lowercase, with hyphen) used to AUTO-DEPLOY on every push (e.g. ""GitHub ____""):","","","","","actions","","Topic 4 batch v4"
+"5","JavaScript Fundamentals","5.1","Variables","**Prerequisites:** New to Node.js or Yarn? Complete Topic 0.1 and 0.2 first.
+
+JavaScript has 3 ways to declare variables:
+
+- **`const`** — value can't be reassigned. USE THIS BY DEFAULT.
+- **`let`** — value CAN be reassigned. Use ONLY when reassignment is needed.
+- **`var`** — old. AVOID. Has function scope (vs block scope of let/const) — causes confusing bugs.
+
+```js
+const PI = 3.14;
+PI = 3.15;  // TypeError
+
+let count = 0;
+count = 1;  // OK
+
+if (true) {
+  let x = 5;  // block-scoped — only exists in this {}
+  var y = 5;  // function-scoped — leaks out!
+}
+console.log(y);  // 5 (var leaks)
+console.log(x);  // ReferenceError
+```
+
+**Note on `const`:** The BINDING is constant, but if it points to an object/array, the contents can still mutate:
+```js
+const arr = [1, 2];
+arr.push(3);  // OK — array mutated, but `arr` still refers to same array
+arr = [4];    // TypeError — can't reassign const
+```","mc","Which keyword should be your DEFAULT for declaring variables in modern JavaScript?","`var`","`let`","`const`","`def`","C","","typed","Type the keyword (3 letters, lowercase) used for a variable that CAN be reassigned later:","","","","","let","","mc","What's the problem with `var`?","Slower performance","It has FUNCTION scope (not block scope), causing confusing bugs","Removed in ES6","Reserved word","B","","mc","Given `const arr = [1, 2]; arr.push(3);`, what happens?","TypeError","Works — `arr` is still the same array, just mutated. Const prevents REASSIGNMENT, not mutation.","arr becomes undefined","Returns false","B","","typed","Type the JavaScript keyword (5 letters, lowercase) used to declare a variable whose value cannot be reassigned:","","","","","const","","Topic 5 batch v4"
+"5","JavaScript Fundamentals","5.2","Data types","JavaScript has 7 primitive types + objects:
+
+**Primitives** (immutable, compared by value):
+- `string` — `""hello""`, `'world'`, `` `template ${x}` ``
+- `number` — `42`, `3.14`, `NaN`, `Infinity` (one type for ALL numbers)
+- `boolean` — `true`, `false`
+- `null` — intentional ""no value""
+- `undefined` — variable declared but not assigned
+- `symbol` — unique identifier (advanced)
+- `bigint` — for numbers beyond `Number.MAX_SAFE_INTEGER` (~9 quadrillion). Written `123n`
+
+**Objects** (everything else — compared by reference):
+- `{ key: value }` — plain object
+- `[1, 2, 3]` — array (object under the hood)
+- functions, dates, regex, etc.
+
+**Check type:** `typeof x` returns a string: `'string'`, `'number'`, `'boolean'`, `'undefined'`, `'object'` (for null and arrays — confusing!), `'function'`.
+
+For arrays use `Array.isArray(x)`. For null use `x === null`.","mc","Which type does `typeof null` return in JavaScript?","`'null'`","`'undefined'`","`'object'` (a famous bug kept for backward compat)","`'none'`","C","","typed","Type the JavaScript operator/keyword used to check the type of a value (e.g. `___ x === 'string'`):","","","","","typeof","","mc","What's the difference between `null` and `undefined`?","Identical","`null` is intentional ""no value"" set by code; `undefined` is the default for unassigned variables","`null` is for strings only","`undefined` is deprecated","B","","mc","How do you reliably check if a value is an array?","`typeof x === 'array'`","`Array.isArray(x)`","`x instanceof Array` only","`x.length !== undefined`","B","","typed","Type the primitive type name (lowercase) of the value `42` in JavaScript:","","","","","number","","Topic 5 batch v4"
+"5","JavaScript Fundamentals","5.3","Type coercion","JavaScript automatically converts types in many contexts — sometimes helpful, often confusing.
+
+**Loose equality (`==`)** does type coercion. STRICT equality (`===`) doesn't.
+
+```js
+0 == '0'        // true  (string coerced to number)
+0 == false      // true  (false coerced to 0)
+null == undefined  // true (special rule)
+'5' + 3         // '53'   (string concat)
+'5' - 3         // 2      (numeric subtract)
+[] + []         // ''
+[] + {}         // '[object Object]'
+```
+
+**RULE: Always use `===` (strict equality).** It checks type AND value with no coercion. Avoid `==` entirely unless you have a very specific reason.
+
+**Truthy/Falsy:** In conditionals, values coerce to boolean:
+- **Falsy:** `false`, `0`, `''`, `null`, `undefined`, `NaN` (memorize this list!)
+- **Everything else is truthy** (including `[]`, `{}`, `'0'`, `'false'`)","mc","Which equality operator should you use by default in JavaScript?","`==`","`===`","`=`","`<=>`","B","","typed","Type the JavaScript operator (3 characters) for STRICT equality (no type coercion):","","","","","===","","mc","What does `'5' + 3` evaluate to in JavaScript?","8","'8'","'53'","Error","C","","mc","Which of these is FALSY in JavaScript?","`[]` (empty array)","`{}` (empty object)","`'0'` (string)","`0` (number)","D","","typed","Type the JavaScript value (lowercase, no quotes) that represents ""not a number"" (result of bad math like `0/0`):","","","","","NaN","","Topic 5 batch v4"
+"5","JavaScript Fundamentals","5.4","Operators","Key operators in JavaScript:
+
+**Arithmetic:** `+ - * / %` (modulo) `**` (exponent)
+
+**Comparison:** `=== !== < > <= >=` (always `===` not `==`)
+
+**Logical:**
+- `&&` AND (short-circuits — returns first falsy or last value)
+- `||` OR (short-circuits — returns first truthy or last value)
+- `!` NOT
+- `??` **Nullish coalescing** — like `||` but ONLY treats `null`/`undefined` as missing (NOT `0` or `''`)
+
+**Optional chaining `?.`** — safely access nested properties:
+```js
+user?.address?.city    // undefined if user or address is null/undefined
+arr?.[0]               // safe array access
+fn?.()                 // safe function call
+```
+
+**Spread / Rest:** `...`
+- Spread (in array/call): `[...a, ...b]`, `fn(...args)`
+- Rest (in params/destructure): `function fn(...args) {}`, `const [first, ...rest] = arr`","mc","What's the difference between `||` and `??` (nullish coalescing)?","Identical","`||` treats `0` and `''` as falsy; `??` only treats `null`/`undefined` as missing","`??` is faster","`||` is deprecated","B","","typed","Type the JavaScript operator (2 characters) for OPTIONAL CHAINING — safely access nested properties (e.g. `user_.address`):","","","","","?.","","mc","What does `arr?.[0]` do?","Sets arr to `[0]`","Returns `arr[0]` if `arr` exists; `undefined` otherwise (no error)","Throws TypeError if arr is null","Same as `arr[0]`","B","","mc","What does `const [first, ...rest] = [1, 2, 3, 4]` produce?","first=1, rest=[1,2,3,4]","first=1, rest=[2,3,4]","first=[1,2,3], rest=4","Syntax error","B","","typed","Type the JavaScript operator (3 characters) for ""spread"" or ""rest"" (used in `[..._arr]` or `function fn(..._args)`):","","","","","...","","Topic 5 batch v4"
+"5","JavaScript Fundamentals","5.5","Control flow","JavaScript control flow statements:
+
+**if / else if / else:**
+```js
+if (score >= 90) { grade = 'A'; }
+else if (score >= 80) { grade = 'B'; }
+else { grade = 'F'; }
+```
+
+**switch** — branch on a single value:
+```js
+switch (day) {
+  case 'Mon': case 'Tue': return 'weekday';
+  case 'Sat': case 'Sun': return 'weekend';
+  default: return 'unknown';
+}
+```
+Don't forget `break` between cases (unless intentional fallthrough). Or use `return`.
+
+**Ternary** — concise inline if/else:
+```js
+const label = isLogged ? 'Logout' : 'Login';
+```
+
+**Short-circuit:**
+```js
+const name = user.name || 'Guest';
+isAdmin && deleteAll();  // only runs deleteAll if isAdmin truthy
+```
+
+**Avoid nested if-else hell.** Use early returns:
+```js
+function check(x) {
+  if (!x) return null;
+  if (x < 0) return 'negative';
+  return 'positive';
+}
+```","mc","What's the cleanest way to handle a function with multiple guard conditions?","Deeply nested if-else","Early returns (`if (!x) return null;` at top of function)","Use `goto`","Switch statement only","B","","typed","Type the JavaScript keyword (5 letters, lowercase) used inside a switch case to stop fall-through to the next case:","","","","","break","","mc","What does `const x = a > 5 ? 'big' : 'small'` use?","If-else","Ternary operator","Switch","Loop","B","","mc","What's the output of `const name = '' || 'Guest';`?","`''`","`'Guest'` (because `''` is falsy, `||` falls through)","`null`","Error","B","","typed","Type the JavaScript keyword (4 letters, lowercase) used for the catch-all branch in a `switch` statement:","","","","","default","","Topic 5 batch v4"
+"5","JavaScript Fundamentals","5.6","Loops","JavaScript loop types — pick the right one for the job:
+
+**`for` (classic)** — when you need an index:
+```js
+for (let i = 0; i < arr.length; i++) { console.log(arr[i]); }
+```
+
+**`for...of`** — iterate VALUES of an iterable (array, string, map, set):
+```js
+for (const item of arr) { console.log(item); }
+```
+
+**`for...in`** — iterate KEYS of an object. AVOID on arrays.
+```js
+for (const key in obj) { console.log(key, obj[key]); }
+```
+
+**`while`** — while condition is true:
+```js
+while (!done) { ... }
+```
+
+**Modern alternative — array methods** (preferred for arrays):
+- `arr.forEach(fn)` — side-effect each item
+- `arr.map(fn)` — transform → new array
+- `arr.filter(fn)` — keep matching → new array
+- `arr.reduce(fn, init)` — reduce to single value
+
+Generally prefer `.map/.filter/.reduce` over manual `for` loops for arrays.","mc","Which loop iterates the VALUES of an array (cleaner than classic `for`)?","`for...in`","`for...of`","`while`","`do...while`","B","","typed","Type the JavaScript array method (lowercase) used to TRANSFORM each element into a new array:","","","","","map","","mc","What's wrong with using `for...in` to iterate an array?","Iterates KEYS (indexes as strings) AND can hit inherited properties — use `for...of` for arrays instead","It's slower","It's deprecated","It doesn't work","A","","mc","Which method returns ONE value computed from an array (e.g. sum, accumulator)?","`map`","`filter`","`reduce`","`forEach`","C","","typed","Type the JavaScript array method (lowercase) used to KEEP only elements matching a condition:","","","","","filter","","Topic 5 batch v4"
+"5","JavaScript Fundamentals","5.7","Functions","JavaScript functions can be declared in several ways:
+
+```js
+// Function declaration (hoisted)
+function add(a, b) { return a + b; }
+
+// Function expression (NOT hoisted)
+const add = function(a, b) { return a + b; };
+
+// Arrow function (concise, no own `this`)
+const add = (a, b) => a + b;
+const square = x => x * x;        // 1 arg: parens optional
+const greet = () => console.log('hi');
+```
+
+**Default parameters:**
+```js
+function greet(name = 'World') { return `Hello, ${name}`; }
+```
+
+**Rest parameters** — collect remaining args:
+```js
+function sum(...nums) { return nums.reduce((a, b) => a + b, 0); }
+sum(1, 2, 3, 4);  // 10
+```
+
+**Arrow functions** are NOT just shorter syntax — they don't have their own `this`, `arguments`, or `super`. Use regular `function` for methods that need their own `this` (object methods, event handlers in some cases).","mc","What's a KEY behavioral difference between arrow functions and regular functions?","Arrow functions are faster","Arrow functions don't have their own `this` — they inherit from enclosing scope","Arrow functions can't take arguments","Arrow functions can't return values","B","","typed","Type the JavaScript syntax (2 characters, no quotes/spaces) that defines an arrow function body (e.g. `(a, b) __ a + b`):","","","","","=>","","mc","What's a DEFAULT parameter?","Required parameter","A parameter with a fallback value if undefined is passed (`function f(x = 10) {}`)","Cached parameter","Reserved keyword","B","","mc","What does `function sum(...nums)` do?","Sums all args automatically","Collects ALL passed arguments into an array named `nums` (rest parameter)","Limits args to 3","Spreads args","B","","typed","Type the JavaScript keyword (6 letters, lowercase) used inside a function to send a value back to the caller:","","","","","return","","Topic 5 batch v4"
+"5","JavaScript Fundamentals","5.8","Objects","JavaScript objects = unordered key-value pairs.
+
+**Create:**
+```js
+const user = {
+  name: 'Alice',
+  age: 30,
+  greet() { return `Hi, ${this.name}`; },
+};
+```
+
+**Access:** `user.name` or `user['name']` (bracket needed for computed keys or special chars).
+
+**Add / update / delete:**
+```js
+user.email = 'a@x.com';
+user.age = 31;
+delete user.age;
+```
+
+**Destructuring** — extract properties into variables:
+```js
+const { name, age } = user;
+const { name: userName } = user;  // rename
+const { city = 'Unknown' } = user;  // default
+```
+
+**Spread** — clone or merge:
+```js
+const clone = { ...user };
+const merged = { ...user, age: 32 };  // overrides age
+```
+
+**Useful methods:**
+- `Object.keys(obj)` → `['name', 'age']`
+- `Object.values(obj)` → `['Alice', 30]`
+- `Object.entries(obj)` → `[['name', 'Alice'], ['age', 30]]`","mc","What does `const { name, age } = user` do?","Defines a function","Object destructuring — pulls `user.name` and `user.age` into local variables","Throws an error","Creates a new object","B","","typed","Type the JavaScript `Object` method (camelCase) that returns an array of an object's KEYS:","","","","","Object.keys","keys","mc","What does `const merged = { ...user, age: 32 }` produce?","A new object with all `user`'s properties + `age` overridden to 32","Merges into `user` directly","Throws error","Loses other properties","A","","mc","Which `Object` method returns the key-value PAIRS as `[[k, v], ...]`?","`Object.keys`","`Object.values`","`Object.entries`","`Object.pairs`","C","","typed","Type the JavaScript keyword (6 letters, lowercase) used to remove a property from an object (e.g. `___ user.age`):","","","","","delete","","Topic 5 batch v4"
+"5","JavaScript Fundamentals","5.9","Arrays (map/filter/reduce)","Arrays have powerful methods to transform data without manual loops.
+
+**`.map(fn)`** — transform each item → NEW array, same length:
+```js
+const doubled = [1, 2, 3].map(x => x * 2);  // [2, 4, 6]
+```
+
+**`.filter(fn)`** — keep items where fn returns true → NEW shorter array:
+```js
+const evens = [1, 2, 3, 4].filter(x => x % 2 === 0);  // [2, 4]
+```
+
+**`.reduce(fn, initial)`** — combine into single value:
+```js
+const sum = [1, 2, 3].reduce((acc, x) => acc + x, 0);  // 6
+```
+
+**`.find(fn)`** — first matching item (or `undefined`):
+```js
+const user = users.find(u => u.id === 42);
+```
+
+**`.some(fn)` / `.every(fn)`** — return boolean if any/all match.
+
+**`.includes(value)`** — check if array contains value.
+
+**Chain them** for elegant data pipelines:
+```js
+const totalAge = users.filter(u => u.active).map(u => u.age).reduce((a, b) => a + b, 0);
+```
+
+All these return NEW arrays — never mutate the original.","mc","Which method TRANSFORMS each array element into a new array of the same length?","`forEach`","`map`","`filter`","`reduce`","B","","typed","Type the array method (lowercase) used to FIND the first matching element (or undefined if none):","","","","","find","","mc","What does `[1, 2, 3].reduce((acc, x) => acc + x, 0)` return?","[1, 2, 3]","6","'1, 2, 3'","Error","B","","mc","What's the difference between `.some()` and `.every()`?","Identical","`.some()` returns true if ANY element matches; `.every()` returns true only if ALL match","`.some` returns numbers","`.every` is deprecated","B","","typed","Type the array method (lowercase) used to keep ONLY elements that pass a test:","","","","","filter","","Topic 5 batch v4"
+"5","JavaScript Fundamentals","5.10","String methods","Common string methods (strings are immutable — methods return NEW strings):
+
+- **`.length`** — character count (property, not method)
+- **`.toUpperCase()`** / **`.toLowerCase()`**
+- **`.trim()`** — remove leading/trailing whitespace
+- **`.includes(sub)`** — boolean: substring present?
+- **`.startsWith(prefix)`** / **`.endsWith(suffix)`**
+- **`.indexOf(sub)`** — index of first match (-1 if not found)
+- **`.slice(start, end)`** — extract substring (negative indexes from end)
+- **`.split(sep)`** — split into array: `'a,b,c'.split(',')` → `['a', 'b', 'c']`
+- **`.replace(old, new)`** — first match. **`.replaceAll(old, new)`** — all matches
+- **`.repeat(n)`** — repeat string n times
+
+**Template literals** with backticks for interpolation + multi-line:
+```js
+const greeting = `Hello, ${user.name}!
+Welcome back.`;
+```","mc","What does `'  hello  '.trim()` return?","`'hello'` (whitespace removed from both ends)","`'  hello  '` (unchanged)","`''`","Error","A","","typed","Type the JavaScript string method (camelCase, no parens) that checks if a string CONTAINS a substring (returns boolean):","","","","","includes","","mc","What does `'a,b,c'.split(',')` return?","`'a,b,c'`","`['a', 'b', 'c']`","`['a,b,c']`","Error","B","","mc","Which character wraps a TEMPLATE LITERAL for `${var}` interpolation?","Single quote `'`","Double quote `\""`","Backtick `` ` ``","Slash `/`","C","","typed","Type the JavaScript string method (lowercase, no parens) used to convert a string to UPPERCASE:","","","","","toUpperCase","","Topic 5 batch v4"
+"5","JavaScript Fundamentals","5.11","Error handling","JavaScript errors are handled with `try / catch / finally`:
+
+```js
+try {
+  const data = JSON.parse(rawInput);
+  doSomething(data);
+} catch (error) {
+  console.error('Parse failed:', error.message);
+  return null;
+} finally {
+  // ALWAYS runs (success or failure) — cleanup code
+  closeConnection();
+}
+```
+
+**Throwing errors:**
+```js
+function divide(a, b) {
+  if (b === 0) throw new Error('Cannot divide by zero');
+  return a / b;
+}
+```
+
+**Custom error classes** (helpful for typing):
+```js
+class ValidationError extends Error {
+  constructor(message, field) {
+    super(message);
+    this.name = 'ValidationError';
+    this.field = field;
+  }
+}
+```
+
+**Best practices:**
+- Catch errors only where you can MEANINGFULLY handle them — don't swallow silently
+- Always log unexpected errors
+- Use specific error types so callers know what went wrong
+- For async code: `try/catch` around `await`","mc","Which block runs whether the `try` succeeded or threw an error?","`catch`","`finally`","`always`","`done`","B","","typed","Type the JavaScript keyword (5 letters, lowercase) used to RAISE an error manually (e.g. `___ new Error('msg')`):","","","","","throw","","mc","What's the BEST practice for catching errors?","Catch everything everywhere","Catch only where you can MEANINGFULLY handle the error — don't silently swallow","Never use try/catch","Log and re-throw immediately every time","B","","mc","How do you catch errors from `await`?","Use `.catch()`","Wrap `await` in a `try/catch` block","Errors auto-bubble — no catching needed","`await` can't throw","B","","typed","Type the JavaScript keyword (3 letters, lowercase) used to start an error-handling block (e.g. `___ { risky(); } catch (e) { ... }`):","","","","","try","","Topic 5 batch v4"
+"5","JavaScript Fundamentals","5.12","Modules (import/export)","Modern JavaScript modules (ESM) use `import` / `export` syntax.
+
+**Named exports** — export multiple things:
+```js
+// utils.js
+export const PI = 3.14;
+export function double(x) { return x * 2; }
+
+// main.js
+import { PI, double } from './utils.js';
+import * as utils from './utils.js';  // namespace import
+```
+
+**Default export** — one main thing per file:
+```js
+// Button.js
+export default function Button() { ... }
+
+// app.js
+import Button from './Button.js';
+import MyButton from './Button.js';  // can rename freely
+```
+
+**Mix both:**
+```js
+// api.js
+export default fetch;
+export const BASE_URL = 'https://api.example.com';
+
+// app.js
+import api, { BASE_URL } from './api.js';
+```
+
+**Rules:**
+- ES Modules use `.mjs` extension or `""type"": ""module""` in package.json (or `.ts`/Vite handles automatically)
+- Imports are HOISTED to top of file
+- `import` paths can be relative (`./`, `../`) or package names (resolved from `node_modules`)
+- Browsers need full path including `.js` extension (Vite handles this)","mc","What's the difference between a NAMED export and a DEFAULT export?","Identical","A file can have MANY named exports (`export const X`) but only ONE default export (`export default ...`)","Default is faster","Named exports are deprecated","B","","typed","Type the JavaScript keyword (6 letters, lowercase) used at the start of a statement to bring values from another module into the current file:","","","","","import","","mc","Which import syntax matches a DEFAULT export?","`import { thing } from './x.js'`","`import thing from './x.js'`","`import * as thing from './x.js'`","`require('./x.js')`","B","","mc","What does `import * as utils from './utils.js'` do?","Imports only `utils`","Imports ALL named exports as properties of a `utils` namespace object","Throws an error","Re-exports","B","","typed","Type the JavaScript keyword (6 letters, lowercase) used to make a value available from a module:","","","","","export","","Topic 5 batch v4"
+"6","JavaScript Advanced","6.1","Closures","A **closure** = a function ""remembers"" variables from the scope where it was created, even after that scope has ended.
+
+```js
+function makeCounter() {
+  let count = 0;            // private variable
+  return function() {
+    count++;                 // closure ""remembers"" count
+    return count;
+  };
+}
+
+const counter = makeCounter();
+counter();  // 1
+counter();  // 2
+counter();  // 3
+```
+
+The inner function ""closes over"" `count`. Each call to `makeCounter()` creates a NEW closure with its own `count`.
+
+**Real-world uses:**
+- **Data privacy** — emulate private variables (pre-class days)
+- **Function factories** — create specialized functions
+- **Callbacks** — event handlers that need to remember context
+- **Module pattern** — encapsulate state
+
+**Common gotcha:** classic `var` + setTimeout loop bug:
+```js
+for (var i = 0; i < 3; i++) {
+  setTimeout(() => console.log(i), 0);  // logs 3, 3, 3 (var is shared)
+}
+// Fix: use `let i` — fresh binding per iteration → logs 0, 1, 2
+```","mc","What is a CLOSURE in JavaScript?","A closed code block","A function that remembers variables from its outer scope, even after that scope has ended","A loop that never ends","An object property","B","","typed","Type the keyword (3 letters, lowercase) you should use INSTEAD of `var` in a `for` loop to fix the classic closure-over-loop-variable bug:","","","","","let","","mc","Why does this print `3, 3, 3` instead of `0, 1, 2`?
+
+```js
+for (var i = 0; i < 3; i++) setTimeout(() => console.log(i), 0);
+```","setTimeout is async","`var` is function-scoped — all 3 callbacks share the SAME `i`, which is 3 when they finally run","Bug in JavaScript","Random output","B","","mc","What's a practical use of closures?","Make code longer","Data privacy (emulate private variables), function factories, callbacks","Slow down execution","Improve SEO","B","","mc","Each call to `makeCounter()` returns a closure. What do TWO calls produce?","Same counter","Two INDEPENDENT counters each with their own private `count`","One counter shared between them","An error","B","","Topic 6 batch v4"
+"6","JavaScript Advanced","6.2","`this` keyword","`this` in JavaScript is determined by HOW a function is called, not where it's defined.
+
+**Rules:**
+
+1. **Method call** (`obj.fn()`) — `this` = the object before the dot:
+```js
+const user = { name: 'Alice', greet() { return this.name; } };
+user.greet();  // 'Alice'
+```
+
+2. **Plain function call** (`fn()`) — `this` = `undefined` in strict mode (or `window`/`global` in non-strict).
+
+3. **Arrow function** — has NO own `this`. Inherits from enclosing scope. Great for callbacks inside methods:
+```js
+class Timer {
+  start() {
+    setInterval(() => console.log(this), 1000);  // `this` = Timer instance
+  }
+}
+```
+
+4. **Explicit binding** — `fn.call(thisArg, ...args)`, `fn.apply(thisArg, argsArray)`, `fn.bind(thisArg)`.
+
+5. **`new` keyword** — `this` = the newly created object.
+
+**Common bug:** detaching a method loses `this`:
+```js
+const greet = user.greet;
+greet();  // 'undefined' — `this` is undefined now
+```","mc","What does `this` refer to inside an ARROW function?","The global object","Inherits from the enclosing scope (no own `this`)","The function itself","Always undefined","B","","typed","Type the JavaScript method name (lowercase) used on a function to permanently set its `this` value (e.g. `fn.___(obj)`):","","","","","bind","","mc","Given `const user = { name: 'A', greet() { return this.name; } }`, what does `user.greet()` return?","undefined","'A'","'user'","Error","B","","mc","Given `const fn = user.greet; fn();`, what is `this` likely to be?","Still `user`","undefined (in strict mode) — `this` is lost when method is detached","'fn'","Global object","B","","typed","Type the JavaScript method name (lowercase, 4 letters) used to invoke a function with a specific `this` and individual args (e.g. `fn.____(obj, 1, 2)`):","","","","","call","","Topic 6 batch v4"
+"6","JavaScript Advanced","6.3","Prototypes","Every JavaScript object has an internal link (`[[Prototype]]`) to another object — the **prototype**. When you access a property, JS looks up the prototype chain until found (or returns `undefined`).
+
+```js
+const animal = { eats: true };
+const rabbit = Object.create(animal);
+rabbit.jumps = true;
+console.log(rabbit.eats);  // true — found on prototype
+console.log(rabbit.jumps); // true — own property
+```
+
+**Prototype chain:**
+- `arr.map(...)` works because Array.prototype has a `map` method
+- `obj.toString()` works because Object.prototype has `toString`
+- Chain ends at `null` (Object.prototype's prototype)
+
+**Modern JS uses `class` syntax** which hides prototypes — but under the hood it IS prototypes:
+```js
+class Dog {
+  bark() { return 'woof'; }  // really added to Dog.prototype
+}
+new Dog().bark();  // 'woof'
+```
+
+You rarely manipulate prototypes directly in modern code, but understanding helps debug ""why does this method exist?"" questions and `instanceof` checks.","mc","What is a PROTOTYPE in JavaScript?","A draft version","A linked object — JavaScript looks up missing properties through the prototype chain","A type definition","Only used with classes","B","","mc","Why does `[1,2,3].map(x => x*2)` work? Where does `.map` come from?","Built into every array","It's defined on `Array.prototype` — accessed via the prototype chain","Compiled by the browser","Magic","B","","typed","Type the `Object` method (camelCase) that creates a new object with a SPECIFIED prototype (e.g. `___(parent)`):","","","","","Object.create","create","mc","Under the hood, what does the modern `class` syntax USE?","Inheritance trees","Prototypes — methods defined in the class body are added to the class's prototype","Brand new ES6 mechanism","Hidden compilation","B","","mc","What's at the end of every prototype chain?","Another object","`null`","An array","Object itself","B","","Topic 6 batch v4"
+"6","JavaScript Advanced","6.4","Classes","ES6+ classes are syntactic sugar over prototypes. Cleaner syntax for OOP-style code.
+
+```js
+class Animal {
+  constructor(name) {
+    this.name = name;
+  }
+  speak() {
+    return `${this.name} makes a sound`;
+  }
+  static fromString(str) {  // class method (not on instance)
+    return new Animal(str);
+  }
+}
+
+class Dog extends Animal {       // inheritance
+  speak() {                       // override
+    return `${this.name} barks`;
+  }
+  superSpeak() {
+    return super.speak();         // call parent's method
+  }
+}
+
+const d = new Dog('Rex');
+d.speak();  // 'Rex barks'
+```
+
+**Key concepts:**
+- `constructor` — initializer, called automatically with `new`
+- `extends` — inheritance
+- `super(...)` — call parent constructor (REQUIRED in subclass constructor)
+- `super.method()` — call parent method
+- `static` — class-level method (called on class, not instance)
+- Private fields: `#count` (truly private — only accessible inside class)
+
+**Prefer composition over inheritance** when possible. Deep class hierarchies become hard to reason about.","mc","Which JavaScript keyword sets up class INHERITANCE?","`inherits`","`extends`","`parent`","`subclass`","B","","typed","Type the JavaScript keyword (5 letters, lowercase) used to call the parent class's constructor or method from a subclass:","","","","","super","","mc","What does `static fromString(str)` define?","An instance method","A class-level method called on the class itself (e.g. `Animal.fromString('...')`), not on instances","A private field","A getter","B","","mc","What's the prefix for a TRULY private class field in modern JavaScript?","`_field`","`#field`","`private field`","`__field`","B","","typed","Type the special method name (lowercase, 11 chars) that runs automatically when `new ClassName()` is called:","","","","","constructor","","Topic 6 batch v4"
+"6","JavaScript Advanced","6.5","Event Loop","JavaScript is single-threaded — only ONE thing runs at a time. The **event loop** lets async code run without blocking.
+
+**Components:**
+1. **Call Stack** — currently executing functions (synchronous)
+2. **Web APIs** — `setTimeout`, fetch, DOM events (run outside JS engine)
+3. **Task Queue (macrotask)** — `setTimeout`, `setInterval`, I/O callbacks
+4. **Microtask Queue** — Promise `.then`/`.catch`, `queueMicrotask`. HIGHER priority than macrotask.
+
+**Algorithm:**
+- Run all synchronous code on call stack
+- When stack empty, drain ALL microtasks
+- Then take ONE macrotask, run it (and its microtasks)
+- Repeat
+
+**Why this matters:**
+```js
+console.log('1');
+setTimeout(() => console.log('2'), 0);
+Promise.resolve().then(() => console.log('3'));
+console.log('4');
+// Output: 1, 4, 3, 2
+```
+`1` and `4` are sync. `3` (microtask) runs before `2` (macrotask) even with `0` timeout.
+
+Watch Philip Roberts' ""What the heck is the event loop?"" talk.","mc","What's the output order of this code?
+
+```js
+console.log('1');
+setTimeout(() => console.log('2'), 0);
+Promise.resolve().then(() => console.log('3'));
+console.log('4');
+```","1, 2, 3, 4","1, 4, 3, 2","1, 2, 4, 3","2, 3, 1, 4","B","","mc","Which has HIGHER priority in the event loop?","Microtasks (Promise.then) — they all drain before the next macrotask","Macrotasks (setTimeout) — they run first","Equal priority","DOM events","A","","typed","Type the type of queue (one word, lowercase) that Promise `.then` callbacks go into — has higher priority than the regular task queue:","","","","","microtask","","mc","Is JavaScript single-threaded or multi-threaded?","Multi-threaded","Single-threaded — but the event loop + Web APIs let it handle async work without blocking","Depends on browser","Both","B","","mc","Why does `setTimeout(fn, 0)` NOT run immediately?","Bug in JavaScript","It goes into the macrotask queue — waits for the call stack to empty AND all microtasks to drain","Browser delay","Random","B","","Topic 6 batch v4"
+"6","JavaScript Advanced","6.6","Promises","A **Promise** represents the eventual result of an asynchronous operation. 3 states: `pending` → `fulfilled` (resolved) or `rejected`.
+
+**Creating:**
+```js
+const p = new Promise((resolve, reject) => {
+  setTimeout(() => resolve(42), 1000);
+});
+```
+
+**Consuming:**
+```js
+p.then(value => console.log(value))       // 42
+ .catch(err => console.error(err))
+ .finally(() => console.log('done'));      // always runs
+```
+
+**Static methods:**
+- `Promise.all([p1, p2])` — wait for ALL to resolve. Rejects if ANY rejects.
+- `Promise.allSettled([...])` — wait for all, never rejects. Returns array of `{status, value/reason}`.
+- `Promise.race([...])` — first to resolve OR reject wins.
+- `Promise.any([...])` — first to RESOLVE (ignores rejections until all reject).
+- `Promise.resolve(v)` / `Promise.reject(e)` — instant resolved/rejected.
+
+**Promise chains** flatten async code (vs callback hell):
+```js
+fetchUser().then(u => fetchPosts(u.id)).then(posts => render(posts));
+```","mc","What are the 3 possible states of a Promise?","start, middle, end","pending, fulfilled (resolved), rejected","new, running, done","todo, in progress, done","B","","typed","Type the Promise method (lowercase, no parens) used to handle a RESOLVED value (e.g. `promise.____(value => ...)`):","","","","","then","","mc","What does `Promise.all([p1, p2, p3])` do?","Returns first resolved","Waits for ALL to resolve and gives an array of results. Rejects if ANY rejects.","Waits for first rejection","Runs them serially","B","","mc","How is `Promise.allSettled` different from `Promise.all`?","Identical","`allSettled` waits for all to finish (resolved OR rejected) and never rejects — returns array of status objects","`allSettled` is faster","`allSettled` is deprecated","B","","typed","Type the Promise method (lowercase, no parens) used to handle an ERROR (e.g. `promise.____(err => ...)`):","","","","","catch","","Topic 6 batch v4"
+"6","JavaScript Advanced","6.7","Async/Await","`async/await` is syntactic sugar over Promises — code looks synchronous but runs asynchronously.
+
+**Basic:**
+```js
+async function getUser(id) {
+  const res = await fetch(`/api/users/${id}`);
+  const user = await res.json();
+  return user;  // automatically wrapped in a Promise
+}
+
+// Call:
+getUser(1).then(u => console.log(u));
+// or in another async function:
+const u = await getUser(1);
+```
+
+**Error handling** — use `try/catch`:
+```js
+async function safe() {
+  try {
+    const data = await mightFail();
+    return data;
+  } catch (err) {
+    console.error(err);
+    return null;
+  }
+}
+```
+
+**Parallel** — `await` is sequential by default. Use `Promise.all` for parallel:
+```js
+// Slow (sequential):
+const a = await fetchA();
+const b = await fetchB();
+
+// Fast (parallel):
+const [a, b] = await Promise.all([fetchA(), fetchB()]);
+```
+
+`await` is only valid inside `async` functions (or modern top-level `await` in modules).","mc","Where can you use `await`?","Anywhere","Only inside `async` functions (or top-level in modules)","Only in classes","Only after `import`","B","","mc","What does an `async` function ALWAYS return?","The raw value","A Promise that wraps the return value","null","Nothing","B","","typed","Type the JavaScript keyword (5 letters, lowercase) used in front of a function declaration to allow `await` inside it:","","","","","async","","mc","Which executes FASTER (parallel)?
+
+```js
+// Option A
+const a = await fetchA();
+const b = await fetchB();
+
+// Option B
+const [a, b] = await Promise.all([fetchA(), fetchB()]);
+```","Option A (sequential)","Option B (parallel — both requests start at the same time)","Same speed","Depends on browser","B","","typed","Type the JavaScript keyword (5 letters, lowercase) used inside an `async` function to wait for a Promise to resolve:","","","","","await","","Topic 6 batch v4"
+"6","JavaScript Advanced","6.8","Iterators & Generators","An **iterator** is an object with a `next()` method that returns `{ value, done }`. Anything ""for-of-able"" is iterable.
+
+**Generator function** = a special function that produces a sequence of values lazily. Marked with `function*`. Use `yield` to emit a value and pause:
+
+```js
+function* counter() {
+  let i = 0;
+  while (true) {
+    yield i++;
+  }
+}
+
+const c = counter();
+c.next();  // { value: 0, done: false }
+c.next();  // { value: 1, done: false }
+// Infinite — never `done: true` here
+```
+
+**Use cases:**
+- Lazy sequences (don't materialize huge arrays)
+- Custom iterables: implement `[Symbol.iterator]()` returning a generator
+- Async iteration: `async function* (...)`, consume with `for await (const x of stream)`
+
+**Modern usage** is rare in app code — most needs are handled by Promises and Streams. Mostly useful for library code (RxJS, streams, parsers).","mc","Which syntax declares a GENERATOR function?","`function gen()`","`function* gen()` (note the asterisk)","`generator gen()`","`function gen* ()`","B","","typed","Type the JavaScript keyword (5 letters, lowercase) used INSIDE a generator function to emit a value and pause:","","","","","yield","","mc","What does calling `.next()` on a generator return?","Just the value","An object `{ value, done }` — `done` is true when generator finishes","Throws error","Nothing","B","","mc","Why are generators useful?","They're faster","Lazy sequences — produce values on demand, don't materialize huge arrays in memory","Required for async","Improves SEO","B","","typed","Type the property symbol expression (literal, including brackets if needed; lowercase) that makes an object iterable. Hint: it's `Symbol.____`:","","","","","iterator","","Topic 6 batch v4"
+"6","JavaScript Advanced","6.9","WeakMap, WeakSet, Map, Set","Built-in collection types for cases where plain objects/arrays aren't ideal:
+
+**`Set`** — collection of UNIQUE values:
+```js
+const tags = new Set(['react', 'vue', 'react']);  // {react, vue}
+tags.add('svelte');
+tags.has('react');  // true
+tags.size;          // 3
+for (const t of tags) console.log(t);
+```
+
+**`Map`** — key-value store with ANY key type (not just strings):
+```js
+const cache = new Map();
+const userObj = { id: 1 };
+cache.set(userObj, 'data');   // object as key!
+cache.get(userObj);            // 'data'
+cache.size;
+```
+
+**vs plain object `{}`:** Map is faster for frequent add/delete, preserves insertion order, supports any key.
+
+**`WeakMap`** / **`WeakSet`** — same but keys are weakly referenced (garbage collected if no other reference exists). Use for caching/metadata tied to objects without preventing their cleanup. Keys MUST be objects, not primitives. Not iterable.","mc","Which built-in stores UNIQUE values?","Array","Set","Map","Object","B","","typed","Type the method name (lowercase) used on a Set to add a value (e.g. `set.___(val)`):","","","","","add","","mc","What can `Map` keys be that plain object keys CAN'T be?","Numbers","Any type — objects, functions, etc. (not just strings/symbols)","Strings only","null only","B","","mc","Why use `WeakMap` instead of `Map`?","Smaller","Keys are weakly held — garbage collected when no other reference exists. Good for object metadata caches.","Faster","Required for typed JS","B","","typed","Type the method name (lowercase) used on a Set or Map to check if a value/key exists (returns boolean):","","","","","has","","Topic 6 batch v4"
+"6","JavaScript Advanced","6.10","Regular expressions","Regex (regular expressions) match patterns in strings.
+
+**Syntax:** between `/` slashes, with flags after:
+```js
+const re = /hello/i;        // case-insensitive match for 'hello'
+re.test('Hello world');     // true
+'foo bar'.match(/(\w+) (\w+)/);  // [match, group1, group2]
+'abc123'.replace(/\d+/g, 'X');   // 'abcX'
+```
+
+**Common metacharacters:**
+- `.` any char
+- `\d` digit, `\D` non-digit
+- `\w` word char (a-z, A-Z, 0-9, _), `\W` non-word
+- `\s` whitespace, `\S` non-whitespace
+- `^` start, `$` end
+- `*` 0+, `+` 1+, `?` 0 or 1, `{n}` exactly n, `{n,m}` n to m
+- `(...)` capture group, `(?:...)` non-capturing
+- `[abc]` character set, `[^abc]` negation, `[a-z]` range
+
+**Flags:** `i` insensitive, `g` global (all matches), `m` multiline, `s` dotAll.
+
+**Common validators:**
+- Email (loose): `/^[^@\s]+@[^@\s]+\.[^@\s]+$/`
+- Phone (loose): `/^\+?[\d\s-]{7,}$/`","mc","Which regex flag makes matching CASE-INSENSITIVE?","`c`","`i`","`x`","`u`","B","","typed","Type the regex shorthand (2 characters including backslash) that matches any DIGIT (0-9):","","","","","\\d","\\d","mc","What does the regex `/^abc/` match?","Any string containing 'abc'","Strings that START with 'abc'","Strings that END with 'abc'","Only the literal '/^abc/'","B","","mc","Which regex method returns BOOLEAN — does the pattern match anywhere?","`.exec()`","`.test()`","`.match()`","`.find()`","B","","typed","Type the regex flag (1 letter, lowercase) used to find ALL matches in a string (not just the first):","","","","","g","","Topic 6 batch v4"
+"6","JavaScript Advanced","6.11","DOM manipulation","The **DOM** = browser's representation of HTML as a tree of nodes. JavaScript can read and modify it.
+
+**Selecting:**
+```js
+document.getElementById('header');
+document.querySelector('.btn');                  // first match — like CSS selector
+document.querySelectorAll('li');                  // NodeList of all matches
+```
+
+**Modifying:**
+```js
+el.textContent = 'New text';       // safe — escapes HTML
+el.innerHTML = '<b>html</b>';      // DANGEROUS — XSS risk if input untrusted
+el.classList.add('active');
+el.classList.toggle('open');
+el.setAttribute('data-id', '42');
+el.style.color = 'red';            // direct style (prefer adding classes)
+```
+
+**Creating + inserting:**
+```js
+const div = document.createElement('div');
+div.textContent = 'Hello';
+document.body.appendChild(div);
+```
+
+**Events:**
+```js
+btn.addEventListener('click', (event) => {
+  event.preventDefault();
+  event.stopPropagation();
+});
+```
+
+**Event delegation** — listen on a parent, use `event.target` to identify which child was clicked (efficient for many similar children).","mc","Which is the SAFE way to insert plain TEXT into an element (no HTML interpretation)?","`innerHTML`","`textContent`","`innerText` and `innerHTML`","`outerHTML`","B","","typed","Type the document method (camelCase) that returns the FIRST element matching a CSS selector:","","","","","querySelector","","mc","Why is `innerHTML = userInput` DANGEROUS?","Slow","XSS risk — if input contains script tags, they execute","Causes memory leak","Doesn't work","B","","mc","How do you add an event listener for clicks?","`el.onclick = fn`","`el.addEventListener('click', fn)` — preferred (supports multiple listeners)","`el.click(fn)`","`el.event = 'click'`","B","","typed","Type the method (camelCase) on a `classList` used to add a class to an element:","","","","","add","","Topic 6 batch v4"
+"6","JavaScript Advanced","6.12","Fetch API","`fetch` is the modern browser API for HTTP requests. Returns a Promise.
+
+**GET (basic):**
+```js
+const res = await fetch('/api/users');
+if (!res.ok) throw new Error(`HTTP ${res.status}`);
+const data = await res.json();
+```
+
+**POST with JSON body:**
+```js
+const res = await fetch('/api/users', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ name: 'Alice' }),
+});
+```
+
+**Important gotcha:** `fetch` only rejects on NETWORK error — HTTP errors (404, 500) still RESOLVE. Always check `res.ok` or `res.status`.
+
+**Reading response:**
+- `res.json()` — parse as JSON
+- `res.text()` — raw string
+- `res.blob()` — binary
+- Each can only be called ONCE
+
+**Cancel a request** with `AbortController`:
+```js
+const ctrl = new AbortController();
+fetch(url, { signal: ctrl.signal });
+ctrl.abort();  // cancels
+```","mc","What does `fetch()` return?","Direct data","A Promise that resolves to a Response object","Always throws","HTML","B","","mc","When does `fetch()` REJECT?","On HTTP 4xx/5xx errors","Only on network errors — HTTP errors still RESOLVE (check `res.ok` yourself)","Never","On any non-200","B","","typed","Type the method (lowercase, no parens) called on a Response object to parse it as JSON (returns another Promise):","","","","","json","","mc","Which header is REQUIRED when POSTing JSON to an API?","Authorization","`Content-Type: application/json`","Accept-Language","Cache-Control","B","","typed","Type the JavaScript class name (PascalCase) used to CANCEL a fetch request (e.g. `new ___()`):","","","","","AbortController","","Topic 6 batch v4"
+"7","TypeScript","7.1","Basic types","TypeScript adds static types to JavaScript. Core primitive types:
+
+- **`string`** — `'hello'`, `\""world\""`
+- **`number`** — `42`, `3.14` (one type for all numbers)
+- **`boolean`** — `true`, `false`
+- **`null`** / **`undefined`** — their own types
+- **`any`** — opt out of type checking. AVOID.
+- **`unknown`** — safe alternative to `any`. Must NARROW before using.
+- **`void`** — function returns nothing
+- **`never`** — function never returns (throws or infinite loop)
+
+```ts
+let name: string = 'Alice';
+let age: number = 30;
+let active: boolean = true;
+
+let data: unknown = await fetch('...').then(r => r.json());
+// data.name  ← Error! Must narrow first
+if (typeof data === 'object' && data !== null && 'name' in data) {
+  console.log(data.name);  // now safe
+}
+```
+
+**Arrays:** `string[]` or `Array<string>`.
+**Tuples:** `[string, number]` — fixed length + types.","mc","Which TypeScript type should you AVOID using?","`unknown`","`any` — turns off type checking and defeats the purpose","`void`","`never`","B","","typed","Type the TypeScript type (lowercase, 7 letters) that's the SAFE alternative to `any` — value must be narrowed before use:","","","","","unknown","","mc","What's the TypeScript syntax for an array of strings?","`string[]` or `Array<string>`","`Array(string)`","`String[]`","`array<string>`","A","","mc","What does `void` mean as a function return type?","Always null","The function returns nothing meaningful","Never returns (throws)","Returns any","B","","typed","Type the TypeScript type (lowercase, 5 letters) used when a function NEVER returns (infinite loop or always throws):","","","","","never","","Topic 7 batch v4"
+"7","TypeScript","7.2","Type annotations","TypeScript types are written after `:`. Annotate variables, params, and return types:
+
+```ts
+let name: string = 'Alice';
+const PI: number = 3.14;
+
+function add(a: number, b: number): number {
+  return a + b;
+}
+
+const greet = (name: string): string => `Hello, ${name}`;
+```
+
+**Type inference** — TS often guesses correctly, so explicit annotations are optional:
+```ts
+let count = 0;        // inferred as `number`
+const tags = ['a', 'b'];  // inferred as `string[]`
+```
+
+**Best practice:**
+- ANNOTATE function params + return types (improves API contract + autocomplete)
+- LET TS infer local variables (less noise)
+
+**Object types inline** (small ones):
+```ts
+function distance(p1: { x: number; y: number }, p2: { x: number; y: number }): number {
+  return Math.hypot(p1.x - p2.x, p1.y - p2.y);
+}
+```
+For reuse, extract into interface (see 7.3).","mc","What's the TypeScript syntax for annotating a function parameter type?","`function add(a number)`","`function add(a: number)` — colon then type","`function add(number a)`","`function add<number>(a)`","B","","typed","Type the TypeScript symbol (1 character) that separates a name from its type annotation (e.g. `name : string`):","","","","",":","","mc","Why is annotating function PARAMETERS and RETURN TYPES recommended?","Required","Documents the API contract + improves IDE autocomplete + catches type bugs at the boundary","Faster execution","Smaller files","B","","mc","What's TYPE INFERENCE?","User must annotate everything","TS automatically guesses types when you don't write them (e.g. `let x = 5` → `number`)","Static types disabled","Runtime check","B","","typed","Type the TypeScript syntax (whole string, lowercase) that annotates a variable as a string (e.g. `let name _____ = 'a'`):","","","","",": string","","Topic 7 batch v4"
+"7","TypeScript","7.3","Interfaces","An **interface** defines the SHAPE of an object — what properties and methods it has.
+
+```ts
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  age?: number;          // optional (with `?`)
+  readonly createdAt: Date;  // can't be reassigned after init
+  greet(): string;       // method
+}
+
+const u: User = {
+  id: 1,
+  name: 'Alice',
+  email: 'a@x.com',
+  createdAt: new Date(),
+  greet() { return `Hi ${this.name}`; },
+};
+```
+
+**Extending interfaces:**
+```ts
+interface AdminUser extends User {
+  permissions: string[];
+}
+```
+
+**Function types:**
+```ts
+interface Comparator {
+  (a: number, b: number): number;
+}
+```
+
+**Index signatures** — for dynamic keys:
+```ts
+interface Dict {
+  [key: string]: string;
+}
+```
+
+Interfaces with the SAME name MERGE (declaration merging) — useful for extending external library types.","mc","What does an INTERFACE define in TypeScript?","Runtime behavior","The SHAPE of an object — its properties, types, and method signatures","CSS rules","Database tables","B","","typed","Type the TypeScript symbol (1 character) appended to a property name to mark it OPTIONAL in an interface (e.g. `age___`):","","","","","?","","mc","Which keyword inherits one interface from another?","`inherits`","`extends`","`super`","`include`","B","","mc","What does `readonly` do on an interface property?","Hides the property","Property can't be REASSIGNED after initial set (helps prevent accidental mutation)","Slows access","Required","B","","typed","Type the TypeScript keyword (9 letters, lowercase) used to define an interface (e.g. `___ User { ... }`):","","","","","interface","","Topic 7 batch v4"
+"7","TypeScript","7.4","Type aliases (type vs interface)","`type` aliases create a name for ANY type — primitive, object, union, function, etc. More versatile than `interface` but with subtle differences.
+
+```ts
+type ID = string | number;                 // union — interface can't do this
+type User = { id: ID; name: string };       // object shape
+type Coords = [number, number];             // tuple
+type Compare = (a: number, b: number) => number;  // function type
+```
+
+**`type` vs `interface`:**
+
+| Feature | `type` | `interface` |
+|---------|--------|-------------|
+| Object shapes | ✅ | ✅ |
+| Unions, primitives, tuples | ✅ | ❌ |
+| `extends` | via `&` intersection | native `extends` |
+| Declaration merging | ❌ | ✅ |
+| Better error messages | ✅ (usually) | ⚠️ |
+
+**Rule of thumb:**
+- Object shapes that may extend → `interface` (slightly cleaner)
+- Unions, complex types, tuples → `type`
+- When in doubt → `type`
+
+Modern projects tend to prefer `type` for consistency.","mc","Which can define a UNION type like `string | number`?","Both `type` and `interface`","Only `type` — `interface` can't represent unions","Only `interface`","Neither","B","","typed","Type the TypeScript keyword (4 letters, lowercase) used to define a TYPE ALIAS (e.g. `___ ID = string | number`):","","","","","type","","mc","What feature does `interface` have that `type` does NOT?","Generics","Declaration merging — declaring an interface twice MERGES the properties","Union types","Faster compile","B","","mc","How do you ""extend"" a `type` (combine with another)?","With `extends`","With `&` intersection: `type C = A & B`","Can't — must use interface","With spread `...`","B","","typed","Type the TypeScript operator (1 character) used to INTERSECT two `type`s into one (combine properties):","","","","","&","","Topic 7 batch v4"
+"7","TypeScript","7.5","Union types","A **union type** means ""value can be of these types"". Written with `|`:
+
+```ts
+let id: string | number;
+id = 'abc';   // OK
+id = 123;     // OK
+id = true;    // Error
+```
+
+**Use in function params:**
+```ts
+function formatId(id: string | number): string {
+  if (typeof id === 'string') return id.toUpperCase();
+  return String(id);
+}
+```
+
+**Discriminated unions** — when each variant has a common ""tag"" field:
+```ts
+type Shape =
+  | { kind: 'circle'; radius: number }
+  | { kind: 'square'; side: number };
+
+function area(s: Shape): number {
+  if (s.kind === 'circle') return Math.PI * s.radius ** 2;
+  return s.side ** 2;  // TS knows s is square here
+}
+```
+
+TS auto-NARROWS the type based on the `kind` check. Powerful pattern for state machines, API responses, redux actions.
+
+**Literal types** — exact values, often combined with unions:
+```ts
+type Status = 'idle' | 'loading' | 'success' | 'error';
+```","mc","What does `string | number` mean in TypeScript?","Both must be true","Either a string OR a number (union)","Concatenate string with number","Pick one at compile time","B","","typed","Type the TypeScript symbol (1 character) used as the union ""OR"" operator (e.g. `string ___ number`):","","","","","|","","mc","What's a DISCRIMINATED UNION?","Forbidden pattern","A union where each variant has a common LITERAL ""tag"" field (e.g. `kind: 'circle' | 'square'`) — TS narrows based on the tag","Random union","Same as intersection","B","","mc","What does `type Status = 'idle' | 'loading' | 'success' | 'error'` define?","Function names","A LITERAL union — Status can ONLY be one of those exact strings","All strings","Array of strings","B","","typed","Type the TypeScript symbol (1 character) used between literal type values to make a union like `'a' ___ 'b'`:","","","","","|","","Topic 7 batch v4"
+"7","TypeScript","7.6","Generics","**Generics** = type variables that let you write reusable functions/types that work with multiple types while preserving type safety.
+
+```ts
+// Without generic — loses type info:
+function first(arr: any[]): any { return arr[0]; }
+const x = first([1, 2, 3]);  // type: any  :(
+
+// With generic:
+function first<T>(arr: T[]): T { return arr[0]; }
+const x = first([1, 2, 3]);  // type: number  :)
+const y = first(['a', 'b']); // type: string
+```
+
+**Generic interfaces:**
+```ts
+interface ApiResponse<T> {
+  data: T;
+  status: number;
+}
+const userRes: ApiResponse<User> = { data: { id: 1, name: 'Alice' }, status: 200 };
+```
+
+**Constraints** — `extends` limits the generic:
+```ts
+function getLength<T extends { length: number }>(item: T): number {
+  return item.length;
+}
+getLength('hello');   // OK
+getLength([1, 2]);    // OK
+getLength(42);        // Error — number has no length
+```
+
+**Default generic type:**
+```ts
+function create<T = string>(): T[] { return []; }
+```","mc","What's the main purpose of GENERICS?","Make code faster","Write reusable functions/types that work with multiple types while preserving type safety","Hide types","Replace classes","B","","typed","Type the conventional single-letter type parameter (uppercase) used for a generic type variable (e.g. `function f<___>(x)`):","","","","","T","","mc","What does `function first<T>(arr: T[]): T` return for `first([1,2,3])`?","Type `any`","Type `number` — generic infers from input","Type `T`","Type `string`","B","","mc","What does the constraint `<T extends { length: number }>` do?","Allows ANY T","Limits T to types that have a `length` property (string, array, etc.)","Forbids generics","Always uses string","B","","typed","Type the TypeScript keyword (7 letters, lowercase) used in a generic constraint (e.g. `<T ___ string>`):","","","","","extends","","Topic 7 batch v4"
+"7","TypeScript","7.7","Enums","Enums = named constant sets. TypeScript has 2 styles: numeric and string. **PREFER string enums** — better debugging, no auto-increment surprises.
+
+**String enum (preferred):**
+```ts
+enum Role {
+  Admin = 'admin',
+  User = 'user',
+  Guest = 'guest',
+}
+
+function setRole(r: Role) { ... }
+setRole(Role.Admin);  // OK
+setRole('admin');     // Error — must use Role.Admin
+```
+
+**Numeric enum (less safe):**
+```ts
+enum Direction { Up, Down, Left, Right }  // 0, 1, 2, 3
+console.log(Direction.Up);  // 0
+```
+
+**Modern alternative: union of literals** (often better than enums):
+```ts
+type Role = 'admin' | 'user' | 'guest';
+function setRole(r: Role) { ... }
+setRole('admin');   // OK
+setRole('boss');    // Error
+```
+
+**vs enum:** literal unions are erased at compile time (smaller output), no runtime object created, more flexible. Many modern codebases prefer literal unions over enums.","mc","Which enum style is RECOMMENDED for safer, more debuggable code?","Numeric (auto-incrementing 0, 1, 2)","String enums with explicit values like `Admin = 'admin'`","Boolean","Symbol","B","","typed","Type the TypeScript keyword (4 letters, lowercase) used to define an enum (e.g. `___ Role { ... }`):","","","","","enum","","mc","What's a modern ALTERNATIVE to enums that many codebases prefer?","Classes","Literal unions: `type Role = 'admin' | 'user' | 'guest'` — no runtime overhead, flexible","Plain objects","Constants","B","","mc","What's the runtime cost of a TypeScript enum?","Zero — fully erased","Generates a runtime object (small overhead). Literal unions have ZERO runtime cost.","Massive","Depends on browser","B","","mc","In a numeric enum `enum X { A, B, C }`, what's the value of `X.B`?","'B'","0","1","2","C","","Topic 7 batch v4"
+"7","TypeScript","7.8","Type narrowing","TypeScript NARROWS the type within branches based on checks you make. Powerful, makes code safe automatically.
+
+**`typeof` narrowing:**
+```ts
+function format(x: string | number) {
+  if (typeof x === 'string') {
+    return x.toUpperCase();   // TS knows x is string here
+  }
+  return x.toFixed(2);        // TS knows x is number here
+}
+```
+
+**`instanceof` narrowing:**
+```ts
+function logError(e: Error | string) {
+  if (e instanceof Error) console.error(e.stack);
+  else console.error(e);
+}
+```
+
+**Equality narrowing:**
+```ts
+function f(x: string | null) {
+  if (x === null) return;
+  x.toUpperCase();  // narrowed to string
+}
+```
+
+**`in` operator** — check property existence:
+```ts
+type Dog = { bark: () => void };
+type Cat = { meow: () => void };
+function speak(a: Dog | Cat) {
+  if ('bark' in a) a.bark();
+  else a.meow();
+}
+```
+
+**Custom type guards** — function returning `x is T`:
+```ts
+function isUser(x: unknown): x is User {
+  return typeof x === 'object' && x !== null && 'id' in x;
+}
+```","mc","What is TYPE NARROWING in TypeScript?","Limiting type imports","TS automatically refines a wider type to a narrower one inside conditional branches (e.g. inside `if (typeof x === 'string')` x is string)","Removing types","Compiling to JS","B","","typed","Type the JavaScript operator (6 letters, lowercase) used for type narrowing on PRIMITIVES like `if (___ x === 'string')`:","","","","","typeof","","mc","Which operator narrows based on CLASS instance?","`typeof`","`instanceof`","`in`","`===`","B","","mc","What does a CUSTOM TYPE GUARD return type look like?","`boolean`","`x is User` (a type predicate)","`User`","`true`","B","","typed","Type the TypeScript operator (2 letters, lowercase) used to check if a PROPERTY exists on an object for narrowing (e.g. `if ('bark' ___ a)`):","","","","","in","","Topic 7 batch v4"
+"7","TypeScript","7.9","Utility types","TypeScript ships built-in **utility types** that transform other types. Top picks:
+
+**`Partial<T>`** — make all props optional:
+```ts
+type User = { id: number; name: string };
+type UserUpdate = Partial<User>;  // { id?: number; name?: string }
+```
+
+**`Required<T>`** — make all props required (opposite of Partial).
+
+**`Readonly<T>`** — make all props readonly.
+
+**`Pick<T, Keys>`** — pick subset of props:
+```ts
+type UserSummary = Pick<User, 'id' | 'name'>;
+```
+
+**`Omit<T, Keys>`** — opposite: exclude some keys:
+```ts
+type UserWithoutId = Omit<User, 'id'>;
+```
+
+**`Record<K, V>`** — object type with keys K, values V:
+```ts
+type RoleMap = Record<'admin' | 'user', string[]>;
+// { admin: string[]; user: string[] }
+```
+
+**`ReturnType<typeof fn>`** — extract return type of a function.
+
+**`Awaited<T>`** — unwrap Promise type.
+
+**`NonNullable<T>`** — remove `null` and `undefined`.
+
+These avoid repetition and keep types DRY.","mc","Which utility type makes all properties of `T` OPTIONAL?","`Required<T>`","`Partial<T>`","`Omit<T>`","`Pick<T>`","B","","typed","Type the TypeScript utility type (PascalCase) that creates an object type from a key union and value type (e.g. `____<'a'|'b', number>`):","","","","","Record","","mc","What does `Pick<User, 'id' | 'name'>` produce?","All of User","A new type with ONLY `id` and `name` from User","Removes id and name","Throws error","B","","mc","Which utility EXTRACTS the return type of a function?","`TypeOf<typeof fn>`","`ReturnType<typeof fn>`","`Returns<fn>`","`Extract<fn>`","B","","typed","Type the TypeScript utility type (PascalCase) that EXCLUDES specific keys from an object type (opposite of Pick):","","","","","Omit","","Topic 7 batch v4"
+"7","TypeScript","7.10","Setting up (tsconfig)","`tsconfig.json` controls how TypeScript compiles. Generate with `npx tsc --init` or use Vite's TS template.
+
+**Recommended baseline (modern):**
+```json
+{
+  ""compilerOptions"": {
+    ""target"": ""ES2022"",
+    ""module"": ""ESNext"",
+    ""moduleResolution"": ""bundler"",
+    ""strict"": true,
+    ""noUncheckedIndexedAccess"": true,
+    ""esModuleInterop"": true,
+    ""skipLibCheck"": true,
+    ""jsx"": ""react-jsx"",
+    ""types"": [""vite/client""]
+  },
+  ""include"": [""src""]
+}
+```
+
+**Critical flags:**
+- **`""strict"": true`** — turns on all strict checks. ALWAYS ENABLE THIS.
+- **`noUncheckedIndexedAccess`** — `arr[0]` typed as `T | undefined` (safer)
+- **`skipLibCheck`** — skip type-checking node_modules (faster builds)
+- **`jsx`** — `react-jsx` for React 17+
+
+**Run TS:**
+- Dev with hot reload: `tsx watch src/index.ts` (no separate build)
+- Production build: `tsc` produces `dist/` JS files
+
+In a Vite project, Vite handles bundling — `tsc --noEmit` is just for type checking in CI.","mc","Which `tsconfig.json` flag is the SINGLE most important to enable?","`""skipLibCheck"": true`","`""strict"": true` — enables all strict type checks","`""target"": ""ES5""`","`""allowJs"": true`","B","","typed","Type the JSON property name (lowercase, no quotes) in tsconfig that enables ALL strict type-checking flags at once:","","","","","strict","","mc","What does `noUncheckedIndexedAccess: true` do?","Speeds up build","Types `arr[i]` as `T | undefined` — forces you to check for undefined access","Disables index types","Enables index types","B","","mc","For a Vite + React project, what `jsx` value is recommended?","`""preserve""`","`""react""`","`""react-jsx""` (no React import needed in every file)","`""none""`","C","","typed","Type the command (lowercase, no flags) to ONLY type-check TS files without emitting JS output (used in CI):","","","","","tsc --noEmit","","Topic 7 batch v4"
+"7","TypeScript","7.11","Migrating JS to TS","Migrating an existing JS codebase to TS is INCREMENTAL — no need to rewrite everything at once.
+
+**Step-by-step:**
+
+1. **Install:** `yarn add -D typescript @types/node @types/react ...`
+2. **Generate config:** `npx tsc --init` — start with `""allowJs"": true, ""strict"": false`
+3. **Rename files** — change `.js` → `.ts` (and `.jsx` → `.tsx`) ONE AT A TIME, top-priority files first
+4. **Fix errors** — add type annotations, use `any` temporarily where needed
+5. **Tighten gradually:**
+   - Turn on `""noImplicitAny""`
+   - Then `""strictNullChecks""`
+   - Finally full `""strict"": true`
+6. **Replace `any`** with proper types over time
+
+**Tips:**
+- Don't fight TS — when stuck, use `any` or `// @ts-expect-error`, file a ""fix later"" issue
+- Use `@types/*` packages from DefinitelyTyped for JS libraries lacking types
+- VS Code's IntelliSense already does some inference even in `.js` — try `// @ts-check` comment at top of a JS file as a stepping stone
+- Migration takes WEEKS for large codebases. Plan accordingly.","mc","Should you rewrite the entire JS codebase to TS at once?","Yes — clean break","No — INCREMENTAL migration: file by file, with `allowJs: true` and gradual strictness","Use a converter tool","Switch languages instead","B","","typed","Type the `tsconfig.json` flag (lowercase camelCase, no quotes) that allows mixing `.js` files alongside `.ts` files during migration:","","","","","allowJs","","mc","Where do you find TypeScript types for npm libraries that don't ship their own?","Write your own only","The `@types/*` packages from DefinitelyTyped (e.g. `@types/lodash`)","TypeScript built-in","Can't","B","","mc","What's the comment to escape a single line of broken TS without disabling everything?","`// @ts-fix`","`// @ts-expect-error` or `// @ts-ignore`","`/* ts-off */`","`// no-check`","B","","typed","Type the comment directive (lowercase, includes `//` and `@`) added at TOP of a `.js` file to opt-in to TypeScript checking (e.g. `// @ts-_____`):","","","","","// @ts-check","@ts-check","Topic 7 batch v4"
+"8","React","8.1","JSX","**Prerequisites:** New to Node.js or Yarn? Complete Topic 0.1 and 0.2 first.
+
+**JSX** = HTML-like syntax inside JavaScript, compiled to React function calls.
+
+```jsx
+const greeting = <h1 className=""title"">Hello, {name}!</h1>;
+// compiles to: React.createElement('h1', { className: 'title' }, 'Hello, ', name, '!')
+```
+
+**Key rules:**
+- `className` instead of `class` (class is JS reserved word)
+- `htmlFor` instead of `for`
+- camelCase for event handlers: `onClick`, `onChange`, `onSubmit`
+- Self-close tags without children: `<img />`, `<br />`
+- Single root element OR fragment `<>...</>`
+- `{expression}` for JS values inside JSX
+- `style={{ color: 'red', fontSize: 16 }}` — double braces (outer JSX expression, inner object)
+
+**Conditional rendering:**
+```jsx
+{isLoggedIn && <Welcome />}
+{count > 0 ? <Cart /> : <Empty />}
+```
+
+**List rendering** — need `key` for each:
+```jsx
+{items.map(item => <li key={item.id}>{item.name}</li>)}
+```
+
+**Why `key`?** React uses it to track WHICH items changed across renders for efficient updates. Use stable unique IDs, NEVER array index.","mc","Why use `className` in JSX instead of `class`?","Required by HTML5","`class` is a JavaScript reserved word — `className` avoids conflict","Performance","React was poorly designed","B","","typed","Type the JSX prop name (camelCase, no quotes) used to attach a CLICK event handler (like `onclick` in HTML):","","","","","onClick","","mc","Why does each item in a `.map()`-rendered list need a `key`?","Required by JS","React uses `key` to track which items changed across renders for efficient updates","Used for sorting","SEO benefit","B","","mc","What's the BEST value for a list item's `key`?","Random number","A stable unique ID from your data (e.g. `item.id`)","The array index","'item-X'","B","","typed","Type the JSX syntax (2 characters) used to wrap multiple sibling elements WITHOUT adding extra DOM nodes (React Fragment shorthand):","","","","","<>","","Topic 8 batch v4"
+"8","React","8.2","Components","React components = JavaScript functions that return JSX. Modern React = function components ONLY (no class components).
+
+```jsx
+function Greeting({ name, count = 0 }) {
+  return (
+    <div>
+      <h1>Hi, {name}!</h1>
+      <p>You have {count} messages.</p>
+    </div>
+  );
+}
+
+// Usage:
+<Greeting name=""Alice"" count={5} />
+```
+
+**Rules:**
+- Component names START WITH UPPERCASE (`Greeting`, not `greeting`)
+- Receive `props` object as first argument
+- Return JSX (one root element or fragment)
+- Pure — same props → same output (no side effects in render)
+
+**Children prop** — special:
+```jsx
+function Card({ title, children }) {
+  return <div className=""card""><h2>{title}</h2>{children}</div>;
+}
+<Card title=""User""><p>Alice</p></Card>
+```
+
+**Default props** via destructuring defaults: `function f({ name = 'Guest' })`.
+
+**File-per-component** convention: `Button.tsx` exports `Button`.","mc","Why must React component names start with an UPPERCASE letter?","Style choice","React uses lowercase for built-in DOM elements (`<div>`) and uppercase for custom components — distinguishes them in JSX","Required by JS","SEO","B","","typed","Type the special prop name (lowercase) used to receive the elements nested INSIDE a component (e.g. `<Card>here</Card>`):","","","","","children","","mc","Should React components be PURE (same input → same output)?","No","Yes — for predictable behavior, easy testing, and React's optimizations","Optional","Only on prod","B","","mc","Can you use CLASS components in modern React?","Required","They still work, but function components + hooks are the modern standard","Forbidden","Only in TS","B","","typed","Type the JavaScript syntax (1 character) used in destructuring to set a DEFAULT prop value (e.g. `{ name __ 'Guest' }`):","","","","","=","","Topic 8 batch v4"
+"8","React","8.3","State (useState)","`useState` is the hook for component-local state. State change triggers re-render.
+
+```jsx
+import { useState } from 'react';
+
+function Counter() {
+  const [count, setCount] = useState(0);  // initial value: 0
+  return (
+    <button onClick={() => setCount(count + 1)}>
+      Count: {count}
+    </button>
+  );
+}
+```
+
+**Rules:**
+- Hooks ONLY at top level of component (no inside `if`, loops, or nested functions)
+- `useState` returns `[value, setterFunction]`
+- State updates are ASYNC and batched — don't read state right after setting
+- IMMUTABLE updates required for objects/arrays:
+
+```jsx
+// WRONG — mutates, React won't re-render
+items.push(newItem);
+setItems(items);
+
+// RIGHT — new array
+setItems([...items, newItem]);
+setUser({ ...user, name: 'Bob' });
+```
+
+**Functional updater** when new state depends on previous:
+```jsx
+setCount(c => c + 1);  // safer in async/batched contexts
+```","mc","What does `useState(0)` return?","Just the value `0`","An array `[currentValue, setterFunction]` — destructure with `[count, setCount]`","An object","The setter only","B","","typed","Type the React hook name (lowercase, camelCase) used for component-local state:","","","","","useState","","mc","Why can't you mutate state directly (like `arr.push(x); setArr(arr)`)?","Slow","React compares by reference — if the array is the SAME reference, React skips re-render. Use spread to create new array.","Throws error","Allowed","B","","mc","When should you use the FUNCTIONAL updater `setCount(c => c + 1)` instead of `setCount(count + 1)`?","Never","When new state depends on previous — safer in async/batched updates","Always required","Only with objects","B","","typed","Type the spread operator (3 characters) used to create a new array with an added item: `setItems([__items, newItem])`:","","","","","...","","Topic 8 batch v4"
+"8","React","8.4","Effects (useEffect)","`useEffect` runs SIDE EFFECTS after render (data fetching, subscriptions, DOM mutations, logging).
+
+```jsx
+import { useEffect, useState } from 'react';
+
+function UserProfile({ userId }) {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/users/${userId}`)
+      .then(r => r.json())
+      .then(data => { if (!cancelled) setUser(data); });
+    return () => { cancelled = true; };  // cleanup
+  }, [userId]);  // dependency array — re-run when userId changes
+
+  return user ? <div>{user.name}</div> : <p>Loading...</p>;
+}
+```
+
+**Dependency array** rules:
+- `[]` — run once on mount, never again
+- `[a, b]` — run on mount AND when a or b changes
+- omitted — run after EVERY render (rarely what you want)
+
+**Cleanup function** (returned from effect) runs:
+- Before next effect run
+- When component unmounts
+
+**Common pitfalls:**
+- Stale closures — useEffect captures old values
+- Missing deps → use ESLint plugin `react-hooks/exhaustive-deps`
+- Don't use useEffect for DERIVED state — compute during render instead
+- For data fetching, prefer TanStack Query (see 8.10) over raw useEffect","mc","When does an `useEffect` with deps `[a, b]` run?","Every render","On mount AND whenever `a` or `b` changes","Only on unmount","Never","B","","typed","Type the React hook name (lowercase, camelCase) used for side effects (data fetching, subscriptions, DOM mutations):","","","","","useEffect","","mc","What does an empty dependency array `[]` mean in useEffect?","Same as no array","Run ONCE on mount, never again","Run on every render","Run on unmount only","B","","mc","Why prefer TanStack Query over raw `useEffect + fetch` for data fetching?","Faster","Built-in caching, deduplication, retries, loading/error states — fewer bugs and less boilerplate","Required","useEffect is deprecated","B","","typed","Type the return value type from useEffect's callback (1 word, lowercase) — a CLEANUP function returned to run before next effect or unmount:","","","","","function","","Topic 8 batch v4"
+"8","React","8.5","Events","React events are wrappers around native DOM events — same names but camelCase: `onClick`, `onChange`, `onSubmit`, `onKeyDown`, etc.
+
+```jsx
+function Form() {
+  function handleSubmit(e) {
+    e.preventDefault();  // stop browser default (form submission, link nav)
+    console.log('Submitted');
+  }
+  return <form onSubmit={handleSubmit}>...</form>;
+}
+```
+
+**Event object** is React's `SyntheticEvent` — works like a native event:
+- `e.preventDefault()` — prevent default
+- `e.stopPropagation()` — stop bubbling
+- `e.target.value` — input value
+- `e.currentTarget` — element the handler is attached to
+
+**Passing args** — use arrow function:
+```jsx
+<button onClick={() => deleteItem(id)}>Delete</button>
+```
+
+**Common pattern: handler factory:**
+```jsx
+const handleClick = (id) => () => deleteItem(id);
+<button onClick={handleClick(item.id)}>X</button>
+```
+
+**Avoid inline handlers** in performance-critical lists (creates new function each render). Use `useCallback` if measured slow.","mc","Why call `e.preventDefault()` in a form submit handler?","Stop event capture","Prevents the browser's default form submission (full page reload)","Required by React","Saves memory","B","","typed","Type the React event prop name (camelCase) used for FORM SUBMISSION (e.g. `<form ___={fn}>`):","","","","","onSubmit","","mc","How do you pass an ARGUMENT to a click handler?","Direct call: `onClick={fn(arg)}` (executes immediately!)","Wrap in arrow: `onClick={() => fn(arg)}`","`onClick={'fn'}`","Not possible","B","","mc","What's `e.target.value` typically used for?","Element style","The current value of an input/textarea/select","Event timestamp","Coordinates","B","","typed","Type the SyntheticEvent method (camelCase) used to PREVENT the browser's default behavior:","","","","","preventDefault","","Topic 8 batch v4"
+"8","React","8.6","Forms","React forms can be CONTROLLED (state-driven) or UNCONTROLLED (refs). Controlled is the dominant pattern.
+
+**Controlled input:**
+```jsx
+function LoginForm() {
+  const [email, setEmail] = useState('');
+  return (
+    <input
+      type=""email""
+      value={email}
+      onChange={(e) => setEmail(e.target.value)}
+    />
+  );
+}
+```
+The input's value is ALWAYS bound to React state — single source of truth.
+
+**Uncontrolled with `useRef`** — when you only read on submit:
+```jsx
+function Search() {
+  const inputRef = useRef(null);
+  function handleSubmit(e) {
+    e.preventDefault();
+    console.log(inputRef.current.value);
+  }
+  return (
+    <form onSubmit={handleSubmit}>
+      <input ref={inputRef} defaultValue=""query"" />
+    </form>
+  );
+}
+```
+
+**Production pattern** — use **React Hook Form + Zod**:
+- React Hook Form — uncontrolled internally (fast, less re-renders), simple API
+- Zod — schema validation, runs on submit (or change), integrates via `@hookform/resolvers/zod`","mc","What's a CONTROLLED input in React?","No state","Input's value is bound to React state via `value` + `onChange` — React is single source of truth","Read-only","Disabled","B","","typed","Type the React prop (lowercase) that sets the CURRENT value of a controlled input (vs `defaultValue` for uncontrolled):","","","","","value","","mc","Which library combo is RECOMMENDED for production forms (less re-renders + schema validation)?","jQuery validate","React Hook Form + Zod (via @hookform/resolvers)","Formik + Yup (older choice)","Plain useState only","B","","mc","What does `defaultValue=""query""` on an `<input>` do (in uncontrolled mode)?","Sets initial value but user can edit freely (React doesn't control it after mount)","Locks value to 'query'","Same as `value`","Invalid","A","","typed","Type the React hook (camelCase) used to get a reference to a DOM element (e.g. for uncontrolled inputs):","","","","","useRef","","Topic 8 batch v4"
+"8","React","8.7","Hooks","React hooks let function components use state, effects, and other React features.
+
+**Built-in hooks:**
+- **`useState`** — local state (covered in 8.3)
+- **`useEffect`** — side effects (covered in 8.4)
+- **`useRef`** — mutable ref or DOM element ref. Doesn't trigger re-render on change.
+- **`useMemo(fn, deps)`** — memoize EXPENSIVE computation, recompute only when deps change
+- **`useCallback(fn, deps)`** — memoize a FUNCTION reference (stable identity), useful for child re-render optimization
+- **`useContext`** — read a Context value (covered in 8.8)
+- **`useReducer`** — alternative to useState for complex state logic
+
+**Custom hooks** — extract reusable stateful logic, name MUST start with `use`:
+```jsx
+function useToggle(initial = false) {
+  const [v, setV] = useState(initial);
+  const toggle = useCallback(() => setV(p => !p), []);
+  return [v, toggle];
+}
+
+// In component:
+const [isOpen, toggleOpen] = useToggle();
+```
+
+**Rules of hooks** (enforced by `eslint-plugin-react-hooks`):
+1. Only call at TOP LEVEL — no inside `if`, loops, nested functions
+2. Only call from React components or other hooks","mc","What's the naming rule for CUSTOM hooks?","Anything","Must start with `use` (lowercase) — React uses this to apply Rules of Hooks","Must start with uppercase","Suffix with Hook","B","","typed","Type the React hook (camelCase) used to memoize an EXPENSIVE COMPUTATION across renders:","","","","","useMemo","","mc","What does `useRef(0)` give you?","Triggers re-render on change","An object `{ current: 0 }` you can mutate — does NOT trigger re-render","State","Side effect","B","","mc","What's the main RULE OF HOOKS?","Use only in classes","Only call at TOP LEVEL of components (never inside `if`/loops) and only from components or other hooks","Avoid hooks","Hooks are deprecated","B","","typed","Type the React hook (camelCase) used to memoize a FUNCTION reference (so children don't re-render unnecessarily):","","","","","useCallback","","Topic 8 batch v4"
+"8","React","8.8","State management","React state management — pick the RIGHT tool for the job:
+
+| Concern | Tool |
+|---------|------|
+| Local component state | `useState` |
+| Cross-component (deep nested) UI/client state | **Zustand** or Context |
+| Server data (API responses) | **TanStack Query** (not local state!) |
+| URL state (filters, tab) | Router params |
+| Form state | React Hook Form |
+
+**Context API (built-in)** — for low-frequency global state (theme, user):
+```jsx
+const ThemeContext = createContext('light');
+function App() {
+  return (
+    <ThemeContext.Provider value=""dark"">
+      <Page />
+    </ThemeContext.Provider>
+  );
+}
+function Button() {
+  const theme = useContext(ThemeContext);
+}
+```
+Watch out: every consumer RE-RENDERS when Provider value changes. Bad for fast-updating state.
+
+**Zustand (recommended for client state):**
+```jsx
+import { create } from 'zustand';
+const useCart = create((set) => ({
+  items: [],
+  add: (item) => set((s) => ({ items: [...s.items, item] })),
+}));
+const { items, add } = useCart();
+```
+Simpler than Redux, no Provider, selector-based subscriptions (no over-rendering).","mc","Where should SERVER data (API responses) live in React?","Zustand","Local useState","TanStack Query — not in client state stores","Redux only","C","","typed","Type the popular lightweight React state library (lowercase, 7 letters):","","","","","zustand","","mc","What's the main DOWNSIDE of using Context API for fast-changing global state?","Slow","Every consumer re-renders when Provider value changes — bad for frequent updates","Doesn't work","Requires Redux","B","","mc","Where should URL-shareable state (filters, current tab) live?","Local state","Router params / search query — so the URL is sharable and back-button works","Zustand","Cookies","B","","typed","Type the React function (camelCase) used to read the CURRENT value from a Context (e.g. `const theme = ____(ThemeContext)`):","","","","","useContext","","Topic 8 batch v4"
+"8","React","8.9","Routing","Client-side routing lets a React SPA navigate between ""pages"" without full page reloads.
+
+**Top choices:**
+- **React Router v7** — most popular, mature
+- **TanStack Router** — newer, type-safe, file-based options
+
+**React Router v7 basics:**
+```jsx
+import { BrowserRouter, Routes, Route, Link, useParams } from 'react-router-dom';
+
+<BrowserRouter>
+  <nav>
+    <Link to=""/"">Home</Link>
+    <Link to=""/users/42"">User 42</Link>
+  </nav>
+  <Routes>
+    <Route path=""/"" element={<Home />} />
+    <Route path=""/users/:id"" element={<UserPage />} />
+    <Route path=""*"" element={<NotFound />} />
+  </Routes>
+</BrowserRouter>
+```
+
+**Reading params:**
+```jsx
+function UserPage() {
+  const { id } = useParams();
+  // ...
+}
+```
+
+**Programmatic navigation:**
+```jsx
+const navigate = useNavigate();
+navigate('/dashboard');
+```
+
+**Use `<Link>` not `<a>`** — prevents full page reload. Use `<a>` only for external links.","mc","Why use `<Link to=""/about"">` instead of `<a href=""/about"">` in React SPA?","Looks better","`<Link>` does client-side navigation (no full page reload); `<a>` causes the browser to reload","Required by React","Performance only","B","","typed","Type the React Router hook name (camelCase) used to read DYNAMIC URL parameters (e.g. `:id`):","","","","","useParams","","mc","Which path pattern matches the URL `/users/42`?","`/users/42`","`/users/:id`","`/users/{id}`","`/users/<id>`","B","","mc","How do you navigate programmatically (e.g. after form submit)?","`window.location = '/x'`","`const navigate = useNavigate(); navigate('/x')`","`<Redirect />`","Can't","B","","typed","Type the React Router component (PascalCase) that wraps your app and enables HTML5 history-based routing:","","","","","BrowserRouter","","Topic 8 batch v4"
+"8","React","8.10","Data fetching","**TanStack Query** (formerly React Query) = the modern way to fetch + cache server data in React.
+
+```jsx
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
+function UserList() {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['users'],
+    queryFn: async () => {
+      const r = await fetch('/api/users');
+      if (!r.ok) throw new Error('Failed');
+      return r.json();
+    },
+  });
+
+  if (isLoading) return <Spinner />;
+  if (error) return <Error msg={error.message} />;
+  return <ul>{data.map(u => <li key={u.id}>{u.name}</li>)}</ul>;
+}
+```
+
+**Mutations** (POST/PATCH/DELETE):
+```jsx
+const queryClient = useQueryClient();
+const { mutate } = useMutation({
+  mutationFn: (user) => fetch('/api/users', { method: 'POST', body: JSON.stringify(user) }),
+  onSuccess: () => queryClient.invalidateQueries({ queryKey: ['users'] }),
+});
+```
+
+**Why it's better than raw `useEffect`:**
+- Automatic caching + dedup (one fetch even if 10 components use same query)
+- Background revalidation
+- Built-in `isLoading` / `error` / `isSuccess` states
+- Optimistic updates
+- Retry on error","mc","Which TanStack Query hook FETCHES data (GET-like)?","useState","useQuery","useEffect","useFetch","B","","typed","Type the TanStack Query hook name (camelCase) used for MUTATIONS (POST/PATCH/DELETE):","","","","","useMutation","","mc","Why use TanStack Query over raw `useEffect + fetch`?","Faster","Built-in caching, dedup, loading/error states, retries, optimistic updates — way less boilerplate and bugs","Required by React","React 19 deprecates useEffect","B","","mc","What's a `queryKey` for in TanStack Query?","Random ID","Cache identity — same key = same cached data shared across components","Auth token","Required prop","B","","typed","Type the TanStack Query method (camelCase) on `queryClient` used to mark queries as stale and trigger a refetch (e.g. after a mutation):","","","","","invalidateQueries","","Topic 8 batch v4"
+"8","React","8.11","Component patterns","Common patterns for organizing React components:
+
+**Composition over props drilling** — accept `children` to nest UI:
+```jsx
+function Layout({ children }) { return <main>{children}</main>; }
+<Layout><Dashboard /></Layout>
+```
+
+**Compound components** — related components share state via Context:
+```jsx
+<Tabs>
+  <Tabs.List>
+    <Tabs.Trigger value=""home"">Home</Tabs.Trigger>
+    <Tabs.Trigger value=""settings"">Settings</Tabs.Trigger>
+  </Tabs.List>
+  <Tabs.Content value=""home"">...</Tabs.Content>
+</Tabs>
+```
+
+**Container / Presentational split:**
+- Container: owns data fetching + state (`UserListContainer`)
+- Presentational: pure UI, takes props (`UserList`)
+- Easier testing, reusability
+
+**Render props / slot prop:** for behavior reuse where markup varies. (Headless UI libraries use this.)
+
+**Component file pattern (VORA convention):**
+- `src/features/auth/components/LoginForm.tsx` — feature-local
+- `src/components/shared/AppHeader.tsx` — shared composed
+- `src/components/ui/Button.tsx` — primitive
+
+**Rule: when a class string is reused 3+ times, extract into a component** (better than `@apply`).","mc","What's COMPOSITION in React (vs prop drilling)?","Same thing","Use `children` to NEST components — keeps parent flexible, avoids passing props through many layers","Style trick","Performance pattern","B","","typed","Type the special React prop (lowercase) that lets a component nest other elements via composition:","","","","","children","","mc","What's a COMPOUND COMPONENT pattern?","Multiple unrelated components","Related components share state via Context — used together like `<Tabs><Tabs.List>...<Tabs.Content/></Tabs>`","Same as HOC","Class component","B","","mc","When should you EXTRACT repeated JSX into a component?","Never","When you reuse the same structure/class string 3+ times — DRY principle","Always at 1","Only for forms","B","","typed","Type the React file structure folder name (lowercase) used in our convention for primitives like Button, Input (e.g. `src/components/___/Button.tsx`):","","","","","ui","","Topic 8 batch v4"
+"8","React","8.12","Styling in React","Top approaches for styling React in 2026:
+
+**1. Tailwind CSS (recommended — VORA's choice):**
+```jsx
+<button className=""px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"">Save</button>
+```
+Pros: no naming, fast iteration, dead-class elimination, design system via config. Cons: long class strings.
+
+**2. CSS Modules** — scoped CSS per component, no naming clashes:
+```jsx
+import styles from './Button.module.css';
+<button className={styles.primary}>Save</button>
+```
+
+**3. CSS-in-JS (Styled-components, Emotion)** — write CSS in JS. Powerful but adds runtime cost. Less popular in 2026.
+
+**4. Vanilla Extract / Panda CSS** — zero-runtime CSS-in-JS with TS types. Newer alternative.
+
+**Helper for conditional classes:** `clsx` or `tailwind-merge`:
+```jsx
+import { clsx } from 'clsx';
+<button className={clsx(
+  'px-4 py-2',
+  isPrimary && 'bg-blue-500',
+  isLarge && 'text-lg'
+)}>...</button>
+```
+
+**Avoid inline `style={...}`** for theming — harder to maintain than utility classes / CSS variables.","mc","What's VORA's PRIMARY styling approach for React?","CSS-in-JS","Tailwind CSS","Bootstrap","Inline styles","B","","typed","Type the popular tiny utility library (4 letters) used to conditionally join className strings (e.g. `clsx('a', cond && 'b')`):","","","","","clsx","","mc","Why avoid CSS-in-JS solutions like styled-components in 2026?","They don't work","Runtime cost + complexity; modern stacks prefer zero-runtime (Tailwind, CSS modules, Vanilla Extract)","Deprecated","Bad SEO","B","","mc","What does CSS Modules give you?","Global styles","Locally-scoped class names per component — no naming clashes","Faster CSS","Inline styles","B","","typed","Type the helper library name (lowercase, with hyphen) used to MERGE Tailwind classes intelligently (e.g. `px-4 px-6` → keeps `px-6`):","","","","","tailwind-merge","","Topic 8 batch v4"
+"9","Next.js","9.1","App Router","**Prerequisites:** New to Node.js or Yarn? Complete Topic 0.1 and 0.2 first.
+
+**App Router** (Next.js 13+) is the modern routing system using the `app/` directory. File-based routing — folder structure DEFINES URL paths.
+
+**Special filenames:**
+- `page.tsx` — the actual route's UI (URL maps to this file)
+- `layout.tsx` — wraps all child pages (persists across navigation)
+- `loading.tsx` — UI shown while page is loading (React Suspense boundary)
+- `error.tsx` — UI shown when page throws an error (Error Boundary)
+- `not-found.tsx` — 404 UI
+- `route.ts` — API route handler (covered in 9.5)
+
+**Examples:**
+```
+app/
+  layout.tsx       → root layout (always renders)
+  page.tsx         → ""/""
+  about/
+    page.tsx       → ""/about""
+  blog/
+    [slug]/
+      page.tsx     → ""/blog/:slug""
+  (marketing)/     → route group (no URL impact)
+    pricing/
+      page.tsx     → ""/pricing""
+```
+
+**Dynamic segments:** `[slug]`, `[id]` — access via `params` prop.
+**Catch-all:** `[...path]` — matches `/a/b/c`.","mc","In Next.js App Router, which filename becomes the actual route's UI?","`index.tsx`","`page.tsx`","`route.tsx`","`main.tsx`","B","","typed","Type the special file name (with extension `.tsx`) that wraps a route and shows a loading UI while the page loads:","","","","","loading.tsx","loading","mc","What's a `[slug]` folder used for?","Slug field","DYNAMIC route segment — `/blog/[slug]/page.tsx` matches `/blog/anything` and gives `params.slug`","Static URL","Reserved","B","","mc","What does a folder name in PARENTHESES like `(marketing)` do?","Hidden folder","Route GROUP — organizes files without affecting the URL path","Required","Throws error","B","","typed","Type the special filename (with extension `.tsx`) shown when a route throws an error (Error Boundary UI):","","","","","error.tsx","error","Topic 9 batch v4"
+"9","Next.js","9.2","Server vs Client Components","App Router introduces a new mental model: components run on SERVER by default. Add `""use client""` directive to make a component a CLIENT component.
+
+**Server Components (default):**
+- Run on the server, send HTML to browser
+- CAN: fetch data with `await`, access DB/file system, use server-only secrets
+- CAN'T: use `useState`, `useEffect`, browser APIs, `onClick` handlers
+
+**Client Components (`""use client""` at top):**
+- Run in browser (after hydration)
+- CAN: hooks, event handlers, browser APIs, interactive features
+- CAN'T: directly access server-only resources (use Server Actions or fetch APIs)
+
+```tsx
+// app/page.tsx — Server Component (default)
+async function HomePage() {
+  const posts = await db.posts.findMany();
+  return <PostList posts={posts} />;
+}
+
+// app/PostList.tsx
+'use client';
+import { useState } from 'react';
+function PostList({ posts }) {
+  const [filter, setFilter] = useState('');
+  // ...
+}
+```
+
+**Rule:** Keep components on the server as much as possible. Move to client ONLY when you need state/effects/interactivity. Push `""use client""` as DEEP in the tree as possible.","mc","What's the DEFAULT type of a component in Next.js App Router?","Client","Server — runs on the server and sends HTML","Static","Streaming","B","","typed","Type the EXACT directive string (with quotes, lowercase, including the space) placed at the TOP of a file to opt into a Client Component: e.g. line 1 should be ___","","","","","'use client'","\""use client\"";|use client","mc","Which CAN'T you do in a Server Component?","Fetch from database","Use `useState` and `useEffect` (those are client-only hooks)","await fetch","Read env vars","B","","mc","What's the recommended STRATEGY for client vs server?","All client","Keep components server by default; push `""use client""` as DEEP into the tree as possible","All client","Random mix","B","","typed","Type the keyword (5 letters, lowercase) you can use INSIDE a Server Component function to fetch data sequentially without useEffect:","","","","","await","","Topic 9 batch v4"
+"9","Next.js","9.3","Data fetching","Next.js extends standard `fetch` with caching superpowers. Default in App Router: **server-side fetch with smart caching**.
+
+```tsx
+// app/posts/page.tsx — Server Component
+async function Posts() {
+  const res = await fetch('https://api.example.com/posts');
+  const posts = await res.json();
+  return <ul>{posts.map(p => <li>{p.title}</li>)}</ul>;
+}
+```
+
+**Caching options on `fetch`:**
+- `cache: 'force-cache'` — cache forever (default)
+- `cache: 'no-store'` — fetch fresh every request
+- `next: { revalidate: 60 }` — cache, but revalidate after 60 seconds (ISR)
+- `next: { tags: ['posts'] }` — tag for selective revalidation (`revalidateTag('posts')`)
+
+**Parallel fetching:**
+```tsx
+const [posts, user] = await Promise.all([
+  fetch('/api/posts').then(r => r.json()),
+  fetch('/api/me').then(r => r.json()),
+]);
+```
+
+**Sequential (waterfall) is SLOW** — always `Promise.all` independent fetches.
+
+**Streaming with Suspense** — show parts of page as they're ready:
+```tsx
+<Suspense fallback={<Spinner />}>
+  <SlowComponent />
+</Suspense>
+```","mc","In a Server Component, what's the recommended way to fetch data?","useEffect + fetch","Just `await fetch(...)` directly in the async component body","Always `useQuery`","Cannot fetch","B","","typed","Type the `fetch` option (lowercase, no quotes) to disable Next.js caching entirely — fetches fresh on every request (the value of the `cache` option):","","","","","no-store","","mc","To revalidate a cached fetch every 60 seconds (ISR), what option do you use?","`cache: 60`","`next: { revalidate: 60 }`","`timeout: 60`","`stale: 60`","B","","mc","Two INDEPENDENT fetches in a Server Component — best pattern?","await one, then await other (sequential)","Wrap in `Promise.all([fetchA(), fetchB()])` — parallel","useEffect","Can't","B","","typed","Type the React component name (PascalCase) used to STREAM parts of a page with a fallback UI (e.g. `<___ fallback={<Spinner/>}>`):","","","","","Suspense","","Topic 9 batch v4"
+"9","Next.js","9.4","Server Actions","**Server Actions** = async functions that run on the SERVER, callable directly from client components — no need to write API endpoints for mutations.
+
+Marked with the `'use server'` directive (at top of file or function).
+
+```tsx
+// app/actions.ts
+'use server';
+
+export async function createPost(formData: FormData) {
+  const title = formData.get('title') as string;
+  await db.posts.create({ data: { title } });
+  revalidatePath('/posts');  // refresh cached pages
+}
+```
+
+**Use in a form (works without JS!):**
+```tsx
+import { createPost } from './actions';
+
+export default function NewPost() {
+  return (
+    <form action={createPost}>
+      <input name=""title"" />
+      <button type=""submit"">Create</button>
+    </form>
+  );
+}
+```
+
+**Client component with `useFormStatus` / `useOptimistic`:**
+```tsx
+'use client';
+import { useFormStatus } from 'react-dom';
+function SubmitBtn() {
+  const { pending } = useFormStatus();
+  return <button disabled={pending}>{pending ? 'Saving...' : 'Save'}</button>;
+}
+```
+
+**Security:** always re-validate user input + auth on the server. Server Actions are public endpoints.","mc","What is a Server Action in Next.js?","Custom API endpoint","Async function that runs on the SERVER, callable directly from React forms/components without writing API routes","Background job","Database query","B","","typed","Type the EXACT directive (with quotes, lowercase) placed at top of a file or function to mark it as a Server Action:","","","","","'use server'","\""use server\"";|use server","mc","After a Server Action mutates data, how do you tell Next.js to refresh cached pages?","Reload manually","Call `revalidatePath('/path')` or `revalidateTag('tag')` inside the action","Restart server","Can't","B","","mc","What's a security consideration for Server Actions?","No security needed","Treat them as PUBLIC endpoints — always validate input + check auth inside the action","Auto-secured","Only callable from server","B","","typed","Type the React hook (camelCase) imported from `react-dom` used inside a form to read the PENDING state of a Server Action:","","","","","useFormStatus","","Topic 9 batch v4"
+"9","Next.js","9.5","API Routes","API Routes let you build HTTP endpoints inside Next.js. In App Router, use `route.ts` files with named HTTP method exports.
+
+```ts
+// app/api/users/route.ts
+import { NextResponse } from 'next/server';
+
+export async function GET(request: Request) {
+  const users = await db.users.findMany();
+  return NextResponse.json(users);
+}
+
+export async function POST(request: Request) {
+  const body = await request.json();
+  const user = await db.users.create({ data: body });
+  return NextResponse.json(user, { status: 201 });
+}
+```
+
+**Dynamic API routes:** `app/api/users/[id]/route.ts`
+```ts
+export async function GET(request: Request, { params }: { params: { id: string } }) {
+  const user = await db.users.findUnique({ where: { id: params.id } });
+  if (!user) return new NextResponse('Not found', { status: 404 });
+  return NextResponse.json(user);
+}
+```
+
+**Server Actions vs API Routes — when to use what:**
+- **Server Actions** — internal form submissions, mutations from your own UI
+- **API Routes** — public APIs, webhooks, third-party integrations, mobile clients","mc","In App Router, which filename creates an API endpoint?","`api.ts`","`route.ts`","`endpoint.ts`","`page.ts`","B","","typed","Type the HTTP method name (uppercase) you export from `route.ts` to handle GET requests:","","","","","GET","get","mc","Which `NextResponse` method returns a JSON response?","`NextResponse.body(...)`","`NextResponse.json(data)`","`NextResponse.send(...)`","`NextResponse.write(...)`","B","","mc","When to choose Server Actions OVER API Routes?","Public APIs","For internal form submissions / mutations from your own UI — less boilerplate, automatic CSRF protection","Webhooks","Mobile API","B","","typed","Type the HTTP method name (uppercase) used to CREATE a new resource (also exported as a function name in route.ts):","","","","","POST","post","Topic 9 batch v4"
+"9","Next.js","9.6","SSR vs SSG vs ISR","Next.js supports 3 main rendering strategies — pick based on data freshness needs:
+
+**SSG (Static Site Generation):**
+- HTML built at BUILD TIME → served from CDN
+- Fastest. Best for blog posts, marketing pages, docs
+- Triggered by `fetch` with default cache OR no dynamic functions
+- `generateStaticParams` for dynamic routes
+
+**SSR (Server-Side Rendering):**
+- HTML rendered on EVERY REQUEST on the server
+- For personalized pages (user dashboard, auth-gated content)
+- Triggered by `cache: 'no-store'` or accessing cookies/headers
+
+**ISR (Incremental Static Regeneration):**
+- Generated at build, REVALIDATED in background after N seconds
+- Best of both: fast like SSG, fresh like SSR
+- Triggered by `next: { revalidate: N }`
+
+**How to choose:**
+- Content rarely changes → SSG
+- Content changes often + personalized → SSR
+- Content changes occasionally, NOT personalized → ISR
+
+**Modern reality (App Router):** Don't pre-decide page-level rendering — Next.js infers per-route based on the data calls you make.","mc","Which rendering strategy generates HTML at BUILD time?","SSR","SSG (Static Site Generation)","ISR","Client-side","B","","typed","Type the `fetch` `next` option key (lowercase) that enables ISR by revalidating cached HTML after N seconds:","","","","","revalidate","","mc","When would you choose SSR over SSG?","Always","For personalized pages (user dashboard, auth-gated content) where each user sees different HTML","Never","Faster","B","","mc","What's ISR (Incremental Static Regeneration)?","Static site only","Static at build, then REVALIDATED in background after N seconds — combines speed of SSG with freshness of SSR","Same as SSR","Client-side","B","","mc","In modern App Router, how is rendering strategy decided?","Per project","Per route, automatically — Next.js infers based on the data calls you make (cache options, cookies, etc.)","Manually","Random","B","","Topic 9 batch v4"
+"9","Next.js","9.7","Middleware","**Middleware** runs BEFORE a request hits your route handler. Used for: auth checks, redirects, A/B testing, geo routing, header injection.
+
+```ts
+// middleware.ts (at project root, NOT inside app/)
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+
+export function middleware(request: NextRequest) {
+  const token = request.cookies.get('auth-token');
+  if (!token && request.nextUrl.pathname.startsWith('/dashboard')) {
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: ['/dashboard/:path*', '/api/protected/:path*'],
+};
+```
+
+**Capabilities:**
+- Rewrite URL (without changing browser URL): `NextResponse.rewrite(url)`
+- Redirect: `NextResponse.redirect(url)`
+- Set response headers
+- Read/set cookies
+
+**Important:**
+- Runs on EVERY matched request — keep it FAST (no heavy DB queries)
+- Runs in Edge runtime (limited Node APIs)
+- Use `matcher` config to limit scope and reduce overhead","mc","Where does `middleware.ts` live in a Next.js project?","Inside `app/`","At the PROJECT ROOT (same level as `app/`)","Inside `pages/`","Anywhere","B","","typed","Type the EXPORTED const name (lowercase, 6 letters) in `middleware.ts` used to limit which routes the middleware runs on:","","","","","config","","mc","Why must middleware code be FAST?","No reason","It runs on EVERY matched request — heavy work creates latency for every page load","Slow runtime","Bug","B","","mc","Which `NextResponse` method REDIRECTS to a new URL?","`NextResponse.next()`","`NextResponse.redirect(url)`","`NextResponse.rewrite(url)`","`NextResponse.go(url)`","B","","typed","Type the property name (lowercase) on `config` used to define route patterns the middleware applies to (e.g. `export const config = { ___: ['/x/:path*'] }`):","","","","","matcher","","Topic 9 batch v4"
+"9","Next.js","9.8","Image optimization","Next.js's `<Image>` component (`next/image`) AUTOMATICALLY:
+- Resizes images to the right size per device
+- Converts to modern formats (WebP, AVIF) when browser supports
+- Lazy-loads off-screen images
+- Prevents layout shift via required `width` + `height`
+
+```tsx
+import Image from 'next/image';
+
+<Image
+  src=""/hero.jpg""
+  alt=""Hero image""
+  width={1200}
+  height={600}
+  priority    // for above-the-fold images — preloads, no lazy
+/>
+```
+
+**Required:** `width` + `height` (or `fill` for parent-sized).
+
+**External images:** allow domains in `next.config.js`:
+```js
+images: {
+  remotePatterns: [
+    { protocol: 'https', hostname: 'images.example.com' },
+  ],
+},
+```
+
+**`<Image fill>`** — parent must be `position: relative` and have explicit size. Image fills container.
+
+**Don't use `<img>` directly** for app images — you lose all optimizations. Lighthouse will flag it.","mc","Why use `<Image>` from `next/image` instead of `<img>`?","Required","Automatic resizing, modern formats (WebP/AVIF), lazy loading, prevents layout shift","Better SEO only","No difference","B","","typed","Type the prop name (lowercase) added to an `<Image>` for ABOVE-the-fold images that should be preloaded (no lazy loading):","","","","","priority","","mc","Why are `width` and `height` REQUIRED on `<Image>`?","Browser requirement","Prevents Cumulative Layout Shift (CLS) — browser reserves space before image loads","Validation","Random","B","","mc","To allow loading images from `images.unsplash.com`, what do you configure?","Nothing","Add to `images.remotePatterns` in `next.config.js`","Inline `crossOrigin`","Can't","B","","typed","Type the special `<Image>` prop (lowercase, 4 letters) used when you want the image to FILL its parent container (alternative to width/height):","","","","","fill","","Topic 9 batch v4"
+"9","Next.js","9.9","Metadata API","Next.js App Router uses the **Metadata API** to generate `<head>` tags (title, description, Open Graph, etc.) automatically.
+
+**Static metadata** — export from any `page.tsx` or `layout.tsx`:
+```tsx
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'My Page — VORA',
+  description: 'Learn HTML, CSS, and JavaScript step by step.',
+  openGraph: {
+    title: 'My Page',
+    images: ['https://example.com/og.jpg'],
+  },
+};
+
+export default function Page() { return <div>...</div>; }
+```
+
+**Dynamic metadata** — based on params (e.g. blog post title from DB):
+```tsx
+export async function generateMetadata({ params }): Promise<Metadata> {
+  const post = await db.posts.findUnique({ where: { slug: params.slug } });
+  return {
+    title: post.title,
+    description: post.excerpt,
+  };
+}
+```
+
+**Layout metadata** cascades down — child page metadata overrides parent.
+
+**Templates** for title prefix:
+```tsx
+title: { default: 'VORA', template: '%s — VORA' }
+// child: title: 'Login' → renders ""Login — VORA""
+```","mc","How do you set page metadata in App Router?","Inside `<head>` JSX","Export a `metadata` object (or `generateMetadata` function) from `page.tsx` / `layout.tsx`","Use `<Head>` component","next.config.js","B","","typed","Type the function name (camelCase) you export for DYNAMIC metadata based on params (e.g. from DB):","","","","","generateMetadata","","mc","Where do Open Graph image tags go in the Metadata API?","`metadata.images`","`metadata.openGraph.images` — nested under openGraph","`metadata.og:image`","Inline JSX","B","","mc","What does `title: { default: 'VORA', template: '%s — VORA' }` do?","Sets fixed title","Child pages with their own title get formatted as 'ChildTitle — VORA'; pages without a title default to 'VORA'","Error","Random","B","","typed","Type the property name (camelCase, no spaces) inside metadata for SOCIAL SHARING preview tags (Facebook, LinkedIn):","","","","","openGraph","","Topic 9 batch v4"
+"9","Next.js","9.10","Deployment (Vercel)","**Vercel** = the company behind Next.js + the easiest way to deploy.
+
+**Steps:**
+1. Push your Next.js code to GitHub
+2. Go to vercel.com → ""Import Project"" → select your repo
+3. Vercel auto-detects Next.js → click Deploy
+4. Done. Gets a URL like `your-app.vercel.app` + auto-HTTPS
+
+**Per-push:**
+- Pushes to `main` → auto-deploy to PRODUCTION
+- Pushes to other branches / PRs → PREVIEW deployment with unique URL (great for review)
+
+**Environment variables:** add via Vercel dashboard (`Settings → Environment Variables`). Don't commit `.env` to git.
+
+**Custom domain:** Vercel dashboard → `Domains` → add → update DNS records. Free HTTPS via Let's Encrypt.
+
+**Other hosting options:**
+- **Self-host** with Docker (`next start` after `next build`)
+- **Netlify** — similar UX, also supports Next.js
+- **Cloudflare Pages** with `@cloudflare/next-on-pages` adapter
+
+VORA's frontend deploys to Vercel (per locked stack).","mc","Which deploy platform is built by the company that makes Next.js (most seamless)?","Netlify","Vercel","Heroku","Railway","B","","mc","What happens when you push to a NON-main branch on a Vercel-connected repo?","Nothing","A unique PREVIEW deployment is created with its own URL (perfect for PR review)","Auto-deploys to prod","Errors","B","","typed","Type the directory inside your Next.js project (lowercase, 4 letters) that gets built by `next build` for production (also where to set output for self-hosting):","","","","",".next","next","mc","Where should production environment variables (DB URL, API keys) be set for Vercel?","In code","Vercel dashboard `Settings → Environment Variables` (NEVER commit `.env`)","`next.config.js`","Anywhere","B","","mc","What's the Next.js command (after `next build`) to START the production server in self-hosting mode?","`next serve`","`next start`","`node next`","`npm run prod`","B","","Topic 9 batch v4"
+"9","Next.js","9.11","Authentication","Top auth solutions for Next.js App Router:
+
+**1. Better Auth (modern, recommended for greenfield):**
+```ts
+import { betterAuth } from 'better-auth';
+export const auth = betterAuth({
+  database: { /* db config */ },
+  emailAndPassword: { enabled: true },
+  socialProviders: { google: { clientId, clientSecret } },
+});
+```
+Type-safe, framework-agnostic, social login support.
+
+**2. NextAuth.js / Auth.js (established):**
+```ts
+import NextAuth from 'next-auth';
+import Google from 'next-auth/providers/google';
+export const { auth, handlers } = NextAuth({
+  providers: [Google({ clientId, clientSecret })],
+});
+```
+
+**3. Roll your own** — JWT + bcrypt + session cookies. More work, full control. Common in pure Express backends.
+
+**Best practices:**
+- Store JWTs in `httpOnly` cookies (not localStorage — XSS risk)
+- Use middleware (Section 9.7) to protect routes
+- Hash passwords with bcrypt (min 10 rounds)
+- Implement refresh token rotation for long sessions
+- Rate-limit login endpoints to prevent brute force
+
+VORA's BE uses custom JWT auth (see BE roadmap). FE consumes via `Authorization: Bearer <token>` header.","mc","Why store JWT in an `httpOnly` cookie instead of `localStorage`?","Faster","`localStorage` is accessible to JavaScript → XSS vulnerability. `httpOnly` cookies aren't.","Required","Looks better","B","","typed","Type the popular Next.js auth library name (lowercase, with hyphen) — the established choice that uses `import NextAuth`:","","","","","next-auth","","mc","Where should route protection (auth checks) happen in Next.js App Router?","Inside each page","Middleware (`middleware.ts` at root) — runs BEFORE the page renders","Client component","Vercel only","B","","mc","What hashing library do you use for passwords?","md5","bcrypt (with sufficient salt rounds, e.g. 10-12)","sha256","plain text","B","","typed","Type the password-hashing npm package name (lowercase, 6 letters) standard for Node.js auth:","","","","","bcrypt","","Topic 9 batch v4"
+"9","Next.js","9.12","Environment variables","Next.js handles env vars with a critical SERVER-vs-CLIENT distinction.
+
+**Files (loaded automatically):**
+- `.env.local` — local development secrets (gitignored)
+- `.env.development` — dev mode defaults
+- `.env.production` — production defaults
+- `.env` — fallback for all environments
+
+**Access:**
+```ts
+process.env.DATABASE_URL  // server only
+```
+
+**CRITICAL:** Env vars are SERVER-ONLY by default. To expose to the BROWSER (client components), prefix with `NEXT_PUBLIC_`:
+```ts
+process.env.NEXT_PUBLIC_API_URL  // OK in browser
+```
+
+**WARNING:** `NEXT_PUBLIC_*` vars are INLINED into the client bundle at build time — visible to anyone inspecting the JS. NEVER put secrets there. Use them only for non-secret config (API base URL, public Stripe key).
+
+**Common security mistake:**
+```ts
+// WRONG — exposes the secret to every browser!
+NEXT_PUBLIC_API_SECRET=abc123
+```
+
+**Rule of thumb:**
+- API URL, public Stripe pk, GA tracking ID → `NEXT_PUBLIC_*`
+- DB password, API secret, JWT secret → plain `process.env.X` (server only)
+
+**Production:** set vars in Vercel dashboard, NOT in `.env` (don't commit secrets).","mc","Which prefix EXPOSES an env variable to the client/browser code?","`NEXT_CLIENT_`","`NEXT_PUBLIC_`","`PUBLIC_`","No prefix needed","B","","typed","Type the env file name (with leading dot) used for LOCAL development secrets — must be in `.gitignore`:","","","","",".env.local","env.local","mc","Why is `NEXT_PUBLIC_API_SECRET=abc` a SECURITY DISASTER?","Slow","`NEXT_PUBLIC_*` vars are INLINED into client JS bundle — anyone viewing your JS sees the secret","Just style issue","No issue","B","","mc","Where do you set production env vars for a Vercel-deployed Next.js app?","In code","Vercel dashboard → Settings → Environment Variables","`.env` (commit it)","Database","B","","typed","Type the global JavaScript object (lowercase) used to access env vars in code: e.g. `process.___.DATABASE_URL`:","","","","","env","","Topic 9 batch v4"
+"0","Dev Environment Setup","0.1","Install Node.js","Node.js is a JavaScript runtime that lets you run JS **outside the browser** (on your computer, on a server). You need Node installed to use modern tools like Yarn, Vite, Next.js, ESLint.
+
+**3 ways to install:**
+
+1. **nvm / fnm (Recommended)** — version manager. Switch Node versions per project.
+   - macOS/Linux: `curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash`
+   - Then: `nvm install 22 && nvm use 22`
+2. **Official installer** — nodejs.org → download LTS .pkg/.msi → run
+3. **Homebrew (Mac)**: `brew install node@22`
+
+**LTS = Long Term Support** version (recommended, stable). Avoid odd-numbered versions (19, 21, 23) in production.
+
+**Verify install:**
+```bash
+node --version    # e.g. v22.11.0
+npm --version     # bundled with Node
+```
+
+VORA uses **Node 22 LTS**.","mc","What is Node.js?","A JavaScript framework","A JS runtime that runs JS outside the browser","A browser","A database","B","","typed","Type the command (with flag) to check your installed Node.js version:","","","","","node --version","node -v","mc","Which Node.js version line is recommended for production?","Latest stable, regardless of LTS status","An LTS (Long Term Support) version (even-numbered major)","Beta releases","Any odd-numbered version (19, 21, 23)","B","","mc","Why use a version manager like nvm or fnm instead of installing Node directly?","Required","Lets you switch Node versions per project, avoid permission issues, easy upgrades","Faster","No reason","B","","typed","Type the bundled package manager (3 letters, lowercase) that's installed automatically with Node.js:","","","","","npm","","Topic 0 batch v4 — prerequisite setup"
+"0","Dev Environment Setup","0.2","Package managers (npm, Yarn, pnpm + Corepack)","Package managers download libraries (packages) from a registry (npmjs.com) and manage your project's dependencies.
+
+**3 popular choices:**
+- **npm** — bundled with Node.js. Improving but historically slowest.
+- **Yarn** — faster, better lockfile semantics. Yarn 1 (Classic) vs Yarn 4+ (Modern). VORA uses Yarn 1.22.
+- **pnpm** — fastest, disk-efficient (symlinks shared deps).
+
+**Corepack** (built into Node 16+) lets you use Yarn/pnpm without separate install:
+```bash
+corepack enable
+```
+
+**Common commands** (mostly identical across managers):
+- `yarn install` (or just `yarn`) — install all deps from package.json
+- `yarn add <pkg>` — add a runtime dependency
+- `yarn add -D <pkg>` — add a DEV dependency (build tools, tests)
+- `yarn remove <pkg>` — remove
+- `yarn <script>` — run a script defined in package.json
+
+`package.json` lists dependencies. `yarn.lock` / `package-lock.json` LOCKS exact versions.","mc","What's the role of a package manager?","Manage Node versions","Download libraries (packages) from a registry and manage project dependencies","Manage your IDE","Browser tool","B","","typed","Type the command (2 words, lowercase) that enables Yarn/pnpm globally via Node's built-in tool:","","","","","corepack enable","","mc","Which file LOCKS exact dependency versions?","package.json","yarn.lock (or package-lock.json for npm)",".npmrc","README.md","B","","typed","Type the flag (2 characters, includes dash) added to `yarn add` to install as a DEV dependency:","","","","","-D","--dev","mc","What's the difference between `yarn add pkg` and `yarn add -D pkg`?","-D is faster","Plain `add` = runtime dep (shipped to users); `-D` = dev-only (build tools, tests)","-D is required","No difference","B","","Topic 0 batch v4 — prerequisite setup"
+"0","Dev Environment Setup","0.3","VS Code essentials","**VS Code** is the most popular code editor for web dev. Free, fast, huge extension ecosystem. Download: code.visualstudio.com.
+
+**Essential extensions for VORA stack:**
+- **ESLint** — surface lint errors in code as you type
+- **Prettier** — auto-format on save
+- **Tailwind CSS IntelliSense** — autocomplete + color previews for Tailwind classes
+- **GitLens** — git blame inline, history navigation
+- **Auto Rename Tag** — renaming `<div>` auto-renames the closing tag
+
+**Key settings** (`File → Preferences → Settings`, or `Cmd/Ctrl+,`):
+```json
+{
+  ""editor.formatOnSave"": true,
+  ""editor.defaultFormatter"": ""esbenp.prettier-vscode"",
+  ""editor.tabSize"": 2
+}
+```
+
+**Useful shortcuts (Mac / Win):**
+- `Cmd/Ctrl+P` — quick file open
+- `Cmd/Ctrl+Shift+P` — command palette (search any action)
+- `Cmd/Ctrl+/` — comment line
+- `F2` — rename symbol everywhere
+- `` Ctrl+` `` — toggle integrated terminal","mc","Why install ESLint + Prettier extensions in VS Code?","Required","Auto-format code on save + surface lint errors inline as you type","Faster typing","Free","B","","typed","Type the EXACT settings key (lowercase, with dot) that auto-formats a file when you save it:","","","","","editor.formatOnSave","","mc","Which VS Code extension provides Tailwind CSS class autocomplete and color previews?","Tailwind CSS IntelliSense","Tailwind v4 Extension","CSS Snippets","Tailwind Helper","A","","mc","What does VS Code's `Cmd/Ctrl+Shift+P` shortcut do?","Save file","Opens the Command Palette (search any VS Code action)","Print","New project","B","","typed","Type the VS Code single-letter shortcut (uppercase, used with Cmd/Ctrl) for the QUICK FILE OPEN dialog:","","","","","P","","Topic 0 batch v4 — prerequisite setup"
+"0","Dev Environment Setup","0.4","Terminal basics","The **terminal** (a.k.a. command line, shell) is how you run dev tools — install packages, start servers, deploy code.
+
+**Common shells:**
+- macOS: `zsh` (default)
+- Linux: `bash` or `zsh`
+- Windows: **WSL (Windows Subsystem for Linux) — strongly recommended for web dev**; or PowerShell
+
+**Essential commands:**
+- `pwd` — print current directory
+- `cd <path>` — change directory (`cd ..` goes up one level, `cd ~` to home)
+- `ls` — list files (`ls -la` for details + hidden files)
+- `mkdir <name>` — create directory
+- `rm <file>` — delete file. `rm -rf <dir>` deletes a directory recursively — **CAREFUL, no recycle bin!**
+- `cp <src> <dest>` / `mv <src> <dest>` — copy / move
+- `cat <file>` — print file contents
+- `clear` (or `Ctrl+L`) — clear screen
+
+**Running scripts:**
+- `node script.js` — run a JS file with Node
+- `yarn dev` — run the `dev` script from package.json
+- `npx <pkg>` — run a npm package WITHOUT installing globally (e.g. `npx create-vite my-app`)
+
+**Tab completion** — type partial path + `Tab` to autocomplete.","mc","What does `pwd` print in the terminal?","Your password","The current (Present Working Directory) full path","All processes","Errors","B","","typed","Type the command (just the verb, 2 letters, lowercase) used to list files in the current directory:","","","","","ls","","mc","What does `cd ..` do?","Shows current directory","Moves to the PARENT directory (up one level)","Clears the screen","Quits the terminal","B","","mc","Why is `rm -rf <dir>` DANGEROUS?","Slow","Recursively + forcefully deletes — no recycle bin. Can wipe entire folders if mistyped.","Doesn't actually work","Only available on Windows","B","","typed","Type the command (3 letters, lowercase) used to run a npm package ONE-TIME without installing it globally (e.g. `___ create-vite my-app`):","","","","","npx","","Topic 0 batch v4 — prerequisite setup"
+"0","Dev Environment Setup","0.5","Browser DevTools","**Browser DevTools** = built-in tools for inspecting, debugging, and profiling web pages. Open with `F12` (Mac: `Cmd+Option+I`; Win/Linux: `Ctrl+Shift+I`).
+
+**Key panels:**
+
+- **Elements** — inspect HTML tree, edit CSS LIVE to test changes
+- **Console** — see `console.log()` output, run JS in page context, view JS errors
+- **Network** — see all HTTP requests (API calls, images). Inspect status codes, timing, headers
+- **Sources** — view source code, set breakpoints to pause execution and inspect variables
+- **Application** — view localStorage, sessionStorage, cookies, IndexedDB
+- **Performance** — record + profile rendering performance (find slow renders)
+- **Lighthouse** — auto-audit page for Performance, Accessibility, SEO, Best Practices
+
+**Responsive mode** — toggle device emulator to preview mobile/tablet sizes (icon top-left of DevTools).
+
+**Console power moves:**
+- `$0` = currently selected element in Elements panel
+- `$_` = last console result
+- Right-click any page element → Inspect to jump to it in Elements","typed","Type the keyboard shortcut (single key, uppercase) used to open browser DevTools in most browsers:","","","","","F12","","mc","Which DevTools panel shows all HTTP requests with status codes and timing?","Elements","Console","Network","Performance","C","","mc","Where do you view `console.log()` output?","Elements panel","Console panel","Sources panel","Network panel","B","","mc","What does Lighthouse audit?","Code style only","Performance, Accessibility, SEO, and Best Practices of a page","Server response only","Database queries","B","","typed","Type the DevTools Console shortcut variable (2 characters including $) that refers to the currently selected element in the Elements panel:","","","","","$0","","Topic 0 batch v4 — prerequisite setup"

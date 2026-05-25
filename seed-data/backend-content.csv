@@ -1,0 +1,2419 @@
+"Topic_ID","Topic_Name","Section_ID","Section_Name","Summary","Q1_Type","Q1_Text","Q1_A","Q1_B","Q1_C","Q1_D","Q1_Correct","Q1_Alternates","Q2_Type","Q2_Text","Q2_A","Q2_B","Q2_C","Q2_D","Q2_Correct","Q2_Alternates","Q3_Type","Q3_Text","Q3_A","Q3_B","Q3_C","Q3_D","Q3_Correct","Q3_Alternates","Q4_Type","Q4_Text","Q4_A","Q4_B","Q4_C","Q4_D","Q4_Correct","Q4_Alternates","Q5_Type","Q5_Text","Q5_A","Q5_B","Q5_C","Q5_D","Q5_Correct","Q5_Alternates","Notes"
+"0","Dev Environment Setup","0.1","Install Node.js","Node.js is a JavaScript runtime that lets you run JS **outside the browser** (on your computer, on a server). You need Node installed to use modern tools like Yarn, Vite, Next.js, ESLint.
+
+**3 ways to install:**
+
+1. **nvm / fnm (Recommended)** — version manager. Switch Node versions per project.
+   - macOS/Linux: `curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash`
+   - Then: `nvm install 22 && nvm use 22`
+2. **Official installer** — nodejs.org → download LTS .pkg/.msi → run
+3. **Homebrew (Mac)**: `brew install node@22`
+
+**LTS = Long Term Support** version (recommended, stable). Avoid odd-numbered versions (19, 21, 23) in production.
+
+**Verify install:**
+```bash
+node --version    # e.g. v22.11.0
+npm --version     # bundled with Node
+```
+
+VORA uses **Node 22 LTS**.","mc","What is Node.js?","A JavaScript framework","A JS runtime that runs JS outside the browser","A browser","A database","B","","typed","Type the command (with flag) to check your installed Node.js version:","","","","","node --version","node -v","mc","Which Node.js version line is recommended for production?","Latest stable, regardless of LTS status","An LTS (Long Term Support) version (even-numbered major)","Beta releases","Any odd-numbered version (19, 21, 23)","B","","mc","Why use a version manager like nvm or fnm instead of installing Node directly?","Required","Lets you switch Node versions per project, avoid permission issues, easy upgrades","Faster","No reason","B","","typed","Type the bundled package manager (3 letters, lowercase) that's installed automatically with Node.js:","","","","","npm","","Topic 0 batch v4 — prerequisite setup (reused from FE Topic 0)"
+"0","Dev Environment Setup","0.2","Package managers (npm, Yarn, pnpm + Corepack)","Package managers download libraries (packages) from a registry (npmjs.com) and manage your project's dependencies.
+
+**3 popular choices:**
+- **npm** — bundled with Node.js. Improving but historically slowest.
+- **Yarn** — faster, better lockfile semantics. Yarn 1 (Classic) vs Yarn 4+ (Modern). VORA uses Yarn 1.22.
+- **pnpm** — fastest, disk-efficient (symlinks shared deps).
+
+**Corepack** (built into Node 16+) lets you use Yarn/pnpm without separate install:
+```bash
+corepack enable
+```
+
+**Common commands** (mostly identical across managers):
+- `yarn install` (or just `yarn`) — install all deps from package.json
+- `yarn add <pkg>` — add a runtime dependency
+- `yarn add -D <pkg>` — add a DEV dependency (build tools, tests)
+- `yarn remove <pkg>` — remove
+- `yarn <script>` — run a script defined in package.json
+
+`package.json` lists dependencies. `yarn.lock` / `package-lock.json` LOCKS exact versions.","mc","What's the role of a package manager?","Manage Node versions","Download libraries (packages) from a registry and manage project dependencies","Manage your IDE","Browser tool","B","","typed","Type the command (2 words, lowercase) that enables Yarn/pnpm globally via Node's built-in tool:","","","","","corepack enable","","mc","Which file LOCKS exact dependency versions?","package.json","yarn.lock (or package-lock.json for npm)",".npmrc","README.md","B","","typed","Type the flag (2 characters, includes dash) added to `yarn add` to install as a DEV dependency:","","","","","-D","--dev","mc","What's the difference between `yarn add pkg` and `yarn add -D pkg`?","-D is faster","Plain `add` = runtime dep (shipped to users); `-D` = dev-only (build tools, tests)","-D is required","No difference","B","","Topic 0 batch v4 — prerequisite setup (reused from FE Topic 0)"
+"0","Dev Environment Setup","0.3","VS Code essentials","**VS Code** is the most popular code editor for web dev. Free, fast, huge extension ecosystem. Download: code.visualstudio.com.
+
+**Essential extensions for VORA stack:**
+- **ESLint** — surface lint errors in code as you type
+- **Prettier** — auto-format on save
+- **Tailwind CSS IntelliSense** — autocomplete + color previews for Tailwind classes
+- **GitLens** — git blame inline, history navigation
+- **Auto Rename Tag** — renaming `<div>` auto-renames the closing tag
+
+**Key settings** (`File → Preferences → Settings`, or `Cmd/Ctrl+,`):
+```json
+{
+  ""editor.formatOnSave"": true,
+  ""editor.defaultFormatter"": ""esbenp.prettier-vscode"",
+  ""editor.tabSize"": 2
+}
+```
+
+**Useful shortcuts (Mac / Win):**
+- `Cmd/Ctrl+P` — quick file open
+- `Cmd/Ctrl+Shift+P` — command palette (search any action)
+- `Cmd/Ctrl+/` — comment line
+- `F2` — rename symbol everywhere
+- `` Ctrl+` `` — toggle integrated terminal","mc","Why install ESLint + Prettier extensions in VS Code?","Required","Auto-format code on save + surface lint errors inline as you type","Faster typing","Free","B","","typed","Type the EXACT settings key (lowercase, with dot) that auto-formats a file when you save it:","","","","","editor.formatOnSave","","mc","Which VS Code extension provides Tailwind CSS class autocomplete and color previews?","Tailwind CSS IntelliSense","Tailwind v4 Extension","CSS Snippets","Tailwind Helper","A","","mc","What does VS Code's `Cmd/Ctrl+Shift+P` shortcut do?","Save file","Opens the Command Palette (search any VS Code action)","Print","New project","B","","typed","Type the VS Code single-letter shortcut (uppercase, used with Cmd/Ctrl) for the QUICK FILE OPEN dialog:","","","","","P","","Topic 0 batch v4 — prerequisite setup (reused from FE Topic 0)"
+"0","Dev Environment Setup","0.4","Terminal basics","The **terminal** (a.k.a. command line, shell) is how you run dev tools — install packages, start servers, deploy code.
+
+**Common shells:**
+- macOS: `zsh` (default)
+- Linux: `bash` or `zsh`
+- Windows: **WSL (Windows Subsystem for Linux) — strongly recommended for web dev**; or PowerShell
+
+**Essential commands:**
+- `pwd` — print current directory
+- `cd <path>` — change directory (`cd ..` goes up one level, `cd ~` to home)
+- `ls` — list files (`ls -la` for details + hidden files)
+- `mkdir <name>` — create directory
+- `rm <file>` — delete file. `rm -rf <dir>` deletes a directory recursively — **CAREFUL, no recycle bin!**
+- `cp <src> <dest>` / `mv <src> <dest>` — copy / move
+- `cat <file>` — print file contents
+- `clear` (or `Ctrl+L`) — clear screen
+
+**Running scripts:**
+- `node script.js` — run a JS file with Node
+- `yarn dev` — run the `dev` script from package.json
+- `npx <pkg>` — run a npm package WITHOUT installing globally (e.g. `npx create-vite my-app`)
+
+**Tab completion** — type partial path + `Tab` to autocomplete.","mc","What does `pwd` print in the terminal?","Your password","The current (Present Working Directory) full path","All processes","Errors","B","","typed","Type the command (just the verb, 2 letters, lowercase) used to list files in the current directory:","","","","","ls","","mc","What does `cd ..` do?","Shows current directory","Moves to the PARENT directory (up one level)","Clears the screen","Quits the terminal","B","","mc","Why is `rm -rf <dir>` DANGEROUS?","Slow","Recursively + forcefully deletes — no recycle bin. Can wipe entire folders if mistyped.","Doesn't actually work","Only available on Windows","B","","typed","Type the command (3 letters, lowercase) used to run a npm package ONE-TIME without installing it globally (e.g. `___ create-vite my-app`):","","","","","npx","","Topic 0 batch v4 — prerequisite setup (reused from FE Topic 0)"
+"0","Dev Environment Setup","0.5","Browser DevTools","**Browser DevTools** = built-in tools for inspecting, debugging, and profiling web pages. Open with `F12` (Mac: `Cmd+Option+I`; Win/Linux: `Ctrl+Shift+I`).
+
+**Key panels:**
+
+- **Elements** — inspect HTML tree, edit CSS LIVE to test changes
+- **Console** — see `console.log()` output, run JS in page context, view JS errors
+- **Network** — see all HTTP requests (API calls, images). Inspect status codes, timing, headers
+- **Sources** — view source code, set breakpoints to pause execution and inspect variables
+- **Application** — view localStorage, sessionStorage, cookies, IndexedDB
+- **Performance** — record + profile rendering performance (find slow renders)
+- **Lighthouse** — auto-audit page for Performance, Accessibility, SEO, Best Practices
+
+**Responsive mode** — toggle device emulator to preview mobile/tablet sizes (icon top-left of DevTools).
+
+**Console power moves:**
+- `$0` = currently selected element in Elements panel
+- `$_` = last console result
+- Right-click any page element → Inspect to jump to it in Elements","typed","Type the keyboard shortcut (single key, uppercase) used to open browser DevTools in most browsers:","","","","","F12","","mc","Which DevTools panel shows all HTTP requests with status codes and timing?","Elements","Console","Network","Performance","C","","mc","Where do you view `console.log()` output?","Elements panel","Console panel","Sources panel","Network panel","B","","mc","What does Lighthouse audit?","Code style only","Performance, Accessibility, SEO, and Best Practices of a page","Server response only","Database queries","B","","typed","Type the DevTools Console shortcut variable (2 characters including $) that refers to the currently selected element in the Elements panel:","","","","","$0","","Topic 0 batch v4 — prerequisite setup (reused from FE Topic 0)"
+"1","Git & GitHub","1.1","Core commands","Git tracks changes to your code over time. Workflow:
+
+1. **`git init`** — turn a folder into a Git repository
+2. **`git status`** — see what's changed
+3. **`git add <file>`** — stage a file for the next commit (or `git add .` for all)
+4. **`git commit -m ""message""`** — save staged changes as a snapshot with a message
+5. **`git log`** — see commit history
+6. **`git push`** — upload commits to remote (e.g. GitHub)
+7. **`git pull`** — download + merge remote changes
+
+**Important distinction:**
+- Modified — file edited but not yet staged
+- Staged — `git add`-ed, ready for next commit
+- Committed — saved as a snapshot
+
+A commit is a SNAPSHOT, not just changes. Every commit has a unique SHA hash (e.g. `a3f72c8`).","mc","Which Git command stages a modified file for the next commit?","`git stage`","`git add`","`git commit -a`","`git push`","B","","typed","Type the Git command (just the verb after `git`) to see what files have been modified, staged, or untracked:","","","","","status","","mc","What does `git commit -m ""msg""` do?","Uploads changes to GitHub","Saves all staged changes as a new snapshot with the given message","Stages all files","Reverts the last commit","B","","mc","What's the difference between `git push` and `git commit`?","Identical","`commit` saves locally; `push` uploads commits to remote (GitHub)","`push` saves locally; `commit` uploads","Both upload to GitHub","B","","typed","Type the Git command (verb only) to download AND merge changes from the remote repository:","","","","","pull","","Topic 4 batch v4 (reused from FE Topic 4)"
+"1","Git & GitHub","1.2","Branching","A **branch** is an independent line of development. Default branch is `main` (or `master` historically).
+
+**Workflow for features:**
+```bash
+git checkout -b feat/login        # create and switch to new branch
+# ... make changes, commit ...
+git push -u origin feat/login     # push branch to remote (first time)
+# ... create Pull Request on GitHub, get review ...
+git checkout main
+git pull
+git branch -d feat/login          # delete merged local branch
+```
+
+**Key commands:**
+- `git branch` — list branches
+- `git branch <name>` — create a branch
+- `git checkout <name>` (or `git switch <name>`) — switch to a branch
+- `git checkout -b <name>` (or `git switch -c <name>`) — create AND switch
+- `git merge <name>` — merge another branch into current
+- `git rebase <name>` — re-apply current branch commits on top of another (cleaner history but rewrites SHAs — never on shared branches!)","mc","Which command creates AND switches to a new branch in one step?","`git branch new-feature`","`git checkout -b new-feature`","`git switch new-feature`","`git create new-feature`","B","","typed","Type the Git command (verb only) that lists all local branches:","","","","","branch","","mc","What's the difference between `git merge` and `git rebase`?","Identical","`merge` creates a merge commit; `rebase` re-applies commits cleanly on top of another branch","`rebase` is for first-time only","`merge` is deprecated","B","","mc","When is `git rebase` DANGEROUS?","Never","When used on shared branches — it rewrites commit history (others may have based work on old commits)","Always — never use it","Only on Windows","B","","typed","Type the Git flag (one character with dash) used with `git branch` to delete a branch (e.g. `git branch __ old-feature`):","","","","","-d","","Topic 4 batch v4 (reused from FE Topic 4)"
+"1","Git & GitHub","1.3","Remote repos","A **remote** is a Git repository hosted elsewhere (GitHub, GitLab, your own server).
+
+**Common commands:**
+- `git remote -v` — list configured remotes (URLs)
+- `git remote add origin <URL>` — link local repo to remote (typically named `origin`)
+- `git clone <URL>` — download a remote repo + set up `origin` automatically
+- `git fetch` — download remote commits WITHOUT merging (safe inspection)
+- `git pull` — `fetch` + `merge` in one step
+- `git push origin <branch>` — upload branch to remote
+
+**First push of a new branch:** use `-u` flag to set upstream:
+```bash
+git push -u origin feat/new-thing
+```
+Sets `feat/new-thing` to track `origin/feat/new-thing`. Future `git push` and `git pull` work without specifying remote/branch.","mc","What's the default name for the primary remote when you clone a repo?","`main`","`origin`","`source`","`upstream`","B","","typed","Type the Git command (verb only) that downloads a remote repository to your local machine for the first time:","","","","","clone","","mc","What does `git fetch` do (vs `git pull`)?","Same as pull","Downloads remote commits but does NOT merge them — safe for inspecting before merging","Uploads commits","Deletes the branch","B","","mc","What does the `-u` flag do in `git push -u origin feat/x`?","Uploads urgently","Sets upstream tracking — future `git push` / `pull` know which remote branch to use","Force pushes","Updates the README","B","","typed","Type the Git flag (one character with dash) used to make output VERBOSE (e.g. `git remote ___`) showing remote URLs:","","","","","-v","","Topic 4 batch v4 (reused from FE Topic 4)"
+"1","Git & GitHub","1.4","GitHub (PRs, issues, README)","**GitHub** is the most popular Git hosting platform. Key concepts:
+
+- **Repository** — your project hosted on GitHub
+- **Issue** — bug report, feature request, or discussion thread tied to the repo
+- **Pull Request (PR)** — proposal to merge changes from one branch into another. Triggers CODE REVIEW workflow. Other devs comment, approve, request changes.
+- **README.md** — the front page of your repo, written in Markdown. ALWAYS include: project name, what it does, how to install/run, screenshot, license.
+
+**PR best practices:**
+- Keep PRs SMALL (< 500 lines diff)
+- Write a clear description: what changed, why, how to test
+- Link related issues with `Closes #42`
+- Run tests locally before pushing
+
+**README sections** (recommended):
+1. Project name + 1-line description
+2. Demo / screenshot
+3. Features list
+4. Installation steps
+5. Usage examples
+6. Tech stack
+7. License","mc","What is a Pull Request (PR) on GitHub?","Pulling code from another repo","A proposal to merge changes from one branch into another, with code review","Downloading a repo","Deleting a branch","B","","typed","Type the filename (with extension, e.g. xxx.md) that GitHub displays as the front page of a repository:","","","","","README.md","","mc","What's the purpose of GitHub Issues?","To request access","To track bug reports, feature requests, and discussions tied to the repo","To delete commits","To pay GitHub","B","","mc","In a PR description, what does `Closes #42` do when merged?","Adds #42 to title","Automatically closes Issue #42 when the PR is merged","Comments on Issue #42","Forks issue #42","B","","mc","Why keep Pull Requests SMALL (< 500 lines)?","Required by GitHub","Easier to review, faster to merge, fewer bugs slip through","Faster to push","No reason","B","","Topic 4 batch v4 (reused from FE Topic 4)"
+"1","Git & GitHub","1.5",".gitignore","`.gitignore` is a plain-text file at your repo root listing files/folders Git should IGNORE — never track or commit.
+
+**Typical entries for a Node/web project:**
+```
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+.next/
+
+# Environment secrets (NEVER COMMIT)
+.env
+.env.local
+.env.*.local
+
+# Editor / OS files
+.DS_Store
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+```
+
+**Patterns:**
+- `node_modules/` — folder
+- `*.log` — all files ending in `.log`
+- `!important.log` — exception: track this one
+- `secrets/*.txt` — only `.txt` files inside `secrets/`
+
+**Critical:** Always set up `.gitignore` BEFORE first commit. If you already committed something you shouldn't have (like `.env` with secrets), use `git rm --cached <file>` + add to `.gitignore`. And **rotate the leaked secrets immediately**.","mc","What does `.gitignore` do?","Hides files from your computer","Tells Git which files/folders to ignore (never track or commit)","Encrypts files","Required to use Git","B","","typed","Type the folder name (lowercase, no slash) that should ALWAYS be in `.gitignore` for Node/web projects (contains installed npm packages):","","","","","node_modules","","mc","What's the pattern `*.log` in `.gitignore`?","Tracks all log files","Ignores all files ending in `.log`","Compresses log files","Invalid syntax","B","","mc","You accidentally committed `.env` with API secrets. Best response?","Just delete from next commit","Use `git rm --cached .env`, add to `.gitignore`, AND rotate the leaked secrets immediately","Hope no one notices","Force-push to overwrite","B","","mc","Which file should NEVER be committed to a public repo?","`README.md`","`.env` (contains secrets/API keys)","`.gitignore`","`package.json`","B","","Topic 4 batch v4 (reused from FE Topic 4)"
+"1","Git & GitHub","1.6","Commit messages (conventional)","**Conventional Commits** is a standard for commit messages that improves readability and enables tooling (changelog generation, semantic versioning).
+
+**Format:**
+```
+<type>: <short summary in present tense, lowercase, no period>
+
+[optional longer body]
+[optional footer]
+```
+
+**Common types:**
+- `feat:` — new feature
+- `fix:` — bug fix
+- `docs:` — documentation only
+- `refactor:` — code change that doesn't add a feature or fix a bug
+- `test:` — adding/updating tests
+- `chore:` — maintenance (deps, build config)
+- `perf:` — performance improvement
+- `ci:` — CI/CD config changes
+- `style:` — formatting (no logic change)
+
+**Good examples:**
+- `feat: add user login form`
+- `fix: correct rounding error in cart total`
+- `docs: update README install steps`
+
+**Bad examples:**
+- `update`
+- `fixes`
+- `WIP`
+- `asdf`","mc","Which is a VALID Conventional Commit message?","`update stuff`","`feat: add user login form`","`Updated the user login`","`changes`","B","","typed","Type the Conventional Commits TYPE (lowercase, no colon) used for a bug fix:","","","","","fix","","mc","What type would you use for a commit that only updates the README?","`feat:`","`fix:`","`docs:`","`chore:`","C","","mc","Why use Conventional Commits?","Required by Git","Improves readability + enables tools to auto-generate changelogs and version bumps","Faster pushes","Hides commits","B","","typed","Type the Conventional Commits TYPE (lowercase, no colon) used for adding a new feature:","","","","","feat","","Topic 4 batch v4 (reused from FE Topic 4)"
+"1","Git & GitHub","1.7","Resolving merge conflicts","A **merge conflict** happens when Git can't auto-merge changes because two branches modified the same lines.
+
+**When you see this:**
+```
+<<<<<<< HEAD
+your version
+=======
+their version
+>>>>>>> feat/their-branch
+```
+
+**Resolve manually:**
+1. Open conflicted file in editor (VS Code highlights conflicts)
+2. Decide: keep yours, keep theirs, or combine
+3. Delete conflict markers (`<<<<<<<`, `=======`, `>>>>>>>`)
+4. Save file
+5. `git add <file>` to mark as resolved
+6. `git commit` (no `-m` needed during merge — Git fills in a message)
+7. If rebasing: `git rebase --continue` instead of commit
+
+**Avoid conflicts:**
+- Pull often (`git pull` regularly)
+- Keep branches short-lived
+- Communicate with teammates about who's editing what
+- Use small focused PRs
+
+**Abort a merge** that's gone wrong: `git merge --abort` (or `git rebase --abort`).","mc","What causes a merge conflict?","Network issues","Two branches modified the same lines of the same file, and Git can't auto-decide","Wrong commit message","Missing `.gitignore`","B","","typed","Type the conflict marker (7 characters including `<` symbols) that appears BEFORE your version in a conflicted file:","","","","","<<<<<<<","","mc","After manually fixing a conflict, what do you do next?","Push immediately","`git add <file>` to mark resolved, then `git commit`","Delete the file","Force push","B","","mc","How can you ABORT a merge that's gone wrong?","Close terminal","`git merge --abort` returns to pre-merge state","Delete `.git/` folder","Force push","B","","mc","Best way to AVOID merge conflicts in a team?","Never branch","Pull often, keep branches short-lived, use small focused PRs","Work on only one branch","Disable Git","B","","Topic 4 batch v4 (reused from FE Topic 4)"
+"1","Git & GitHub","1.8","GitHub Pages","**GitHub Pages** is FREE static site hosting directly from a GitHub repo. Great for personal sites, project demos, documentation.
+
+**Limits:** Only static files (HTML/CSS/JS). No backend/database. Free for public repos (Pro plan needed for private).
+
+**Setup (UI):**
+1. Push your built static files (HTML/CSS/JS) to a branch (typically `main` or `gh-pages`)
+2. Repo Settings → Pages
+3. Source: pick branch + folder (`/` root or `/docs`)
+4. Click Save
+5. Wait ~1 min — site available at `https://<username>.github.io/<repo-name>/`
+
+**For Vite/React app:** add `base: '/repo-name/'` in `vite.config.js`, then `yarn build` → push the `dist/` folder.
+
+**Custom domain:** add a `CNAME` file with your domain (e.g. `mysite.com`) to the deployed folder, configure DNS to point to GitHub Pages.
+
+**GitHub Actions** can auto-deploy on every push to `main`.","mc","What can you host on GitHub Pages?","Full-stack apps with database","Static sites (HTML/CSS/JS only) — no backend or database","Only Markdown files","Docker containers","B","","typed","Type the default URL pattern for GitHub Pages (replace USER and REPO; just the domain part before `/REPO/`, e.g. `something.github.io`):","","","","","<username>.github.io","username.github.io","mc","For a Vite-built React app deployed to GitHub Pages at `username.github.io/my-app/`, what must be set in `vite.config.js`?","Nothing","`base: '/my-app/'` so asset URLs work correctly under the sub-path","`port: 4000`","`mode: 'production'`","B","","mc","How do you set up a CUSTOM DOMAIN (e.g. mysite.com) for GitHub Pages?","Pay GitHub","Add a `CNAME` file with your domain to the deployed folder + configure DNS to point to GitHub Pages","Use a different hosting","Not possible","B","","typed","Type the GitHub feature/tool name (lowercase, with hyphen) used to AUTO-DEPLOY on every push (e.g. ""GitHub ____""):","","","","","actions","","Topic 4 batch v4 (reused from FE Topic 4)"
+"2","JavaScript Fundamentals","2.1","Variables","**Prerequisites:** New to Node.js or Yarn? Complete Topic 0.1 and 0.2 first.
+
+JavaScript has 3 ways to declare variables:
+
+- **`const`** — value can't be reassigned. USE THIS BY DEFAULT.
+- **`let`** — value CAN be reassigned. Use ONLY when reassignment is needed.
+- **`var`** — old. AVOID. Has function scope (vs block scope of let/const) — causes confusing bugs.
+
+```js
+const PI = 3.14;
+PI = 3.15;  // TypeError
+
+let count = 0;
+count = 1;  // OK
+
+if (true) {
+  let x = 5;  // block-scoped — only exists in this {}
+  var y = 5;  // function-scoped — leaks out!
+}
+console.log(y);  // 5 (var leaks)
+console.log(x);  // ReferenceError
+```
+
+**Note on `const`:** The BINDING is constant, but if it points to an object/array, the contents can still mutate:
+```js
+const arr = [1, 2];
+arr.push(3);  // OK — array mutated, but `arr` still refers to same array
+arr = [4];    // TypeError — can't reassign const
+```","mc","Which keyword should be your DEFAULT for declaring variables in modern JavaScript?","`var`","`let`","`const`","`def`","C","","typed","Type the keyword (3 letters, lowercase) used for a variable that CAN be reassigned later:","","","","","let","","mc","What's the problem with `var`?","Slower performance","It has FUNCTION scope (not block scope), causing confusing bugs","Removed in ES6","Reserved word","B","","mc","Given `const arr = [1, 2]; arr.push(3);`, what happens?","TypeError","Works — `arr` is still the same array, just mutated. Const prevents REASSIGNMENT, not mutation.","arr becomes undefined","Returns false","B","","typed","Type the JavaScript keyword (5 letters, lowercase) used to declare a variable whose value cannot be reassigned:","","","","","const","","Topic 5 batch v4 (reused from FE Topic 5)"
+"2","JavaScript Fundamentals","2.2","Data types","JavaScript has 7 primitive types + objects:
+
+**Primitives** (immutable, compared by value):
+- `string` — `""hello""`, `'world'`, `` `template ${x}` ``
+- `number` — `42`, `3.14`, `NaN`, `Infinity` (one type for ALL numbers)
+- `boolean` — `true`, `false`
+- `null` — intentional ""no value""
+- `undefined` — variable declared but not assigned
+- `symbol` — unique identifier (advanced)
+- `bigint` — for numbers beyond `Number.MAX_SAFE_INTEGER` (~9 quadrillion). Written `123n`
+
+**Objects** (everything else — compared by reference):
+- `{ key: value }` — plain object
+- `[1, 2, 3]` — array (object under the hood)
+- functions, dates, regex, etc.
+
+**Check type:** `typeof x` returns a string: `'string'`, `'number'`, `'boolean'`, `'undefined'`, `'object'` (for null and arrays — confusing!), `'function'`.
+
+For arrays use `Array.isArray(x)`. For null use `x === null`.","mc","Which type does `typeof null` return in JavaScript?","`'null'`","`'undefined'`","`'object'` (a famous bug kept for backward compat)","`'none'`","C","","typed","Type the JavaScript operator/keyword used to check the type of a value (e.g. `___ x === 'string'`):","","","","","typeof","","mc","What's the difference between `null` and `undefined`?","Identical","`null` is intentional ""no value"" set by code; `undefined` is the default for unassigned variables","`null` is for strings only","`undefined` is deprecated","B","","mc","How do you reliably check if a value is an array?","`typeof x === 'array'`","`Array.isArray(x)`","`x instanceof Array` only","`x.length !== undefined`","B","","typed","Type the primitive type name (lowercase) of the value `42` in JavaScript:","","","","","number","","Topic 5 batch v4 (reused from FE Topic 5)"
+"2","JavaScript Fundamentals","2.3","Type coercion","JavaScript automatically converts types in many contexts — sometimes helpful, often confusing.
+
+**Loose equality (`==`)** does type coercion. STRICT equality (`===`) doesn't.
+
+```js
+0 == '0'        // true  (string coerced to number)
+0 == false      // true  (false coerced to 0)
+null == undefined  // true (special rule)
+'5' + 3         // '53'   (string concat)
+'5' - 3         // 2      (numeric subtract)
+[] + []         // ''
+[] + {}         // '[object Object]'
+```
+
+**RULE: Always use `===` (strict equality).** It checks type AND value with no coercion. Avoid `==` entirely unless you have a very specific reason.
+
+**Truthy/Falsy:** In conditionals, values coerce to boolean:
+- **Falsy:** `false`, `0`, `''`, `null`, `undefined`, `NaN` (memorize this list!)
+- **Everything else is truthy** (including `[]`, `{}`, `'0'`, `'false'`)","mc","Which equality operator should you use by default in JavaScript?","`==`","`===`","`=`","`<=>`","B","","typed","Type the JavaScript operator (3 characters) for STRICT equality (no type coercion):","","","","","===","","mc","What does `'5' + 3` evaluate to in JavaScript?","8","'8'","'53'","Error","C","","mc","Which of these is FALSY in JavaScript?","`[]` (empty array)","`{}` (empty object)","`'0'` (string)","`0` (number)","D","","typed","Type the JavaScript value (lowercase, no quotes) that represents ""not a number"" (result of bad math like `0/0`):","","","","","NaN","","Topic 5 batch v4 (reused from FE Topic 5)"
+"2","JavaScript Fundamentals","2.4","Operators","Key operators in JavaScript:
+
+**Arithmetic:** `+ - * / %` (modulo) `**` (exponent)
+
+**Comparison:** `=== !== < > <= >=` (always `===` not `==`)
+
+**Logical:**
+- `&&` AND (short-circuits — returns first falsy or last value)
+- `||` OR (short-circuits — returns first truthy or last value)
+- `!` NOT
+- `??` **Nullish coalescing** — like `||` but ONLY treats `null`/`undefined` as missing (NOT `0` or `''`)
+
+**Optional chaining `?.`** — safely access nested properties:
+```js
+user?.address?.city    // undefined if user or address is null/undefined
+arr?.[0]               // safe array access
+fn?.()                 // safe function call
+```
+
+**Spread / Rest:** `...`
+- Spread (in array/call): `[...a, ...b]`, `fn(...args)`
+- Rest (in params/destructure): `function fn(...args) {}`, `const [first, ...rest] = arr`","mc","What's the difference between `||` and `??` (nullish coalescing)?","Identical","`||` treats `0` and `''` as falsy; `??` only treats `null`/`undefined` as missing","`??` is faster","`||` is deprecated","B","","typed","Type the JavaScript operator (2 characters) for OPTIONAL CHAINING — safely access nested properties (e.g. `user_.address`):","","","","","?.","","mc","What does `arr?.[0]` do?","Sets arr to `[0]`","Returns `arr[0]` if `arr` exists; `undefined` otherwise (no error)","Throws TypeError if arr is null","Same as `arr[0]`","B","","mc","What does `const [first, ...rest] = [1, 2, 3, 4]` produce?","first=1, rest=[1,2,3,4]","first=1, rest=[2,3,4]","first=[1,2,3], rest=4","Syntax error","B","","typed","Type the JavaScript operator (3 characters) for ""spread"" or ""rest"" (used in `[..._arr]` or `function fn(..._args)`):","","","","","...","","Topic 5 batch v4 (reused from FE Topic 5)"
+"2","JavaScript Fundamentals","2.5","Control flow","JavaScript control flow statements:
+
+**if / else if / else:**
+```js
+if (score >= 90) { grade = 'A'; }
+else if (score >= 80) { grade = 'B'; }
+else { grade = 'F'; }
+```
+
+**switch** — branch on a single value:
+```js
+switch (day) {
+  case 'Mon': case 'Tue': return 'weekday';
+  case 'Sat': case 'Sun': return 'weekend';
+  default: return 'unknown';
+}
+```
+Don't forget `break` between cases (unless intentional fallthrough). Or use `return`.
+
+**Ternary** — concise inline if/else:
+```js
+const label = isLogged ? 'Logout' : 'Login';
+```
+
+**Short-circuit:**
+```js
+const name = user.name || 'Guest';
+isAdmin && deleteAll();  // only runs deleteAll if isAdmin truthy
+```
+
+**Avoid nested if-else hell.** Use early returns:
+```js
+function check(x) {
+  if (!x) return null;
+  if (x < 0) return 'negative';
+  return 'positive';
+}
+```","mc","What's the cleanest way to handle a function with multiple guard conditions?","Deeply nested if-else","Early returns (`if (!x) return null;` at top of function)","Use `goto`","Switch statement only","B","","typed","Type the JavaScript keyword (5 letters, lowercase) used inside a switch case to stop fall-through to the next case:","","","","","break","","mc","What does `const x = a > 5 ? 'big' : 'small'` use?","If-else","Ternary operator","Switch","Loop","B","","mc","What's the output of `const name = '' || 'Guest';`?","`''`","`'Guest'` (because `''` is falsy, `||` falls through)","`null`","Error","B","","typed","Type the JavaScript keyword (4 letters, lowercase) used for the catch-all branch in a `switch` statement:","","","","","default","","Topic 5 batch v4 (reused from FE Topic 5)"
+"2","JavaScript Fundamentals","2.6","Loops","JavaScript loop types — pick the right one for the job:
+
+**`for` (classic)** — when you need an index:
+```js
+for (let i = 0; i < arr.length; i++) { console.log(arr[i]); }
+```
+
+**`for...of`** — iterate VALUES of an iterable (array, string, map, set):
+```js
+for (const item of arr) { console.log(item); }
+```
+
+**`for...in`** — iterate KEYS of an object. AVOID on arrays.
+```js
+for (const key in obj) { console.log(key, obj[key]); }
+```
+
+**`while`** — while condition is true:
+```js
+while (!done) { ... }
+```
+
+**Modern alternative — array methods** (preferred for arrays):
+- `arr.forEach(fn)` — side-effect each item
+- `arr.map(fn)` — transform → new array
+- `arr.filter(fn)` — keep matching → new array
+- `arr.reduce(fn, init)` — reduce to single value
+
+Generally prefer `.map/.filter/.reduce` over manual `for` loops for arrays.","mc","Which loop iterates the VALUES of an array (cleaner than classic `for`)?","`for...in`","`for...of`","`while`","`do...while`","B","","typed","Type the JavaScript array method (lowercase) used to TRANSFORM each element into a new array:","","","","","map","","mc","What's wrong with using `for...in` to iterate an array?","Iterates KEYS (indexes as strings) AND can hit inherited properties — use `for...of` for arrays instead","It's slower","It's deprecated","It doesn't work","A","","mc","Which method returns ONE value computed from an array (e.g. sum, accumulator)?","`map`","`filter`","`reduce`","`forEach`","C","","typed","Type the JavaScript array method (lowercase) used to KEEP only elements matching a condition:","","","","","filter","","Topic 5 batch v4 (reused from FE Topic 5)"
+"2","JavaScript Fundamentals","2.7","Functions","JavaScript functions can be declared in several ways:
+
+```js
+// Function declaration (hoisted)
+function add(a, b) { return a + b; }
+
+// Function expression (NOT hoisted)
+const add = function(a, b) { return a + b; };
+
+// Arrow function (concise, no own `this`)
+const add = (a, b) => a + b;
+const square = x => x * x;        // 1 arg: parens optional
+const greet = () => console.log('hi');
+```
+
+**Default parameters:**
+```js
+function greet(name = 'World') { return `Hello, ${name}`; }
+```
+
+**Rest parameters** — collect remaining args:
+```js
+function sum(...nums) { return nums.reduce((a, b) => a + b, 0); }
+sum(1, 2, 3, 4);  // 10
+```
+
+**Arrow functions** are NOT just shorter syntax — they don't have their own `this`, `arguments`, or `super`. Use regular `function` for methods that need their own `this` (object methods, event handlers in some cases).","mc","What's a KEY behavioral difference between arrow functions and regular functions?","Arrow functions are faster","Arrow functions don't have their own `this` — they inherit from enclosing scope","Arrow functions can't take arguments","Arrow functions can't return values","B","","typed","Type the JavaScript syntax (2 characters, no quotes/spaces) that defines an arrow function body (e.g. `(a, b) __ a + b`):","","","","","=>","","mc","What's a DEFAULT parameter?","Required parameter","A parameter with a fallback value if undefined is passed (`function f(x = 10) {}`)","Cached parameter","Reserved keyword","B","","mc","What does `function sum(...nums)` do?","Sums all args automatically","Collects ALL passed arguments into an array named `nums` (rest parameter)","Limits args to 3","Spreads args","B","","typed","Type the JavaScript keyword (6 letters, lowercase) used inside a function to send a value back to the caller:","","","","","return","","Topic 5 batch v4 (reused from FE Topic 5)"
+"2","JavaScript Fundamentals","2.8","Objects","JavaScript objects = unordered key-value pairs.
+
+**Create:**
+```js
+const user = {
+  name: 'Alice',
+  age: 30,
+  greet() { return `Hi, ${this.name}`; },
+};
+```
+
+**Access:** `user.name` or `user['name']` (bracket needed for computed keys or special chars).
+
+**Add / update / delete:**
+```js
+user.email = 'a@x.com';
+user.age = 31;
+delete user.age;
+```
+
+**Destructuring** — extract properties into variables:
+```js
+const { name, age } = user;
+const { name: userName } = user;  // rename
+const { city = 'Unknown' } = user;  // default
+```
+
+**Spread** — clone or merge:
+```js
+const clone = { ...user };
+const merged = { ...user, age: 32 };  // overrides age
+```
+
+**Useful methods:**
+- `Object.keys(obj)` → `['name', 'age']`
+- `Object.values(obj)` → `['Alice', 30]`
+- `Object.entries(obj)` → `[['name', 'Alice'], ['age', 30]]`","mc","What does `const { name, age } = user` do?","Defines a function","Object destructuring — pulls `user.name` and `user.age` into local variables","Throws an error","Creates a new object","B","","typed","Type the JavaScript `Object` method (camelCase) that returns an array of an object's KEYS:","","","","","Object.keys","keys","mc","What does `const merged = { ...user, age: 32 }` produce?","A new object with all `user`'s properties + `age` overridden to 32","Merges into `user` directly","Throws error","Loses other properties","A","","mc","Which `Object` method returns the key-value PAIRS as `[[k, v], ...]`?","`Object.keys`","`Object.values`","`Object.entries`","`Object.pairs`","C","","typed","Type the JavaScript keyword (6 letters, lowercase) used to remove a property from an object (e.g. `___ user.age`):","","","","","delete","","Topic 5 batch v4 (reused from FE Topic 5)"
+"2","JavaScript Fundamentals","2.9","Arrays (map/filter/reduce)","Arrays have powerful methods to transform data without manual loops.
+
+**`.map(fn)`** — transform each item → NEW array, same length:
+```js
+const doubled = [1, 2, 3].map(x => x * 2);  // [2, 4, 6]
+```
+
+**`.filter(fn)`** — keep items where fn returns true → NEW shorter array:
+```js
+const evens = [1, 2, 3, 4].filter(x => x % 2 === 0);  // [2, 4]
+```
+
+**`.reduce(fn, initial)`** — combine into single value:
+```js
+const sum = [1, 2, 3].reduce((acc, x) => acc + x, 0);  // 6
+```
+
+**`.find(fn)`** — first matching item (or `undefined`):
+```js
+const user = users.find(u => u.id === 42);
+```
+
+**`.some(fn)` / `.every(fn)`** — return boolean if any/all match.
+
+**`.includes(value)`** — check if array contains value.
+
+**Chain them** for elegant data pipelines:
+```js
+const totalAge = users.filter(u => u.active).map(u => u.age).reduce((a, b) => a + b, 0);
+```
+
+All these return NEW arrays — never mutate the original.","mc","Which method TRANSFORMS each array element into a new array of the same length?","`forEach`","`map`","`filter`","`reduce`","B","","typed","Type the array method (lowercase) used to FIND the first matching element (or undefined if none):","","","","","find","","mc","What does `[1, 2, 3].reduce((acc, x) => acc + x, 0)` return?","[1, 2, 3]","6","'1, 2, 3'","Error","B","","mc","What's the difference between `.some()` and `.every()`?","Identical","`.some()` returns true if ANY element matches; `.every()` returns true only if ALL match","`.some` returns numbers","`.every` is deprecated","B","","typed","Type the array method (lowercase) used to keep ONLY elements that pass a test:","","","","","filter","","Topic 5 batch v4 (reused from FE Topic 5)"
+"2","JavaScript Fundamentals","2.10","String methods","Common string methods (strings are immutable — methods return NEW strings):
+
+- **`.length`** — character count (property, not method)
+- **`.toUpperCase()`** / **`.toLowerCase()`**
+- **`.trim()`** — remove leading/trailing whitespace
+- **`.includes(sub)`** — boolean: substring present?
+- **`.startsWith(prefix)`** / **`.endsWith(suffix)`**
+- **`.indexOf(sub)`** — index of first match (-1 if not found)
+- **`.slice(start, end)`** — extract substring (negative indexes from end)
+- **`.split(sep)`** — split into array: `'a,b,c'.split(',')` → `['a', 'b', 'c']`
+- **`.replace(old, new)`** — first match. **`.replaceAll(old, new)`** — all matches
+- **`.repeat(n)`** — repeat string n times
+
+**Template literals** with backticks for interpolation + multi-line:
+```js
+const greeting = `Hello, ${user.name}!
+Welcome back.`;
+```","mc","What does `'  hello  '.trim()` return?","`'hello'` (whitespace removed from both ends)","`'  hello  '` (unchanged)","`''`","Error","A","","typed","Type the JavaScript string method (camelCase, no parens) that checks if a string CONTAINS a substring (returns boolean):","","","","","includes","","mc","What does `'a,b,c'.split(',')` return?","`'a,b,c'`","`['a', 'b', 'c']`","`['a,b,c']`","Error","B","","mc","Which character wraps a TEMPLATE LITERAL for `${var}` interpolation?","Single quote `'`","Double quote `\""`","Backtick `` ` ``","Slash `/`","C","","typed","Type the JavaScript string method (lowercase, no parens) used to convert a string to UPPERCASE:","","","","","toUpperCase","","Topic 5 batch v4 (reused from FE Topic 5)"
+"2","JavaScript Fundamentals","2.11","Error handling","JavaScript errors are handled with `try / catch / finally`:
+
+```js
+try {
+  const data = JSON.parse(rawInput);
+  doSomething(data);
+} catch (error) {
+  console.error('Parse failed:', error.message);
+  return null;
+} finally {
+  // ALWAYS runs (success or failure) — cleanup code
+  closeConnection();
+}
+```
+
+**Throwing errors:**
+```js
+function divide(a, b) {
+  if (b === 0) throw new Error('Cannot divide by zero');
+  return a / b;
+}
+```
+
+**Custom error classes** (helpful for typing):
+```js
+class ValidationError extends Error {
+  constructor(message, field) {
+    super(message);
+    this.name = 'ValidationError';
+    this.field = field;
+  }
+}
+```
+
+**Best practices:**
+- Catch errors only where you can MEANINGFULLY handle them — don't swallow silently
+- Always log unexpected errors
+- Use specific error types so callers know what went wrong
+- For async code: `try/catch` around `await`","mc","Which block runs whether the `try` succeeded or threw an error?","`catch`","`finally`","`always`","`done`","B","","typed","Type the JavaScript keyword (5 letters, lowercase) used to RAISE an error manually (e.g. `___ new Error('msg')`):","","","","","throw","","mc","What's the BEST practice for catching errors?","Catch everything everywhere","Catch only where you can MEANINGFULLY handle the error — don't silently swallow","Never use try/catch","Log and re-throw immediately every time","B","","mc","How do you catch errors from `await`?","Use `.catch()`","Wrap `await` in a `try/catch` block","Errors auto-bubble — no catching needed","`await` can't throw","B","","typed","Type the JavaScript keyword (3 letters, lowercase) used to start an error-handling block (e.g. `___ { risky(); } catch (e) { ... }`):","","","","","try","","Topic 5 batch v4 (reused from FE Topic 5)"
+"2","JavaScript Fundamentals","2.12","Modules (import/export)","Modern JavaScript modules (ESM) use `import` / `export` syntax.
+
+**Named exports** — export multiple things:
+```js
+// utils.js
+export const PI = 3.14;
+export function double(x) { return x * 2; }
+
+// main.js
+import { PI, double } from './utils.js';
+import * as utils from './utils.js';  // namespace import
+```
+
+**Default export** — one main thing per file:
+```js
+// Button.js
+export default function Button() { ... }
+
+// app.js
+import Button from './Button.js';
+import MyButton from './Button.js';  // can rename freely
+```
+
+**Mix both:**
+```js
+// api.js
+export default fetch;
+export const BASE_URL = 'https://api.example.com';
+
+// app.js
+import api, { BASE_URL } from './api.js';
+```
+
+**Rules:**
+- ES Modules use `.mjs` extension or `""type"": ""module""` in package.json (or `.ts`/Vite handles automatically)
+- Imports are HOISTED to top of file
+- `import` paths can be relative (`./`, `../`) or package names (resolved from `node_modules`)
+- Browsers need full path including `.js` extension (Vite handles this)","mc","What's the difference between a NAMED export and a DEFAULT export?","Identical","A file can have MANY named exports (`export const X`) but only ONE default export (`export default ...`)","Default is faster","Named exports are deprecated","B","","typed","Type the JavaScript keyword (6 letters, lowercase) used at the start of a statement to bring values from another module into the current file:","","","","","import","","mc","Which import syntax matches a DEFAULT export?","`import { thing } from './x.js'`","`import thing from './x.js'`","`import * as thing from './x.js'`","`require('./x.js')`","B","","mc","What does `import * as utils from './utils.js'` do?","Imports only `utils`","Imports ALL named exports as properties of a `utils` namespace object","Throws an error","Re-exports","B","","typed","Type the JavaScript keyword (6 letters, lowercase) used to make a value available from a module:","","","","","export","","Topic 5 batch v4 (reused from FE Topic 5)"
+"3","JavaScript Advanced","3.1","Closures","A **closure** = a function ""remembers"" variables from the scope where it was created, even after that scope has ended.
+
+```js
+function makeCounter() {
+  let count = 0;            // private variable
+  return function() {
+    count++;                 // closure ""remembers"" count
+    return count;
+  };
+}
+
+const counter = makeCounter();
+counter();  // 1
+counter();  // 2
+counter();  // 3
+```
+
+The inner function ""closes over"" `count`. Each call to `makeCounter()` creates a NEW closure with its own `count`.
+
+**Real-world uses:**
+- **Data privacy** — emulate private variables (pre-class days)
+- **Function factories** — create specialized functions
+- **Callbacks** — event handlers that need to remember context
+- **Module pattern** — encapsulate state
+
+**Common gotcha:** classic `var` + setTimeout loop bug:
+```js
+for (var i = 0; i < 3; i++) {
+  setTimeout(() => console.log(i), 0);  // logs 3, 3, 3 (var is shared)
+}
+// Fix: use `let i` — fresh binding per iteration → logs 0, 1, 2
+```","mc","What is a CLOSURE in JavaScript?","A closed code block","A function that remembers variables from its outer scope, even after that scope has ended","A loop that never ends","An object property","B","","typed","Type the keyword (3 letters, lowercase) you should use INSTEAD of `var` in a `for` loop to fix the classic closure-over-loop-variable bug:","","","","","let","","mc","Why does this print `3, 3, 3` instead of `0, 1, 2`?
+
+```js
+for (var i = 0; i < 3; i++) setTimeout(() => console.log(i), 0);
+```","setTimeout is async","`var` is function-scoped — all 3 callbacks share the SAME `i`, which is 3 when they finally run","Bug in JavaScript","Random output","B","","mc","What's a practical use of closures?","Make code longer","Data privacy (emulate private variables), function factories, callbacks","Slow down execution","Improve SEO","B","","mc","Each call to `makeCounter()` returns a closure. What do TWO calls produce?","Same counter","Two INDEPENDENT counters each with their own private `count`","One counter shared between them","An error","B","","Topic 6 batch v4 (reused from FE Topic 6)"
+"3","JavaScript Advanced","3.2","`this` keyword","`this` in JavaScript is determined by HOW a function is called, not where it's defined.
+
+**Rules:**
+
+1. **Method call** (`obj.fn()`) — `this` = the object before the dot:
+```js
+const user = { name: 'Alice', greet() { return this.name; } };
+user.greet();  // 'Alice'
+```
+
+2. **Plain function call** (`fn()`) — `this` = `undefined` in strict mode (or `window`/`global` in non-strict).
+
+3. **Arrow function** — has NO own `this`. Inherits from enclosing scope. Great for callbacks inside methods:
+```js
+class Timer {
+  start() {
+    setInterval(() => console.log(this), 1000);  // `this` = Timer instance
+  }
+}
+```
+
+4. **Explicit binding** — `fn.call(thisArg, ...args)`, `fn.apply(thisArg, argsArray)`, `fn.bind(thisArg)`.
+
+5. **`new` keyword** — `this` = the newly created object.
+
+**Common bug:** detaching a method loses `this`:
+```js
+const greet = user.greet;
+greet();  // 'undefined' — `this` is undefined now
+```","mc","What does `this` refer to inside an ARROW function?","The global object","Inherits from the enclosing scope (no own `this`)","The function itself","Always undefined","B","","typed","Type the JavaScript method name (lowercase) used on a function to permanently set its `this` value (e.g. `fn.___(obj)`):","","","","","bind","","mc","Given `const user = { name: 'A', greet() { return this.name; } }`, what does `user.greet()` return?","undefined","'A'","'user'","Error","B","","mc","Given `const fn = user.greet; fn();`, what is `this` likely to be?","Still `user`","undefined (in strict mode) — `this` is lost when method is detached","'fn'","Global object","B","","typed","Type the JavaScript method name (lowercase, 4 letters) used to invoke a function with a specific `this` and individual args (e.g. `fn.____(obj, 1, 2)`):","","","","","call","","Topic 6 batch v4 (reused from FE Topic 6)"
+"3","JavaScript Advanced","3.3","Prototypes","Every JavaScript object has an internal link (`[[Prototype]]`) to another object — the **prototype**. When you access a property, JS looks up the prototype chain until found (or returns `undefined`).
+
+```js
+const animal = { eats: true };
+const rabbit = Object.create(animal);
+rabbit.jumps = true;
+console.log(rabbit.eats);  // true — found on prototype
+console.log(rabbit.jumps); // true — own property
+```
+
+**Prototype chain:**
+- `arr.map(...)` works because Array.prototype has a `map` method
+- `obj.toString()` works because Object.prototype has `toString`
+- Chain ends at `null` (Object.prototype's prototype)
+
+**Modern JS uses `class` syntax** which hides prototypes — but under the hood it IS prototypes:
+```js
+class Dog {
+  bark() { return 'woof'; }  // really added to Dog.prototype
+}
+new Dog().bark();  // 'woof'
+```
+
+You rarely manipulate prototypes directly in modern code, but understanding helps debug ""why does this method exist?"" questions and `instanceof` checks.","mc","What is a PROTOTYPE in JavaScript?","A draft version","A linked object — JavaScript looks up missing properties through the prototype chain","A type definition","Only used with classes","B","","mc","Why does `[1,2,3].map(x => x*2)` work? Where does `.map` come from?","Built into every array","It's defined on `Array.prototype` — accessed via the prototype chain","Compiled by the browser","Magic","B","","typed","Type the `Object` method (camelCase) that creates a new object with a SPECIFIED prototype (e.g. `___(parent)`):","","","","","Object.create","create","mc","Under the hood, what does the modern `class` syntax USE?","Inheritance trees","Prototypes — methods defined in the class body are added to the class's prototype","Brand new ES6 mechanism","Hidden compilation","B","","mc","What's at the end of every prototype chain?","Another object","`null`","An array","Object itself","B","","Topic 6 batch v4 (reused from FE Topic 6)"
+"3","JavaScript Advanced","3.4","Classes","ES6+ classes are syntactic sugar over prototypes. Cleaner syntax for OOP-style code.
+
+```js
+class Animal {
+  constructor(name) {
+    this.name = name;
+  }
+  speak() {
+    return `${this.name} makes a sound`;
+  }
+  static fromString(str) {  // class method (not on instance)
+    return new Animal(str);
+  }
+}
+
+class Dog extends Animal {       // inheritance
+  speak() {                       // override
+    return `${this.name} barks`;
+  }
+  superSpeak() {
+    return super.speak();         // call parent's method
+  }
+}
+
+const d = new Dog('Rex');
+d.speak();  // 'Rex barks'
+```
+
+**Key concepts:**
+- `constructor` — initializer, called automatically with `new`
+- `extends` — inheritance
+- `super(...)` — call parent constructor (REQUIRED in subclass constructor)
+- `super.method()` — call parent method
+- `static` — class-level method (called on class, not instance)
+- Private fields: `#count` (truly private — only accessible inside class)
+
+**Prefer composition over inheritance** when possible. Deep class hierarchies become hard to reason about.","mc","Which JavaScript keyword sets up class INHERITANCE?","`inherits`","`extends`","`parent`","`subclass`","B","","typed","Type the JavaScript keyword (5 letters, lowercase) used to call the parent class's constructor or method from a subclass:","","","","","super","","mc","What does `static fromString(str)` define?","An instance method","A class-level method called on the class itself (e.g. `Animal.fromString('...')`), not on instances","A private field","A getter","B","","mc","What's the prefix for a TRULY private class field in modern JavaScript?","`_field`","`#field`","`private field`","`__field`","B","","typed","Type the special method name (lowercase, 11 chars) that runs automatically when `new ClassName()` is called:","","","","","constructor","","Topic 6 batch v4 (reused from FE Topic 6)"
+"3","JavaScript Advanced","3.5","Event Loop","JavaScript is single-threaded — only ONE thing runs at a time. The **event loop** lets async code run without blocking.
+
+**Components:**
+1. **Call Stack** — currently executing functions (synchronous)
+2. **Web APIs** — `setTimeout`, fetch, DOM events (run outside JS engine)
+3. **Task Queue (macrotask)** — `setTimeout`, `setInterval`, I/O callbacks
+4. **Microtask Queue** — Promise `.then`/`.catch`, `queueMicrotask`. HIGHER priority than macrotask.
+
+**Algorithm:**
+- Run all synchronous code on call stack
+- When stack empty, drain ALL microtasks
+- Then take ONE macrotask, run it (and its microtasks)
+- Repeat
+
+**Why this matters:**
+```js
+console.log('1');
+setTimeout(() => console.log('2'), 0);
+Promise.resolve().then(() => console.log('3'));
+console.log('4');
+// Output: 1, 4, 3, 2
+```
+`1` and `4` are sync. `3` (microtask) runs before `2` (macrotask) even with `0` timeout.
+
+Watch Philip Roberts' ""What the heck is the event loop?"" talk.","mc","What's the output order of this code?
+
+```js
+console.log('1');
+setTimeout(() => console.log('2'), 0);
+Promise.resolve().then(() => console.log('3'));
+console.log('4');
+```","1, 2, 3, 4","1, 4, 3, 2","1, 2, 4, 3","2, 3, 1, 4","B","","mc","Which has HIGHER priority in the event loop?","Microtasks (Promise.then) — they all drain before the next macrotask","Macrotasks (setTimeout) — they run first","Equal priority","DOM events","A","","typed","Type the type of queue (one word, lowercase) that Promise `.then` callbacks go into — has higher priority than the regular task queue:","","","","","microtask","","mc","Is JavaScript single-threaded or multi-threaded?","Multi-threaded","Single-threaded — but the event loop + Web APIs let it handle async work without blocking","Depends on browser","Both","B","","mc","Why does `setTimeout(fn, 0)` NOT run immediately?","Bug in JavaScript","It goes into the macrotask queue — waits for the call stack to empty AND all microtasks to drain","Browser delay","Random","B","","Topic 6 batch v4 (reused from FE Topic 6)"
+"3","JavaScript Advanced","3.6","Promises","A **Promise** represents the eventual result of an asynchronous operation. 3 states: `pending` → `fulfilled` (resolved) or `rejected`.
+
+**Creating:**
+```js
+const p = new Promise((resolve, reject) => {
+  setTimeout(() => resolve(42), 1000);
+});
+```
+
+**Consuming:**
+```js
+p.then(value => console.log(value))       // 42
+ .catch(err => console.error(err))
+ .finally(() => console.log('done'));      // always runs
+```
+
+**Static methods:**
+- `Promise.all([p1, p2])` — wait for ALL to resolve. Rejects if ANY rejects.
+- `Promise.allSettled([...])` — wait for all, never rejects. Returns array of `{status, value/reason}`.
+- `Promise.race([...])` — first to resolve OR reject wins.
+- `Promise.any([...])` — first to RESOLVE (ignores rejections until all reject).
+- `Promise.resolve(v)` / `Promise.reject(e)` — instant resolved/rejected.
+
+**Promise chains** flatten async code (vs callback hell):
+```js
+fetchUser().then(u => fetchPosts(u.id)).then(posts => render(posts));
+```","mc","What are the 3 possible states of a Promise?","start, middle, end","pending, fulfilled (resolved), rejected","new, running, done","todo, in progress, done","B","","typed","Type the Promise method (lowercase, no parens) used to handle a RESOLVED value (e.g. `promise.____(value => ...)`):","","","","","then","","mc","What does `Promise.all([p1, p2, p3])` do?","Returns first resolved","Waits for ALL to resolve and gives an array of results. Rejects if ANY rejects.","Waits for first rejection","Runs them serially","B","","mc","How is `Promise.allSettled` different from `Promise.all`?","Identical","`allSettled` waits for all to finish (resolved OR rejected) and never rejects — returns array of status objects","`allSettled` is faster","`allSettled` is deprecated","B","","typed","Type the Promise method (lowercase, no parens) used to handle an ERROR (e.g. `promise.____(err => ...)`):","","","","","catch","","Topic 6 batch v4 (reused from FE Topic 6)"
+"3","JavaScript Advanced","3.7","Async/Await","`async/await` is syntactic sugar over Promises — code looks synchronous but runs asynchronously.
+
+**Basic:**
+```js
+async function getUser(id) {
+  const res = await fetch(`/api/users/${id}`);
+  const user = await res.json();
+  return user;  // automatically wrapped in a Promise
+}
+
+// Call:
+getUser(1).then(u => console.log(u));
+// or in another async function:
+const u = await getUser(1);
+```
+
+**Error handling** — use `try/catch`:
+```js
+async function safe() {
+  try {
+    const data = await mightFail();
+    return data;
+  } catch (err) {
+    console.error(err);
+    return null;
+  }
+}
+```
+
+**Parallel** — `await` is sequential by default. Use `Promise.all` for parallel:
+```js
+// Slow (sequential):
+const a = await fetchA();
+const b = await fetchB();
+
+// Fast (parallel):
+const [a, b] = await Promise.all([fetchA(), fetchB()]);
+```
+
+`await` is only valid inside `async` functions (or modern top-level `await` in modules).","mc","Where can you use `await`?","Anywhere","Only inside `async` functions (or top-level in modules)","Only in classes","Only after `import`","B","","mc","What does an `async` function ALWAYS return?","The raw value","A Promise that wraps the return value","null","Nothing","B","","typed","Type the JavaScript keyword (5 letters, lowercase) used in front of a function declaration to allow `await` inside it:","","","","","async","","mc","Which executes FASTER (parallel)?
+
+```js
+// Option A
+const a = await fetchA();
+const b = await fetchB();
+
+// Option B
+const [a, b] = await Promise.all([fetchA(), fetchB()]);
+```","Option A (sequential)","Option B (parallel — both requests start at the same time)","Same speed","Depends on browser","B","","typed","Type the JavaScript keyword (5 letters, lowercase) used inside an `async` function to wait for a Promise to resolve:","","","","","await","","Topic 6 batch v4 (reused from FE Topic 6)"
+"3","JavaScript Advanced","3.8","Iterators & Generators","An **iterator** is an object with a `next()` method that returns `{ value, done }`. Anything ""for-of-able"" is iterable.
+
+**Generator function** = a special function that produces a sequence of values lazily. Marked with `function*`. Use `yield` to emit a value and pause:
+
+```js
+function* counter() {
+  let i = 0;
+  while (true) {
+    yield i++;
+  }
+}
+
+const c = counter();
+c.next();  // { value: 0, done: false }
+c.next();  // { value: 1, done: false }
+// Infinite — never `done: true` here
+```
+
+**Use cases:**
+- Lazy sequences (don't materialize huge arrays)
+- Custom iterables: implement `[Symbol.iterator]()` returning a generator
+- Async iteration: `async function* (...)`, consume with `for await (const x of stream)`
+
+**Modern usage** is rare in app code — most needs are handled by Promises and Streams. Mostly useful for library code (RxJS, streams, parsers).","mc","Which syntax declares a GENERATOR function?","`function gen()`","`function* gen()` (note the asterisk)","`generator gen()`","`function gen* ()`","B","","typed","Type the JavaScript keyword (5 letters, lowercase) used INSIDE a generator function to emit a value and pause:","","","","","yield","","mc","What does calling `.next()` on a generator return?","Just the value","An object `{ value, done }` — `done` is true when generator finishes","Throws error","Nothing","B","","mc","Why are generators useful?","They're faster","Lazy sequences — produce values on demand, don't materialize huge arrays in memory","Required for async","Improves SEO","B","","typed","Type the property symbol expression (literal, including brackets if needed; lowercase) that makes an object iterable. Hint: it's `Symbol.____`:","","","","","iterator","","Topic 6 batch v4 (reused from FE Topic 6)"
+"3","JavaScript Advanced","3.9","WeakMap, WeakSet, Map, Set","Built-in collection types for cases where plain objects/arrays aren't ideal:
+
+**`Set`** — collection of UNIQUE values:
+```js
+const tags = new Set(['react', 'vue', 'react']);  // {react, vue}
+tags.add('svelte');
+tags.has('react');  // true
+tags.size;          // 3
+for (const t of tags) console.log(t);
+```
+
+**`Map`** — key-value store with ANY key type (not just strings):
+```js
+const cache = new Map();
+const userObj = { id: 1 };
+cache.set(userObj, 'data');   // object as key!
+cache.get(userObj);            // 'data'
+cache.size;
+```
+
+**vs plain object `{}`:** Map is faster for frequent add/delete, preserves insertion order, supports any key.
+
+**`WeakMap`** / **`WeakSet`** — same but keys are weakly referenced (garbage collected if no other reference exists). Use for caching/metadata tied to objects without preventing their cleanup. Keys MUST be objects, not primitives. Not iterable.","mc","Which built-in stores UNIQUE values?","Array","Set","Map","Object","B","","typed","Type the method name (lowercase) used on a Set to add a value (e.g. `set.___(val)`):","","","","","add","","mc","What can `Map` keys be that plain object keys CAN'T be?","Numbers","Any type — objects, functions, etc. (not just strings/symbols)","Strings only","null only","B","","mc","Why use `WeakMap` instead of `Map`?","Smaller","Keys are weakly held — garbage collected when no other reference exists. Good for object metadata caches.","Faster","Required for typed JS","B","","typed","Type the method name (lowercase) used on a Set or Map to check if a value/key exists (returns boolean):","","","","","has","","Topic 6 batch v4 (reused from FE Topic 6)"
+"3","JavaScript Advanced","3.10","Regular expressions","Regex (regular expressions) match patterns in strings.
+
+**Syntax:** between `/` slashes, with flags after:
+```js
+const re = /hello/i;        // case-insensitive match for 'hello'
+re.test('Hello world');     // true
+'foo bar'.match(/(\w+) (\w+)/);  // [match, group1, group2]
+'abc123'.replace(/\d+/g, 'X');   // 'abcX'
+```
+
+**Common metacharacters:**
+- `.` any char
+- `\d` digit, `\D` non-digit
+- `\w` word char (a-z, A-Z, 0-9, _), `\W` non-word
+- `\s` whitespace, `\S` non-whitespace
+- `^` start, `$` end
+- `*` 0+, `+` 1+, `?` 0 or 1, `{n}` exactly n, `{n,m}` n to m
+- `(...)` capture group, `(?:...)` non-capturing
+- `[abc]` character set, `[^abc]` negation, `[a-z]` range
+
+**Flags:** `i` insensitive, `g` global (all matches), `m` multiline, `s` dotAll.
+
+**Common validators:**
+- Email (loose): `/^[^@\s]+@[^@\s]+\.[^@\s]+$/`
+- Phone (loose): `/^\+?[\d\s-]{7,}$/`","mc","Which regex flag makes matching CASE-INSENSITIVE?","`c`","`i`","`x`","`u`","B","","typed","Type the regex shorthand (2 characters including backslash) that matches any DIGIT (0-9):","","","","","\\d","\\d","mc","What does the regex `/^abc/` match?","Any string containing 'abc'","Strings that START with 'abc'","Strings that END with 'abc'","Only the literal '/^abc/'","B","","mc","Which regex method returns BOOLEAN — does the pattern match anywhere?","`.exec()`","`.test()`","`.match()`","`.find()`","B","","typed","Type the regex flag (1 letter, lowercase) used to find ALL matches in a string (not just the first):","","","","","g","","Topic 6 batch v4 (reused from FE Topic 6)"
+"3","JavaScript Advanced","3.11","DOM manipulation","The **DOM** = browser's representation of HTML as a tree of nodes. JavaScript can read and modify it.
+
+**Selecting:**
+```js
+document.getElementById('header');
+document.querySelector('.btn');                  // first match — like CSS selector
+document.querySelectorAll('li');                  // NodeList of all matches
+```
+
+**Modifying:**
+```js
+el.textContent = 'New text';       // safe — escapes HTML
+el.innerHTML = '<b>html</b>';      // DANGEROUS — XSS risk if input untrusted
+el.classList.add('active');
+el.classList.toggle('open');
+el.setAttribute('data-id', '42');
+el.style.color = 'red';            // direct style (prefer adding classes)
+```
+
+**Creating + inserting:**
+```js
+const div = document.createElement('div');
+div.textContent = 'Hello';
+document.body.appendChild(div);
+```
+
+**Events:**
+```js
+btn.addEventListener('click', (event) => {
+  event.preventDefault();
+  event.stopPropagation();
+});
+```
+
+**Event delegation** — listen on a parent, use `event.target` to identify which child was clicked (efficient for many similar children).","mc","Which is the SAFE way to insert plain TEXT into an element (no HTML interpretation)?","`innerHTML`","`textContent`","`innerText` and `innerHTML`","`outerHTML`","B","","typed","Type the document method (camelCase) that returns the FIRST element matching a CSS selector:","","","","","querySelector","","mc","Why is `innerHTML = userInput` DANGEROUS?","Slow","XSS risk — if input contains script tags, they execute","Causes memory leak","Doesn't work","B","","mc","How do you add an event listener for clicks?","`el.onclick = fn`","`el.addEventListener('click', fn)` — preferred (supports multiple listeners)","`el.click(fn)`","`el.event = 'click'`","B","","typed","Type the method (camelCase) on a `classList` used to add a class to an element:","","","","","add","","Topic 6 batch v4 (reused from FE Topic 6)"
+"3","JavaScript Advanced","3.12","Fetch API","`fetch` is the modern browser API for HTTP requests. Returns a Promise.
+
+**GET (basic):**
+```js
+const res = await fetch('/api/users');
+if (!res.ok) throw new Error(`HTTP ${res.status}`);
+const data = await res.json();
+```
+
+**POST with JSON body:**
+```js
+const res = await fetch('/api/users', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ name: 'Alice' }),
+});
+```
+
+**Important gotcha:** `fetch` only rejects on NETWORK error — HTTP errors (404, 500) still RESOLVE. Always check `res.ok` or `res.status`.
+
+**Reading response:**
+- `res.json()` — parse as JSON
+- `res.text()` — raw string
+- `res.blob()` — binary
+- Each can only be called ONCE
+
+**Cancel a request** with `AbortController`:
+```js
+const ctrl = new AbortController();
+fetch(url, { signal: ctrl.signal });
+ctrl.abort();  // cancels
+```","mc","What does `fetch()` return?","Direct data","A Promise that resolves to a Response object","Always throws","HTML","B","","mc","When does `fetch()` REJECT?","On HTTP 4xx/5xx errors","Only on network errors — HTTP errors still RESOLVE (check `res.ok` yourself)","Never","On any non-200","B","","typed","Type the method (lowercase, no parens) called on a Response object to parse it as JSON (returns another Promise):","","","","","json","","mc","Which header is REQUIRED when POSTing JSON to an API?","Authorization","`Content-Type: application/json`","Accept-Language","Cache-Control","B","","typed","Type the JavaScript class name (PascalCase) used to CANCEL a fetch request (e.g. `new ___()`):","","","","","AbortController","","Topic 6 batch v4 (reused from FE Topic 6)"
+"4","TypeScript","4.1","Basic types","TypeScript adds static types to JavaScript. Core primitive types:
+
+- **`string`** — `'hello'`, `\""world\""`
+- **`number`** — `42`, `3.14` (one type for all numbers)
+- **`boolean`** — `true`, `false`
+- **`null`** / **`undefined`** — their own types
+- **`any`** — opt out of type checking. AVOID.
+- **`unknown`** — safe alternative to `any`. Must NARROW before using.
+- **`void`** — function returns nothing
+- **`never`** — function never returns (throws or infinite loop)
+
+```ts
+let name: string = 'Alice';
+let age: number = 30;
+let active: boolean = true;
+
+let data: unknown = await fetch('...').then(r => r.json());
+// data.name  ← Error! Must narrow first
+if (typeof data === 'object' && data !== null && 'name' in data) {
+  console.log(data.name);  // now safe
+}
+```
+
+**Arrays:** `string[]` or `Array<string>`.
+**Tuples:** `[string, number]` — fixed length + types.","mc","Which TypeScript type should you AVOID using?","`unknown`","`any` — turns off type checking and defeats the purpose","`void`","`never`","B","","typed","Type the TypeScript type (lowercase, 7 letters) that's the SAFE alternative to `any` — value must be narrowed before use:","","","","","unknown","","mc","What's the TypeScript syntax for an array of strings?","`string[]` or `Array<string>`","`Array(string)`","`String[]`","`array<string>`","A","","mc","What does `void` mean as a function return type?","Always null","The function returns nothing meaningful","Never returns (throws)","Returns any","B","","typed","Type the TypeScript type (lowercase, 5 letters) used when a function NEVER returns (infinite loop or always throws):","","","","","never","","Topic 7 batch v4 (reused from FE Topic 7)"
+"4","TypeScript","4.2","Type annotations","TypeScript types are written after `:`. Annotate variables, params, and return types:
+
+```ts
+let name: string = 'Alice';
+const PI: number = 3.14;
+
+function add(a: number, b: number): number {
+  return a + b;
+}
+
+const greet = (name: string): string => `Hello, ${name}`;
+```
+
+**Type inference** — TS often guesses correctly, so explicit annotations are optional:
+```ts
+let count = 0;        // inferred as `number`
+const tags = ['a', 'b'];  // inferred as `string[]`
+```
+
+**Best practice:**
+- ANNOTATE function params + return types (improves API contract + autocomplete)
+- LET TS infer local variables (less noise)
+
+**Object types inline** (small ones):
+```ts
+function distance(p1: { x: number; y: number }, p2: { x: number; y: number }): number {
+  return Math.hypot(p1.x - p2.x, p1.y - p2.y);
+}
+```
+For reuse, extract into interface (see 7.3).","mc","What's the TypeScript syntax for annotating a function parameter type?","`function add(a number)`","`function add(a: number)` — colon then type","`function add(number a)`","`function add<number>(a)`","B","","typed","Type the TypeScript symbol (1 character) that separates a name from its type annotation (e.g. `name : string`):","","","","",":","","mc","Why is annotating function PARAMETERS and RETURN TYPES recommended?","Required","Documents the API contract + improves IDE autocomplete + catches type bugs at the boundary","Faster execution","Smaller files","B","","mc","What's TYPE INFERENCE?","User must annotate everything","TS automatically guesses types when you don't write them (e.g. `let x = 5` → `number`)","Static types disabled","Runtime check","B","","typed","Type the TypeScript syntax (whole string, lowercase) that annotates a variable as a string (e.g. `let name _____ = 'a'`):","","","","",": string","","Topic 7 batch v4 (reused from FE Topic 7)"
+"4","TypeScript","4.3","Interfaces","An **interface** defines the SHAPE of an object — what properties and methods it has.
+
+```ts
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  age?: number;          // optional (with `?`)
+  readonly createdAt: Date;  // can't be reassigned after init
+  greet(): string;       // method
+}
+
+const u: User = {
+  id: 1,
+  name: 'Alice',
+  email: 'a@x.com',
+  createdAt: new Date(),
+  greet() { return `Hi ${this.name}`; },
+};
+```
+
+**Extending interfaces:**
+```ts
+interface AdminUser extends User {
+  permissions: string[];
+}
+```
+
+**Function types:**
+```ts
+interface Comparator {
+  (a: number, b: number): number;
+}
+```
+
+**Index signatures** — for dynamic keys:
+```ts
+interface Dict {
+  [key: string]: string;
+}
+```
+
+Interfaces with the SAME name MERGE (declaration merging) — useful for extending external library types.","mc","What does an INTERFACE define in TypeScript?","Runtime behavior","The SHAPE of an object — its properties, types, and method signatures","CSS rules","Database tables","B","","typed","Type the TypeScript symbol (1 character) appended to a property name to mark it OPTIONAL in an interface (e.g. `age___`):","","","","","?","","mc","Which keyword inherits one interface from another?","`inherits`","`extends`","`super`","`include`","B","","mc","What does `readonly` do on an interface property?","Hides the property","Property can't be REASSIGNED after initial set (helps prevent accidental mutation)","Slows access","Required","B","","typed","Type the TypeScript keyword (9 letters, lowercase) used to define an interface (e.g. `___ User { ... }`):","","","","","interface","","Topic 7 batch v4 (reused from FE Topic 7)"
+"4","TypeScript","4.4","Type aliases (type vs interface)","`type` aliases create a name for ANY type — primitive, object, union, function, etc. More versatile than `interface` but with subtle differences.
+
+```ts
+type ID = string | number;                 // union — interface can't do this
+type User = { id: ID; name: string };       // object shape
+type Coords = [number, number];             // tuple
+type Compare = (a: number, b: number) => number;  // function type
+```
+
+**`type` vs `interface`:**
+
+| Feature | `type` | `interface` |
+|---------|--------|-------------|
+| Object shapes | ✅ | ✅ |
+| Unions, primitives, tuples | ✅ | ❌ |
+| `extends` | via `&` intersection | native `extends` |
+| Declaration merging | ❌ | ✅ |
+| Better error messages | ✅ (usually) | ⚠️ |
+
+**Rule of thumb:**
+- Object shapes that may extend → `interface` (slightly cleaner)
+- Unions, complex types, tuples → `type`
+- When in doubt → `type`
+
+Modern projects tend to prefer `type` for consistency.","mc","Which can define a UNION type like `string | number`?","Both `type` and `interface`","Only `type` — `interface` can't represent unions","Only `interface`","Neither","B","","typed","Type the TypeScript keyword (4 letters, lowercase) used to define a TYPE ALIAS (e.g. `___ ID = string | number`):","","","","","type","","mc","What feature does `interface` have that `type` does NOT?","Generics","Declaration merging — declaring an interface twice MERGES the properties","Union types","Faster compile","B","","mc","How do you ""extend"" a `type` (combine with another)?","With `extends`","With `&` intersection: `type C = A & B`","Can't — must use interface","With spread `...`","B","","typed","Type the TypeScript operator (1 character) used to INTERSECT two `type`s into one (combine properties):","","","","","&","","Topic 7 batch v4 (reused from FE Topic 7)"
+"4","TypeScript","4.5","Union types","A **union type** means ""value can be of these types"". Written with `|`:
+
+```ts
+let id: string | number;
+id = 'abc';   // OK
+id = 123;     // OK
+id = true;    // Error
+```
+
+**Use in function params:**
+```ts
+function formatId(id: string | number): string {
+  if (typeof id === 'string') return id.toUpperCase();
+  return String(id);
+}
+```
+
+**Discriminated unions** — when each variant has a common ""tag"" field:
+```ts
+type Shape =
+  | { kind: 'circle'; radius: number }
+  | { kind: 'square'; side: number };
+
+function area(s: Shape): number {
+  if (s.kind === 'circle') return Math.PI * s.radius ** 2;
+  return s.side ** 2;  // TS knows s is square here
+}
+```
+
+TS auto-NARROWS the type based on the `kind` check. Powerful pattern for state machines, API responses, redux actions.
+
+**Literal types** — exact values, often combined with unions:
+```ts
+type Status = 'idle' | 'loading' | 'success' | 'error';
+```","mc","What does `string | number` mean in TypeScript?","Both must be true","Either a string OR a number (union)","Concatenate string with number","Pick one at compile time","B","","typed","Type the TypeScript symbol (1 character) used as the union ""OR"" operator (e.g. `string ___ number`):","","","","","|","","mc","What's a DISCRIMINATED UNION?","Forbidden pattern","A union where each variant has a common LITERAL ""tag"" field (e.g. `kind: 'circle' | 'square'`) — TS narrows based on the tag","Random union","Same as intersection","B","","mc","What does `type Status = 'idle' | 'loading' | 'success' | 'error'` define?","Function names","A LITERAL union — Status can ONLY be one of those exact strings","All strings","Array of strings","B","","typed","Type the TypeScript symbol (1 character) used between literal type values to make a union like `'a' ___ 'b'`:","","","","","|","","Topic 7 batch v4 (reused from FE Topic 7)"
+"4","TypeScript","4.6","Generics","**Generics** = type variables that let you write reusable functions/types that work with multiple types while preserving type safety.
+
+```ts
+// Without generic — loses type info:
+function first(arr: any[]): any { return arr[0]; }
+const x = first([1, 2, 3]);  // type: any  :(
+
+// With generic:
+function first<T>(arr: T[]): T { return arr[0]; }
+const x = first([1, 2, 3]);  // type: number  :)
+const y = first(['a', 'b']); // type: string
+```
+
+**Generic interfaces:**
+```ts
+interface ApiResponse<T> {
+  data: T;
+  status: number;
+}
+const userRes: ApiResponse<User> = { data: { id: 1, name: 'Alice' }, status: 200 };
+```
+
+**Constraints** — `extends` limits the generic:
+```ts
+function getLength<T extends { length: number }>(item: T): number {
+  return item.length;
+}
+getLength('hello');   // OK
+getLength([1, 2]);    // OK
+getLength(42);        // Error — number has no length
+```
+
+**Default generic type:**
+```ts
+function create<T = string>(): T[] { return []; }
+```","mc","What's the main purpose of GENERICS?","Make code faster","Write reusable functions/types that work with multiple types while preserving type safety","Hide types","Replace classes","B","","typed","Type the conventional single-letter type parameter (uppercase) used for a generic type variable (e.g. `function f<___>(x)`):","","","","","T","","mc","What does `function first<T>(arr: T[]): T` return for `first([1,2,3])`?","Type `any`","Type `number` — generic infers from input","Type `T`","Type `string`","B","","mc","What does the constraint `<T extends { length: number }>` do?","Allows ANY T","Limits T to types that have a `length` property (string, array, etc.)","Forbids generics","Always uses string","B","","typed","Type the TypeScript keyword (7 letters, lowercase) used in a generic constraint (e.g. `<T ___ string>`):","","","","","extends","","Topic 7 batch v4 (reused from FE Topic 7)"
+"4","TypeScript","4.7","Enums","Enums = named constant sets. TypeScript has 2 styles: numeric and string. **PREFER string enums** — better debugging, no auto-increment surprises.
+
+**String enum (preferred):**
+```ts
+enum Role {
+  Admin = 'admin',
+  User = 'user',
+  Guest = 'guest',
+}
+
+function setRole(r: Role) { ... }
+setRole(Role.Admin);  // OK
+setRole('admin');     // Error — must use Role.Admin
+```
+
+**Numeric enum (less safe):**
+```ts
+enum Direction { Up, Down, Left, Right }  // 0, 1, 2, 3
+console.log(Direction.Up);  // 0
+```
+
+**Modern alternative: union of literals** (often better than enums):
+```ts
+type Role = 'admin' | 'user' | 'guest';
+function setRole(r: Role) { ... }
+setRole('admin');   // OK
+setRole('boss');    // Error
+```
+
+**vs enum:** literal unions are erased at compile time (smaller output), no runtime object created, more flexible. Many modern codebases prefer literal unions over enums.","mc","Which enum style is RECOMMENDED for safer, more debuggable code?","Numeric (auto-incrementing 0, 1, 2)","String enums with explicit values like `Admin = 'admin'`","Boolean","Symbol","B","","typed","Type the TypeScript keyword (4 letters, lowercase) used to define an enum (e.g. `___ Role { ... }`):","","","","","enum","","mc","What's a modern ALTERNATIVE to enums that many codebases prefer?","Classes","Literal unions: `type Role = 'admin' | 'user' | 'guest'` — no runtime overhead, flexible","Plain objects","Constants","B","","mc","What's the runtime cost of a TypeScript enum?","Zero — fully erased","Generates a runtime object (small overhead). Literal unions have ZERO runtime cost.","Massive","Depends on browser","B","","mc","In a numeric enum `enum X { A, B, C }`, what's the value of `X.B`?","'B'","0","1","2","C","","Topic 7 batch v4 (reused from FE Topic 7)"
+"4","TypeScript","4.8","Type narrowing","TypeScript NARROWS the type within branches based on checks you make. Powerful, makes code safe automatically.
+
+**`typeof` narrowing:**
+```ts
+function format(x: string | number) {
+  if (typeof x === 'string') {
+    return x.toUpperCase();   // TS knows x is string here
+  }
+  return x.toFixed(2);        // TS knows x is number here
+}
+```
+
+**`instanceof` narrowing:**
+```ts
+function logError(e: Error | string) {
+  if (e instanceof Error) console.error(e.stack);
+  else console.error(e);
+}
+```
+
+**Equality narrowing:**
+```ts
+function f(x: string | null) {
+  if (x === null) return;
+  x.toUpperCase();  // narrowed to string
+}
+```
+
+**`in` operator** — check property existence:
+```ts
+type Dog = { bark: () => void };
+type Cat = { meow: () => void };
+function speak(a: Dog | Cat) {
+  if ('bark' in a) a.bark();
+  else a.meow();
+}
+```
+
+**Custom type guards** — function returning `x is T`:
+```ts
+function isUser(x: unknown): x is User {
+  return typeof x === 'object' && x !== null && 'id' in x;
+}
+```","mc","What is TYPE NARROWING in TypeScript?","Limiting type imports","TS automatically refines a wider type to a narrower one inside conditional branches (e.g. inside `if (typeof x === 'string')` x is string)","Removing types","Compiling to JS","B","","typed","Type the JavaScript operator (6 letters, lowercase) used for type narrowing on PRIMITIVES like `if (___ x === 'string')`:","","","","","typeof","","mc","Which operator narrows based on CLASS instance?","`typeof`","`instanceof`","`in`","`===`","B","","mc","What does a CUSTOM TYPE GUARD return type look like?","`boolean`","`x is User` (a type predicate)","`User`","`true`","B","","typed","Type the TypeScript operator (2 letters, lowercase) used to check if a PROPERTY exists on an object for narrowing (e.g. `if ('bark' ___ a)`):","","","","","in","","Topic 7 batch v4 (reused from FE Topic 7)"
+"4","TypeScript","4.9","Utility types","TypeScript ships built-in **utility types** that transform other types. Top picks:
+
+**`Partial<T>`** — make all props optional:
+```ts
+type User = { id: number; name: string };
+type UserUpdate = Partial<User>;  // { id?: number; name?: string }
+```
+
+**`Required<T>`** — make all props required (opposite of Partial).
+
+**`Readonly<T>`** — make all props readonly.
+
+**`Pick<T, Keys>`** — pick subset of props:
+```ts
+type UserSummary = Pick<User, 'id' | 'name'>;
+```
+
+**`Omit<T, Keys>`** — opposite: exclude some keys:
+```ts
+type UserWithoutId = Omit<User, 'id'>;
+```
+
+**`Record<K, V>`** — object type with keys K, values V:
+```ts
+type RoleMap = Record<'admin' | 'user', string[]>;
+// { admin: string[]; user: string[] }
+```
+
+**`ReturnType<typeof fn>`** — extract return type of a function.
+
+**`Awaited<T>`** — unwrap Promise type.
+
+**`NonNullable<T>`** — remove `null` and `undefined`.
+
+These avoid repetition and keep types DRY.","mc","Which utility type makes all properties of `T` OPTIONAL?","`Required<T>`","`Partial<T>`","`Omit<T>`","`Pick<T>`","B","","typed","Type the TypeScript utility type (PascalCase) that creates an object type from a key union and value type (e.g. `____<'a'|'b', number>`):","","","","","Record","","mc","What does `Pick<User, 'id' | 'name'>` produce?","All of User","A new type with ONLY `id` and `name` from User","Removes id and name","Throws error","B","","mc","Which utility EXTRACTS the return type of a function?","`TypeOf<typeof fn>`","`ReturnType<typeof fn>`","`Returns<fn>`","`Extract<fn>`","B","","typed","Type the TypeScript utility type (PascalCase) that EXCLUDES specific keys from an object type (opposite of Pick):","","","","","Omit","","Topic 7 batch v4 (reused from FE Topic 7)"
+"4","TypeScript","4.10","Setting up (tsconfig)","`tsconfig.json` controls how TypeScript compiles. Generate with `npx tsc --init` or use Vite's TS template.
+
+**Recommended baseline (modern):**
+```json
+{
+  ""compilerOptions"": {
+    ""target"": ""ES2022"",
+    ""module"": ""ESNext"",
+    ""moduleResolution"": ""bundler"",
+    ""strict"": true,
+    ""noUncheckedIndexedAccess"": true,
+    ""esModuleInterop"": true,
+    ""skipLibCheck"": true,
+    ""jsx"": ""react-jsx"",
+    ""types"": [""vite/client""]
+  },
+  ""include"": [""src""]
+}
+```
+
+**Critical flags:**
+- **`""strict"": true`** — turns on all strict checks. ALWAYS ENABLE THIS.
+- **`noUncheckedIndexedAccess`** — `arr[0]` typed as `T | undefined` (safer)
+- **`skipLibCheck`** — skip type-checking node_modules (faster builds)
+- **`jsx`** — `react-jsx` for React 17+
+
+**Run TS:**
+- Dev with hot reload: `tsx watch src/index.ts` (no separate build)
+- Production build: `tsc` produces `dist/` JS files
+
+In a Vite project, Vite handles bundling — `tsc --noEmit` is just for type checking in CI.","mc","Which `tsconfig.json` flag is the SINGLE most important to enable?","`""skipLibCheck"": true`","`""strict"": true` — enables all strict type checks","`""target"": ""ES5""`","`""allowJs"": true`","B","","typed","Type the JSON property name (lowercase, no quotes) in tsconfig that enables ALL strict type-checking flags at once:","","","","","strict","","mc","What does `noUncheckedIndexedAccess: true` do?","Speeds up build","Types `arr[i]` as `T | undefined` — forces you to check for undefined access","Disables index types","Enables index types","B","","mc","For a Vite + React project, what `jsx` value is recommended?","`""preserve""`","`""react""`","`""react-jsx""` (no React import needed in every file)","`""none""`","C","","typed","Type the command (lowercase, no flags) to ONLY type-check TS files without emitting JS output (used in CI):","","","","","tsc --noEmit","","Topic 7 batch v4 (reused from FE Topic 7)"
+"4","TypeScript","4.11","Migrating JS to TS","Migrating an existing JS codebase to TS is INCREMENTAL — no need to rewrite everything at once.
+
+**Step-by-step:**
+
+1. **Install:** `yarn add -D typescript @types/node @types/react ...`
+2. **Generate config:** `npx tsc --init` — start with `""allowJs"": true, ""strict"": false`
+3. **Rename files** — change `.js` → `.ts` (and `.jsx` → `.tsx`) ONE AT A TIME, top-priority files first
+4. **Fix errors** — add type annotations, use `any` temporarily where needed
+5. **Tighten gradually:**
+   - Turn on `""noImplicitAny""`
+   - Then `""strictNullChecks""`
+   - Finally full `""strict"": true`
+6. **Replace `any`** with proper types over time
+
+**Tips:**
+- Don't fight TS — when stuck, use `any` or `// @ts-expect-error`, file a ""fix later"" issue
+- Use `@types/*` packages from DefinitelyTyped for JS libraries lacking types
+- VS Code's IntelliSense already does some inference even in `.js` — try `// @ts-check` comment at top of a JS file as a stepping stone
+- Migration takes WEEKS for large codebases. Plan accordingly.","mc","Should you rewrite the entire JS codebase to TS at once?","Yes — clean break","No — INCREMENTAL migration: file by file, with `allowJs: true` and gradual strictness","Use a converter tool","Switch languages instead","B","","typed","Type the `tsconfig.json` flag (lowercase camelCase, no quotes) that allows mixing `.js` files alongside `.ts` files during migration:","","","","","allowJs","","mc","Where do you find TypeScript types for npm libraries that don't ship their own?","Write your own only","The `@types/*` packages from DefinitelyTyped (e.g. `@types/lodash`)","TypeScript built-in","Can't","B","","mc","What's the comment to escape a single line of broken TS without disabling everything?","`// @ts-fix`","`// @ts-expect-error` or `// @ts-ignore`","`/* ts-off */`","`// no-check`","B","","typed","Type the comment directive (lowercase, includes `//` and `@`) added at TOP of a `.js` file to opt-in to TypeScript checking (e.g. `// @ts-_____`):","","","","","// @ts-check","@ts-check","Topic 7 batch v4 (reused from FE Topic 7)"
+"5","Node.js & Express","5.1","Node.js fundamentals","**Prerequisites:** New to Node.js or Yarn? Complete Topic 0.1 and 0.2 first.
+
+Node.js is a JavaScript runtime that runs JS OUTSIDE the browser — typically on a server. Built on Chrome's V8 engine.
+
+**Why Node for backend:**
+- Same language as frontend (JS/TS) — reduce context switching
+- Huge npm ecosystem (~3M packages)
+- Non-blocking I/O — great for many concurrent connections (APIs, real-time)
+- Used by Netflix, PayPal, LinkedIn, NASA
+
+**Built-in modules** (no install needed):
+- `fs` — file system (read/write files)
+- `path` — path manipulation (cross-platform)
+- `process` — current process info (env vars, args, exit)
+- `http` / `https` — HTTP servers (low-level; Express wraps this)
+- `crypto` — encryption, hashing
+
+**Module systems:**
+- **ESM** (modern): `import x from './x.js'` — VORA uses this (`""type"": ""module""`)
+- **CommonJS** (legacy): `const x = require('./x.js')`
+
+**Run a JS file:**
+```bash
+node script.js
+tsx script.ts    # for TS with hot reload (dev)
+```","mc","What is Node.js?","A JavaScript framework","A JavaScript runtime that runs JS outside the browser, on a server","A browser","A database","B","","typed","Type the Node.js built-in module name (lowercase, 2 letters) for file system operations:","","","","","fs","","mc","Which module system does modern Node use (and VORA's backend)?","CommonJS with `require`","ESM with `import` (Node 14+, `type: module`)","AMD","UMD","B","","typed","Type the global Node object (lowercase) used to access environment variables and command-line args:","","","","","process","","mc","Why is Node good for APIs with many concurrent connections?","Multi-threaded by default","Non-blocking I/O — handles thousands of connections per process","Synchronous","Free","B","","Topic 5 batch v1"
+"5","Node.js & Express","5.2","npm and tooling","**npm** = Node Package Manager. Bundled with Node. Handles downloading + version-locking dependencies.
+
+**`package.json`** — your project manifest:
+```json
+{
+  ""name"": ""my-api"",
+  ""version"": ""1.0.0"",
+  ""type"": ""module"",
+  ""scripts"": {
+    ""dev"": ""tsx watch src/server.ts"",
+    ""build"": ""tsc"",
+    ""start"": ""node build/server.js""
+  },
+  ""dependencies"": { ""express"": ""^5.0.0"" },
+  ""devDependencies"": { ""tsx"": ""^4.0.0"", ""typescript"": ""^5.0.0"" }
+}
+```
+
+**`dependencies` vs `devDependencies`:**
+- `dependencies` — runtime (shipped to prod): express, mongoose, jsonwebtoken
+- `devDependencies` — dev-only: typescript, eslint, vitest, tsx
+
+**Semantic versioning (semver):** `MAJOR.MINOR.PATCH`
+- `^5.2.1` — allow 5.x.x updates (but not 6.0)
+- `~5.2.1` — allow 5.2.x patches only
+- `5.2.1` — exact
+
+**Lock files** (`yarn.lock`, `package-lock.json`) lock EXACT versions for reproducible installs. ALWAYS commit them.
+
+**Scripts:** run with `yarn <script>` (e.g. `yarn dev`).","typed","Type the filename (with extension) that lists your project's dependencies and scripts:","","","","","package.json","","mc","What's the difference between `dependencies` and `devDependencies`?","Identical","`dependencies` = runtime (shipped to production); `devDependencies` = dev-only (build tools, tests, not shipped)","`devDependencies` is faster","`dependencies` is for npm only","B","","mc","In semver, what does `^5.2.1` allow?","Only 5.2.1 exactly","5.x.x updates (minor + patch), but NOT 6.0","Any version","5.2.x only","B","","typed","Type the lock file name (with extension) for Yarn 1.x:","","","","","yarn.lock","","mc","Why ALWAYS commit lock files to git?","Required","Ensures every dev/server installs EXACT same versions — reproducible builds, no surprise breakages","Looks neat","Performance","B","","Topic 5 batch v1"
+"5","Node.js & Express","5.3","Express basics","Express is the most popular Node web framework. Minimal, unopinionated, huge community.
+
+**Minimal Express server:**
+```ts
+import express from 'express';
+const app = express();
+
+app.use(express.json()); // parse JSON bodies
+
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
+app.post('/users', (req, res) => {
+  res.status(201).json({ id: 1, ...req.body });
+});
+
+app.listen(3000, () => console.log('Listening on :3000'));
+```
+
+**Key concepts:**
+- **`app`** — the Express application instance
+- **Route methods** — `app.get`, `app.post`, `app.put`, `app.patch`, `app.delete`, `app.all`
+- **Handler signature** — `(req, res, next) => { ... }`
+- **`req`** — incoming request: `req.body`, `req.params`, `req.query`, `req.headers`
+- **`res`** — outgoing response: `res.status(N).json(data)`, `res.send(text)`, `res.redirect(url)`
+- **Middleware** — functions with signature `(req, res, next)` that run BEFORE handlers (see 5.6)
+
+**Express 5** (VORA's choice) auto-handles async errors — `throw` in async handler bubbles to error middleware.","mc","What does `app.use(express.json())` do?","Returns JSON","Registers middleware that parses incoming JSON request bodies and puts them on `req.body`","Validates requests","Adds CORS","B","","typed","Type the Express method name (lowercase, 3 letters) used to register a GET route handler:","","","","","get","","mc","Which response method sends a JSON body with a 201 status code?","`res.send(201, data)`","`res.status(201).json(data)`","`res.json(201, data)`","`res.create(data)`","B","","typed","Type the Express object (lowercase) representing the INCOMING request (with body, params, headers):","","","","","req","","mc","What's the signature of a regular Express middleware function?","`(req, res)`","`(req, res, next)`","`(req, next)`","`(error, req, res)`","B","","Topic 5 batch v1"
+"5","Node.js & Express","5.4","REST API design","REST = REpresentational State Transfer. The dominant API design style.
+
+**HTTP methods (verbs) — use the RIGHT one:**
+| Method | Purpose | Idempotent? |
+|--------|---------|-------------|
+| GET | Read | Yes |
+| POST | Create | No |
+| PUT | Replace (full update) | Yes |
+| PATCH | Partial update | No (usually) |
+| DELETE | Remove | Yes |
+
+**Status codes — match the situation:**
+- **2xx success:** 200 OK, 201 Created, 204 No Content
+- **4xx client error:** 400 Bad Request, 401 Unauthorized (not logged in), 403 Forbidden (no permission), 404 Not Found, 409 Conflict, 422 Unprocessable
+- **5xx server error:** 500 Internal Server Error, 503 Service Unavailable
+
+**URL naming:**
+- Use **plural nouns**: `/users`, `/orders` (not `/getUsers`)
+- Identify resource by ID: `/users/42`
+- Nest sparingly: `/users/42/orders` is fine; deeper gets ugly
+- Versioning in path: `/api/v1/users`
+
+**JSON envelope** (VORA convention):
+- Success: `{ ""success"": true, ""data"": {...} }`
+- Error: `{ ""success"": false, ""error"": { ""code"": ""X"", ""message"": ""..."" } }`","mc","Which HTTP method should you use to CREATE a new resource?","GET","POST","PUT","DELETE","B","","typed","Type the HTTP status code (just the number) returned when a resource is CREATED successfully:","","","","","201","","mc","What HTTP status code means 'not logged in / token missing'?","400","401","403","404","B","","mc","Which URL is MOST RESTful?","`/getUsers`","`/users/42`","`/user-info?id=42`","`/api/fetchUser`","B","","typed","Type the HTTP status code (number) for 'resource not found':","","","","","404","","Topic 5 batch v1"
+"5","Node.js & Express","5.5","Request handling","Express parses incoming requests into a `req` object:
+
+- **`req.body`** — the parsed JSON/form body (requires `express.json()` middleware)
+- **`req.params`** — route parameters from URL pattern: `/users/:id` → `req.params.id`
+- **`req.query`** — URL search query: `?page=2&limit=10` → `req.query = { page: '2', limit: '10' }`
+- **`req.headers`** — request headers: `req.headers['content-type']`, `req.headers.authorization`
+- **`req.cookies`** — cookies (requires `cookie-parser` middleware)
+- **`req.ip`** — client IP
+
+**Important: ALL `req.query` and `req.params` values are STRINGS.** Coerce/parse before using.
+
+**File uploads** — use `multer` middleware:
+```ts
+import multer from 'multer';
+const upload = multer({ dest: 'uploads/' });
+app.post('/avatar', upload.single('image'), (req, res) => {
+  res.json({ filename: req.file.filename });
+});
+```
+
+**Pattern: always VALIDATE inputs** (see 5.7 Zod) — never trust `req.body` / `req.query` / `req.params` directly.","typed","Type the Express property (camelCase) holding the parsed JSON request body:","","","","","req.body","body","mc","For route `/users/:id`, what does `req.params.id` contain when URL is `/users/42`?","Number 42","String '42' (route params are always strings until you parse them)","Object","undefined","B","","typed","Type the Express property (lowercase, with dot) used to read URL search params like `?page=2`:","","","","","req.query","query","mc","Which middleware handles multipart file uploads in Express?","express.json()","multer","body-parser","fileUpload()","B","","mc","Should you trust `req.body` directly?","Yes — Express parses it safely","NEVER — always validate with Zod before processing","Only for GET","Only for admins","B","","Topic 5 batch v1"
+"5","Node.js & Express","5.6","Middleware patterns","**Middleware** = functions in the request pipeline: `(req, res, next) => { ... }`.
+
+Express runs them IN ORDER. Call `next()` to pass to the next middleware, or `res.send(...)` to short-circuit.
+
+**Apply globally:** `app.use(middleware)`
+**Apply to specific route:** `app.get('/x', middleware, handler)`
+
+**Essential middleware for any API:**
+```ts
+import helmet from 'helmet';
+import cors from 'cors';
+import compression from 'compression';
+import rateLimit from 'express-rate-limit';
+
+app.use(helmet());                              // security headers
+app.use(cors({ origin: process.env.CLIENT_URL })); // CORS
+app.use(compression());                         // gzip responses
+app.use(express.json({ limit: '10kb' }));       // JSON body, capped
+app.use(rateLimit({ windowMs: 60_000, max: 100 })); // 100 req/min
+```
+
+**Authentication middleware** (pattern):
+```ts
+function authenticate(req, res, next) {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'No token' });
+  try {
+    req.user = jwt.verify(token, process.env.JWT_SECRET);
+    next();
+  } catch { res.status(401).json({ error: 'Invalid token' }); }
+}
+app.get('/me', authenticate, handler);
+```
+
+**Error-handling middleware** has 4 args: `(err, req, res, next)` — must be registered LAST.","mc","What does calling `next()` in middleware do?","Ends the response","Passes control to the next middleware/handler in the pipeline","Throws error","Restarts request","B","","typed","Type the middleware package name (lowercase, 6 letters) that adds security HTTP headers to Express:","","","","","helmet","","mc","How does Express distinguish ERROR-handling middleware from regular middleware?","Name suffix","Function signature has 4 parameters: `(err, req, res, next)`","Decorator","Special export","B","","mc","Why register the error-handling middleware LAST?","Convention only","Express needs it to catch errors from all previous handlers/middleware in the pipeline","Faster","Required by Node","B","","typed","Type the npm package name (lowercase, 4 letters) used to enable CORS in Express:","","","","","cors","","Topic 5 batch v1"
+"5","Node.js & Express","5.7","Input validation with Zod","**Zod** = TypeScript-first schema validation library. Validate AND get types from one source.
+
+```ts
+import { z } from 'zod';
+
+const RegisterSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8).max(72),
+  age: z.number().int().min(13).optional(),
+});
+
+type RegisterInput = z.infer<typeof RegisterSchema>; // automatic TS type!
+```
+
+**Two parse modes:**
+- `RegisterSchema.parse(data)` — throws on invalid
+- `RegisterSchema.safeParse(data)` — returns `{ success, data | error }`
+
+**Express middleware pattern:**
+```ts
+function validate(schema) {
+  return (req, res, next) => {
+    const result = schema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ errors: result.error.flatten() });
+    }
+    req.body = result.data; // overwrite with parsed (coerced) data
+    next();
+  };
+}
+
+app.post('/register', validate(RegisterSchema), handler);
+```
+
+**Common validators:** `.string()`, `.number()`, `.boolean()`, `.email()`, `.uuid()`, `.url()`, `.array(z.string())`, `.enum(['admin','user'])`, `.refine(custom)`.","mc","Why use Zod over manual validation?","Faster","Single source for validation + TypeScript types (z.infer) + clear error messages","Required","Built into Express","B","","typed","Type the Zod TypeScript helper (camelCase, 5 letters) used to derive a TS type from a schema (e.g. `type X = z.____<typeof S>`):","","","","","infer","","mc","What's the difference between `.parse()` and `.safeParse()`?","Identical","`.parse()` THROWS on invalid; `.safeParse()` returns `{ success, data | error }` — no throw","`.safeParse()` is slower","`.parse()` is deprecated","B","","mc","What's the BEST place to put Zod validation in Express?","Inside every handler","As reusable middleware: `app.post('/x', validate(schema), handler)`","Database layer","Frontend only","B","","typed","Type the Zod method (lowercase, 5 letters) used to validate that a string is an email address (e.g. `z.string().___()`):","","","","","email","","Topic 5 batch v1"
+"5","Node.js & Express","5.8","Error handling","Express 5 auto-catches async errors. Throw an error → it bubbles to the error middleware.
+
+**Custom error class** (clean API):
+```ts
+export class ApiError extends Error {
+  constructor(public status: number, message: string, public code?: string) {
+    super(message);
+  }
+}
+```
+
+**Services THROW; controllers DON'T catch:**
+```ts
+// service
+async function getUser(id: string) {
+  const user = await User.findById(id);
+  if (!user) throw new ApiError(404, 'User not found', 'USER_NOT_FOUND');
+  return user;
+}
+
+// controller
+async function handleGet(req, res) {
+  const user = await getUser(req.params.id);  // no try/catch
+  res.json({ success: true, data: user });
+}
+```
+
+**Centralized error middleware** (registered LAST):
+```ts
+app.use((err, req, res, next) => {
+  if (err instanceof ApiError) {
+    return res.status(err.status).json({
+      success: false, error: { code: err.code, message: err.message }
+    });
+  }
+  if (err instanceof ZodError) {
+    return res.status(400).json({ success: false, error: { code: 'VALIDATION', message: 'Invalid input', details: err.flatten() } });
+  }
+  console.error(err);
+  res.status(500).json({ success: false, error: { message: 'Internal error' } });
+});
+```","mc","In Express 5, what happens to errors thrown from async route handlers?","Crash the server","Auto-caught and passed to the error-handling middleware (no try/catch needed)","Silently swallowed","Logged to console only","B","","typed","Type the number of parameters (just the digit) that Express uses to identify error-handling middleware (vs regular middleware):","","","","","4","","mc","Why use a custom `ApiError` class instead of plain `Error`?","Required","Carries status code + error code + message — error middleware formats consistent JSON responses","Faster","Looks nicer","B","","mc","Where should you `res.json` errors — in the route handler or in error middleware?","Each handler","Error middleware ONLY — central handler, consistent error envelope, less duplication","Both","Database","B","","typed","Type the HTTP status code (just number) returned for a Zod validation failure:","","","","","400","","Topic 5 batch v1"
+"5","Node.js & Express","5.9","Security","API security is non-negotiable. Layers to apply on EVERY API:
+
+**1. Security headers — `helmet`:**
+```ts
+import helmet from 'helmet';
+app.use(helmet());
+```
+Sets headers: X-Content-Type-Options, X-Frame-Options, Strict-Transport-Security, etc.
+
+**2. Rate limiting — `express-rate-limit`:**
+```ts
+import rateLimit from 'express-rate-limit';
+app.use(rateLimit({ windowMs: 60_000, max: 100, message: 'Too many requests' }));
+
+// Tighter for auth endpoints:
+const authLimiter = rateLimit({ windowMs: 60_000, max: 5 });
+app.post('/login', authLimiter, ...);
+```
+
+**3. CORS** — only allow trusted origins:
+```ts
+import cors from 'cors';
+app.use(cors({
+  origin: process.env.CLIENT_URL,  // NOT '*' in production!
+  credentials: true,
+}));
+```
+
+**4. Input sanitization** — Zod validates structure; for HTML content also strip XSS with libraries like `sanitize-html`. Never `res.send(req.body.html)` raw.
+
+**5. Body size limit** — `express.json({ limit: '10kb' })` to prevent payload bomb.
+
+**6. Hide stack traces in production** — never leak `err.stack` to clients.
+
+**7. Use HTTPS** in production — let Render/Cloudflare handle TLS.","mc","What does the `helmet` middleware do?","Logs requests","Sets various HTTP security headers (CSP, X-Frame, HSTS, etc.) by default","Validates input","Compresses responses","B","","typed","Type the npm package name (lowercase, with hyphens) used to limit how many requests a client can send per time window in Express:","","","","","express-rate-limit","","mc","Why should you AVOID `cors({ origin: '*' })` in production?","Slow","Allows ANY origin to call your API — disables CORS protection, enables abuse","Required","No reason","B","","mc","Why limit the JSON body size (e.g. `express.json({ limit: '10kb' })`)?","Cosmetic","Prevents payload-bomb attacks (huge bodies that exhaust memory)","Required by HTTP","Faster parsing only","B","","mc","Should error stack traces be returned to clients in production?","Always","NEVER — leaks code structure, server paths, sometimes secrets. Log server-side only.","Only for admins","Yes for debugging","B","","Topic 5 batch v1"
+"5","Node.js & Express","5.10","Environment variables","**Environment variables** = config that varies per environment (dev, staging, prod) — and **secrets** that NEVER go in code.
+
+**Setup with `dotenv`** (or Node 20+ native `--env-file`):
+```ts
+import 'dotenv/config';
+const dbUrl = process.env.DATABASE_URL;
+```
+
+**File hierarchy:**
+- `.env` — defaults (commit if no secrets)
+- `.env.local` — local dev overrides (gitignored)
+- `.env.production` — prod (set via deploy platform, NOT committed)
+
+**ALWAYS in `.gitignore`:**
+```
+.env
+.env.local
+.env.*.local
+```
+
+**VALIDATE env at startup** with Zod — fail fast on missing/bad config:
+```ts
+import { z } from 'zod';
+
+const envSchema = z.object({
+  NODE_ENV: z.enum(['development', 'production', 'test']),
+  PORT: z.coerce.number().default(3000),
+  DATABASE_URL: z.string().url(),
+  JWT_SECRET: z.string().min(32),
+});
+
+export const env = envSchema.parse(process.env);
+```
+
+If `JWT_SECRET` is missing, the server crashes immediately with a clear error — vs failing mysteriously later.","typed","Type the npm package name (lowercase, 6 letters) commonly used to load `.env` files into `process.env`:","","","","","dotenv","","mc","What goes in `.env`?","Source code","Configuration values + SECRETS (DB URL, API keys, JWT secret) — NEVER commit","Build output","Test data","B","","mc","Why VALIDATE env vars at app startup (with Zod)?","Faster boot","FAIL FAST on missing/invalid config — better than a 3am crash on first request","Required","Reduces file size","B","","typed","Type the Node global object property (lowercase, with dot) used to read environment variables in code:","","","","","process.env","env","mc","What if you accidentally commit `.env` with real secrets?","It's fine","Rotate the secrets IMMEDIATELY (they're permanently in git history) + add to .gitignore","Delete from next commit","Hide the repo","B","","Topic 5 batch v1"
+"5","Node.js & Express","5.11","Logging","In production, you can't `console.log()` debug — you need **structured logs** (JSON) for analysis.
+
+**`pino` (recommended — fast + structured):**
+```ts
+import pino from 'pino';
+const logger = pino({ level: 'info' });
+
+logger.info({ userId: 1, action: 'login' }, 'User logged in');
+logger.error({ err }, 'Failed to fetch user');
+```
+
+Output (JSON):
+```json
+{""level"":30,""time"":1700000000,""userId"":1,""action"":""login"",""msg"":""User logged in""}
+```
+
+**Log levels** (low to high severity): `trace`, `debug`, `info`, `warn`, `error`, `fatal`. Set `level` to filter — `info` shows info/warn/error/fatal.
+
+**Dev pretty-printing** — use `pino-pretty`:
+```bash
+node app.js | pino-pretty
+```
+
+**Don't log secrets:** never include passwords, tokens, API keys in log payloads. Use redaction:
+```ts
+const logger = pino({ redact: ['password', '*.token', 'headers.authorization'] });
+```
+
+**Request logging middleware** — `pino-http`:
+```ts
+import pinoHttp from 'pino-http';
+app.use(pinoHttp({ logger }));
+```
+
+Logs every request with method/URL/status/duration. Essential in production.","typed","Type the popular fast structured-logging library name (lowercase, 4 letters) recommended for production Node:","","","","","pino","","mc","Why use STRUCTURED (JSON) logs instead of free-text `console.log` in production?","Looks better","Machine-readable — log aggregators (Datadog, Loki) parse and filter; analysts can query by fields","Required","Faster I/O only","B","","mc","Which log level is MOST severe?","info","warn","error","fatal","D","","mc","Should you log passwords or auth tokens?","Always","NEVER — use redaction config to mask sensitive fields automatically","Only for debugging","Only in dev","B","","typed","Type the npm package name (lowercase, with hyphen) added on top of `pino` to pretty-print logs in development:","","","","","pino-pretty","","Topic 5 batch v1"
+"5","Node.js & Express","5.12","API documentation","API docs let consumers (frontend devs, mobile devs, partners) USE your API without reading source code.
+
+**OpenAPI (formerly Swagger)** = JSON/YAML spec describing endpoints, params, responses. Industry standard.
+
+**Approach 1: write spec by hand** in `openapi.yaml`, serve via `swagger-ui-express`:
+```ts
+import swaggerUi from 'swagger-ui-express';
+import yaml from 'yaml';
+import fs from 'node:fs';
+
+const spec = yaml.parse(fs.readFileSync('./openapi.yaml', 'utf8'));
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(spec));
+```
+
+Visit `http://localhost:3000/docs` for interactive UI — try endpoints right in the browser.
+
+**Approach 2: generate from code** — `swagger-jsdoc` parses JSDoc comments above routes:
+```ts
+/**
+ * @openapi
+ * /users:
+ *   get:
+ *     summary: List users
+ *     responses:
+ *       200: { description: OK }
+ */
+app.get('/users', handler);
+```
+
+**Best**: keep schema (Zod) as source of truth + derive OpenAPI types via `zod-to-openapi`.
+
+**Why bother:**
+- Frontend devs can mock + test before backend ships
+- Auto-generates TypeScript client SDKs
+- Catches contract drift early","mc","What is OpenAPI (formerly Swagger)?","A testing framework","A standard spec format describing REST APIs (endpoints, params, responses) — JSON/YAML","A Node web framework","A database","B","","typed","Type the npm package (lowercase, with hyphens, 18 chars total) used to serve interactive API docs UI in Express:","","","","","swagger-ui-express","","mc","What's the BIG benefit of an OpenAPI spec?","Documentation only","Single source of truth → frontend mocks + auto-generated TypeScript clients + contract testing","Faster","Required by HTTP","B","","mc","What's the cleanest pattern for API docs in a TS + Zod stack?","Manual YAML","Derive OpenAPI from Zod schemas (zod-to-openapi) — single source of truth between validation, types, and docs","JSDoc only","Don't document","B","","typed","Type the file extension (lowercase, 5 chars with dot) commonly used for OpenAPI spec files (besides JSON):","","","","",".yaml","yaml|.yml|yml","Topic 5 batch v1"
+"6","PostgreSQL (with Prisma)","6.1","SQL fundamentals","**SQL** = Structured Query Language. The standard for relational databases. PostgreSQL, MySQL, SQLite all speak SQL with minor dialect differences.
+
+**4 core operations (CRUD):**
+```sql
+-- CREATE (insert)
+INSERT INTO users (name, email) VALUES ('Alice', 'a@x.com');
+
+-- READ (select)
+SELECT id, name FROM users WHERE active = true ORDER BY name LIMIT 10;
+
+-- UPDATE
+UPDATE users SET active = false WHERE last_login < '2024-01-01';
+
+-- DELETE
+DELETE FROM users WHERE id = 42;
+```
+
+**JOIN** — combine rows from multiple tables:
+```sql
+SELECT u.name, o.total
+FROM users u
+INNER JOIN orders o ON o.user_id = u.id
+WHERE o.created_at > '2026-01-01';
+```
+
+**GROUP BY + aggregates** — summarize:
+```sql
+SELECT user_id, COUNT(*) AS order_count, SUM(total) AS revenue
+FROM orders
+GROUP BY user_id
+HAVING COUNT(*) > 5;
+```
+
+**Best practices:**
+- Always use **parameterized queries** (placeholders) — never string-concat user input → SQL injection
+- Use SQL clients: `psql` (CLI), TablePlus, DBeaver, pgAdmin","typed","Type the SQL keyword (uppercase, 6 letters) used to RETRIEVE rows from a table:","","","","","SELECT","select","mc","What does this query do? `SELECT * FROM users WHERE active = true LIMIT 10;`","Inserts 10 users","Returns at most 10 rows from users where active is true","Deletes 10 rows","Updates 10 rows","B","","typed","Type the SQL keyword (uppercase, 4 letters) used to combine rows from two tables based on a related column:","","","","","JOIN","join","mc","Why use PARAMETERIZED queries instead of string concatenation?","Faster","Prevents SQL injection — user input can't break out of the query and execute arbitrary SQL","Required","Looks neater","B","","mc","Which clause filters AGGREGATED rows (e.g. after GROUP BY)?","WHERE","HAVING","FILTER","AGGREGATE","B","","Topic 6 batch v1"
+"6","PostgreSQL (with Prisma)","6.2","Table design","Good table design = fewer bugs, better performance, easier queries.
+
+**Choose data types carefully:**
+- `SERIAL` / `BIGSERIAL` — auto-incrementing integer (legacy)
+- `UUID` (with `gen_random_uuid()`) — preferred for primary keys in distributed systems
+- `VARCHAR(N)` vs `TEXT` — both store text; TEXT for unlimited length (PostgreSQL has no perf penalty)
+- `TIMESTAMP WITH TIME ZONE` — always prefer over plain TIMESTAMP for dates
+- `JSONB` — store structured data, indexable, queryable
+- `BOOLEAN` — not BIT or TINYINT
+
+**Constraints — enforce data integrity at the DB level:**
+```sql
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email VARCHAR(255) NOT NULL UNIQUE,
+  age INT CHECK (age >= 0 AND age <= 150),
+  role VARCHAR(20) NOT NULL DEFAULT 'user',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+```
+
+**Naming conventions:**
+- Table names: plural snake_case (`users`, `order_items`)
+- Column names: snake_case (`created_at`, not `createdAt`)
+- Primary key: just `id`
+- Foreign key: `<table>_id` (e.g. `user_id`)","mc","Which PostgreSQL data type is preferred for primary keys in modern distributed systems?","INT with AUTO_INCREMENT","UUID (with gen_random_uuid())","VARCHAR","TEXT","B","","typed","Type the SQL constraint keyword (uppercase, 6 letters with space — 2 words) that prevents NULL values in a column:","","","","","NOT NULL","not null","mc","Why prefer `TIMESTAMP WITH TIME ZONE` (TIMESTAMPTZ) over plain TIMESTAMP?","Faster","Stores zone-aware UTC — no ambiguity across servers in different time zones","Smaller","Required","B","","typed","Type the conventional SQL column name (snake_case, 2 words with underscore) for storing the row creation time:","","","","","created_at","","mc","Which PostgreSQL type is best for storing structured but flexible data (queryable, indexable)?","TEXT","JSON","JSONB","BYTEA","C","","Topic 6 batch v1"
+"6","PostgreSQL (with Prisma)","6.3","Relationships","Tables relate via **foreign keys**. 3 common patterns:
+
+**1. One-to-Many (most common):**
+A user has many orders. Each order belongs to one user.
+```sql
+CREATE TABLE orders (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  total NUMERIC(10,2) NOT NULL
+);
+```
+- `REFERENCES users(id)` — foreign key
+- `ON DELETE CASCADE` — when user deleted, their orders go too
+- `ON DELETE SET NULL` — alternative: orphan order, set user_id to NULL
+- `ON DELETE RESTRICT` — prevent user deletion if orders exist
+
+**2. One-to-One:**
+A user has one profile. Put `user_id UNIQUE` on the profiles table.
+
+**3. Many-to-Many:**
+A user has many roles; a role has many users. Use a **junction table**:
+```sql
+CREATE TABLE user_roles (
+  user_id UUID NOT NULL REFERENCES users(id),
+  role_id UUID NOT NULL REFERENCES roles(id),
+  PRIMARY KEY (user_id, role_id)  -- composite PK prevents duplicates
+);
+```
+
+**Query with JOIN:**
+```sql
+SELECT u.name, r.name AS role
+FROM users u
+JOIN user_roles ur ON ur.user_id = u.id
+JOIN roles r ON r.id = ur.role_id;
+```","typed","Type the SQL keyword (uppercase, 10 letters) used in column definitions to declare a foreign key relationship:","","","","","REFERENCES","references","mc","What does `ON DELETE CASCADE` on a foreign key do?","Blocks deletion","When the referenced row is deleted, ALSO delete the rows referencing it","Sets to NULL","Logs the deletion","B","","mc","How do you model a Many-to-Many relationship in SQL?","Single table with comma-separated IDs","A JUNCTION TABLE with two foreign keys (often a composite primary key)","Not possible","JSON column","B","","mc","For a One-to-One relationship, what constraint do you add to the foreign key column?","PRIMARY KEY","UNIQUE","NOT NULL only","REFERENCES only","B","","typed","Type the SQL keyword (uppercase, 7 letters) used for the most common JOIN type (only rows that match in BOTH tables):","","","","","INNER","inner","Topic 6 batch v1"
+"6","PostgreSQL (with Prisma)","6.4","Indexing","**Indexes** speed up queries by avoiding full table scans. Trade-off: slower writes, more disk.
+
+**When to add an index:**
+- Columns used in `WHERE` clauses heavily
+- Foreign key columns (joins)
+- Columns in `ORDER BY` or `GROUP BY`
+- Unique constraints (auto-indexed)
+
+**When NOT to over-index:**
+- Tiny tables (<1000 rows) — full scan is faster
+- Rarely-queried columns
+- Heavy-write tables — every index slows INSERTs/UPDATEs
+
+**Create an index:**
+```sql
+CREATE INDEX idx_orders_user_id ON orders(user_id);
+CREATE UNIQUE INDEX idx_users_email ON users(email);
+
+-- Composite index (multiple columns) — order MATTERS
+CREATE INDEX idx_orders_status_date ON orders(status, created_at);
+-- Helps WHERE status = 'paid' AND created_at > '...' — leftmost prefix rule
+```
+
+**Inspect query plan with `EXPLAIN`:**
+```sql
+EXPLAIN ANALYZE SELECT * FROM orders WHERE user_id = '...';
+```
+Look for `Seq Scan` (bad on big tables) vs `Index Scan` (good).
+
+**B-tree** is the default index type — works for `=`, `<`, `>`, `BETWEEN`, range, sort. Specialty types: GIN (full-text), GiST (geographic).","mc","What's the main TRADE-OFF when adding an index?","Free benefit","Faster reads, but slower writes (INSERT/UPDATE/DELETE) and more disk usage","Required for queries","No trade-off","B","","typed","Type the SQL command (2 words, uppercase) used to inspect a query's execution plan and see if indexes are used:","","","","","EXPLAIN ANALYZE","EXPLAIN|explain analyze|explain","mc","Which column type is AUTOMATICALLY indexed?","Plain INT","UNIQUE constraints / PRIMARY KEY","TEXT","JSON","B","","mc","When is adding an index PROBABLY a BAD idea?","Big tables","Tiny tables (<1k rows) or heavy-write tables with rarely-queried columns","Always good","Production tables only","B","","typed","Type the default index type name (lowercase, 6 chars with hyphen) used in PostgreSQL for general purpose:","","","","","b-tree","btree","Topic 6 batch v1"
+"6","PostgreSQL (with Prisma)","6.5","Transactions","A **transaction** = a group of operations treated as one atomic unit. Either ALL succeed or ALL roll back.
+
+**ACID properties:**
+- **Atomicity** — all-or-nothing
+- **Consistency** — DB never violates constraints
+- **Isolation** — transactions don't see each other's incomplete changes
+- **Durability** — committed changes survive crashes
+
+**Use transactions when** multiple writes must happen together:
+```sql
+BEGIN;
+  UPDATE accounts SET balance = balance - 100 WHERE id = 1;
+  UPDATE accounts SET balance = balance + 100 WHERE id = 2;
+COMMIT;
+-- or ROLLBACK on error
+```
+
+If the server crashes between the two UPDATEs without a transaction, money disappears.
+
+**In Prisma (Node):**
+```ts
+await prisma.$transaction(async (tx) => {
+  await tx.account.update({ where: { id: 1 }, data: { balance: { decrement: 100 } } });
+  await tx.account.update({ where: { id: 2 }, data: { balance: { increment: 100 } } });
+});
+```
+If either throws, BOTH roll back automatically.
+
+**Isolation levels** (advanced): READ COMMITTED (default), REPEATABLE READ, SERIALIZABLE — control how transactions see each other's data. Higher level = more correctness, less concurrency.","typed","Type the SQL keyword (uppercase, 5 letters) used to START a transaction:","","","","","BEGIN","begin|start transaction|START TRANSACTION","mc","What does the 'A' in ACID stand for?","Accuracy","Atomicity — all operations in a transaction succeed or all roll back","Access","Async","B","","typed","Type the SQL keyword (uppercase, 8 letters) used to UNDO all changes in the current transaction:","","","","","ROLLBACK","rollback","mc","Why use a transaction for transferring money between accounts?","Faster","Both UPDATEs must succeed together — without a transaction, a crash mid-operation can lose money","Required by SQL","Cosmetic","B","","mc","What's PostgreSQL's DEFAULT isolation level?","REPEATABLE READ","READ COMMITTED","SERIALIZABLE","READ UNCOMMITTED","B","","Topic 6 batch v1"
+"6","PostgreSQL (with Prisma)","6.6","Prisma ORM","**Prisma** = the modern TypeScript ORM for SQL databases (Postgres, MySQL, SQLite, SQL Server). Type-safe queries, easy migrations.
+
+**Setup:**
+```bash
+yarn add prisma -D && yarn add @prisma/client
+npx prisma init
+```
+
+**Define schema** (`prisma/schema.prisma`):
+```prisma
+generator client { provider = ""prisma-client-js"" }
+datasource db {
+  provider = ""postgresql""
+  url = env(""DATABASE_URL"")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  posts     Post[]
+  createdAt DateTime @default(now())
+}
+
+model Post {
+  id      String @id @default(uuid())
+  title   String
+  userId  String
+  user    User   @relation(fields: [userId], references: [id])
+}
+```
+
+**Generate migration + apply:**
+```bash
+npx prisma migrate dev --name add_user_post
+```
+
+**Use in code:**
+```ts
+import { PrismaClient } from '@prisma/client';
+const prisma = new PrismaClient();
+
+const user = await prisma.user.create({
+  data: { email: 'a@x.com', posts: { create: { title: 'Hello' } } },
+});
+
+const userWithPosts = await prisma.user.findUnique({
+  where: { id: '...' },
+  include: { posts: true },  // eager load relation
+});
+```","typed","Type the Prisma schema file name (filename including extension):","","","","","schema.prisma","prisma/schema.prisma","mc","Why use Prisma over raw SQL strings in TypeScript?","Faster","Auto-generated type-safe queries, schema migrations, IntelliSense for tables/columns","Required","Free","B","","typed","Type the Prisma CLI command (3 words after `npx prisma`) to generate AND apply a migration in development:","","","","","migrate dev --name","migrate dev","mc","What does `include: { posts: true }` do in a Prisma query?","Filter posts","Eager-load related rows (Posts) along with the User — single round-trip","Delete posts","Cache posts","B","","mc","What problem does eager-loading (`include`) solve?","Type errors","N+1 query problem — instead of N+1 round-trips for related data, fetch in one query","Migration speed","Authentication","B","","Topic 6 batch v1"
+"6","PostgreSQL (with Prisma)","6.7","Connection pooling","Opening a fresh DB connection per request is EXPENSIVE (latency + memory). **Connection pooling** = reuse a small pool of long-lived connections.
+
+**Without pooling:** every request → TCP handshake + auth + warm-up → 50-100ms overhead.
+**With pooling:** request → grab idle connection from pool → ~0ms overhead.
+
+**Default in Prisma:** built-in pool (10 connections by default).
+
+**Tune via DATABASE_URL parameter:**
+```
+postgresql://user:pass@host:5432/db?connection_limit=20&pool_timeout=10
+```
+
+**Why limits matter:** Postgres has its own max connections (default ~100). Multiply: 5 app instances × 20 pool size = 100 — at limit. New connections fail.
+
+**Solution for serverless/edge:** use an EXTERNAL pooler:
+- **PgBouncer** — standalone pooler
+- **Supabase Pooler** / **Prisma Accelerate** / **Neon** — managed
+- These multiplex 1000+ app connections through ~20 actual Postgres connections
+
+**Common issue:** Vercel serverless → each invocation may open new connection → exhausts DB. Use Prisma Accelerate or a pooler.","mc","Why use a connection POOL instead of opening fresh connections per request?","Required","TCP handshake + auth + warm-up takes 50-100ms each — pooling reuses connections, eliminates that overhead","Free","Cosmetic","B","","typed","Type the URL query parameter name (snake_case, 16 letters) in a Postgres connection string used to set the max pool size:","","","","","connection_limit","","mc","Why is connection pooling CRUCIAL in serverless environments (Vercel, Lambda)?","Performance only","Each cold-start may open a new DB connection — without pooling/multiplexer, you exhaust Postgres's max_connections fast","Required by HTTP","Random","B","","typed","Type the popular external Postgres connection pooler name (lowercase, 9 letters):","","","","","pgbouncer","","mc","What's Prisma's DEFAULT connection pool size?","1","10","100","1000","B","","Topic 6 batch v1"
+"6","PostgreSQL (with Prisma)","6.8","Common patterns","Patterns every backend dev reuses:
+
+**Timestamps** — `created_at` / `updated_at` on every table:
+```prisma
+model Post {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt   // Prisma auto-updates on change
+}
+```
+
+**Soft delete** — instead of `DELETE`, mark a row deleted:
+```prisma
+model Post {
+  deletedAt DateTime?  // NULL = active; timestamp = deleted
+}
+
+// Query active only:
+await prisma.post.findMany({ where: { deletedAt: null } });
+```
+Pros: recovery possible, audit trail. Cons: must remember to filter; performance.
+
+**Pagination** — never return unbounded:
+```ts
+// Offset pagination (simple, fine for small datasets)
+await prisma.post.findMany({ skip: page * limit, take: limit, orderBy: { id: 'desc' } });
+
+// Cursor pagination (scales better, infinite scroll)
+await prisma.post.findMany({
+  take: limit, cursor: { id: lastId }, skip: 1,
+  orderBy: { id: 'desc' },
+});
+```
+
+**Slugs** (URL-friendly IDs):
+```ts
+model Post { slug String @unique }
+// Generate: 'My Post Title' → 'my-post-title' via slugify
+```
+
+**Indexed enums** — use Postgres enum or string + check constraint.","typed","Type the column name convention (snake_case, 2 words) for storing when a row was last updated:","","","","","updated_at","","mc","What's a SOFT DELETE?","Slow delete","Mark rows as deleted (e.g. `deleted_at` timestamp) instead of removing — allows recovery + audit","Async delete","Hidden delete","B","","mc","Why use CURSOR pagination over OFFSET pagination for large datasets?","Simpler","Avoids the cost of scanning + skipping N rows — performance stays constant as you paginate deeper","Required by HTTP","Looks better","B","","typed","Type the URL-friendly identifier type name (lowercase, 4 letters) used like `/posts/my-article-title`:","","","","","slug","","mc","Why ALWAYS paginate list endpoints?","Cosmetic","Unbounded results can return millions of rows — exhausts memory, kills response time, breaks frontends","Required","No reason","B","","Topic 6 batch v1"
+"7","MongoDB (with Mongoose)","7.1","Document model","**MongoDB** = document database. Data is JSON-like documents inside collections.
+
+vs SQL: instead of rigid tables/rows/columns, MongoDB stores flexible documents:
+```json
+{
+  ""_id"": ObjectId(""...""),
+  ""name"": ""Alice"",
+  ""email"": ""a@x.com"",
+  ""address"": { ""city"": ""Saigon"", ""zip"": ""70000"" },  // nested object OK
+  ""tags"": [""admin"", ""premium""]                       // arrays OK
+}
+```
+
+**Two main modeling decisions:**
+
+**1. Embed** (nested inside parent doc):
+```json
+{ ""_id"": ""..."", ""title"": ""Post"", ""comments"": [{ ""author"": ""Alice"", ""text"": ""..."" }] }
+```
+- **When:** 1-to-few, data fetched together, bounded size
+- **Pros:** single query gets everything, atomic updates
+- **Cons:** doc size limit 16MB, can't query embedded items independently as easily
+
+**2. Reference** (store ObjectId, populate later):
+```json
+// posts collection
+{ ""_id"": ""..."", ""title"": ""Post"", ""authorId"": ObjectId(""user-id"") }
+// users collection
+{ ""_id"": ObjectId(""user-id""), ""name"": ""Alice"" }
+```
+- **When:** 1-to-many (unbounded), data has independent lifecycle, frequent independent updates
+- **Pros:** no doc size limit, normalized
+- **Cons:** needs extra query (or `.populate()` in Mongoose)
+
+**Rule:** embed when read together always + bounded; reference otherwise.","mc","What is MongoDB's data model?","Tables with rows and columns","Documents (JSON-like) inside collections — flexible schema, nested data allowed","Key-value only","Graph","B","","typed","Type the MongoDB BSON type name (PascalCase, 8 chars) used for unique document identifiers (e.g. `_id` field):","","","","","ObjectId","","mc","When should you EMBED data inside a parent document?","Always","When the data is read TOGETHER with the parent, bounded size, and few-to-one cardinality","Never","Only for arrays","B","","mc","What's the MongoDB document size limit?","Unlimited","16 MB per document","1 GB","100 KB","B","","typed","Type the MongoDB collection naming convention (lowercase, plural) for storing user documents (1 word, 5 letters):","","","","","users","","Topic 7 batch v1"
+"7","MongoDB (with Mongoose)","7.2","CRUD operations","Native MongoDB CRUD methods (via the driver or Mongoose):
+
+```ts
+// CREATE
+await collection.insertOne({ name: 'Alice', age: 30 });
+await collection.insertMany([{...}, {...}]);
+
+// READ
+await collection.findOne({ email: 'a@x.com' });
+await collection.find({ active: true }).toArray();
+await collection.find({ age: { $gt: 18 } }).sort({ name: 1 }).limit(10).toArray();
+
+// UPDATE
+await collection.updateOne(
+  { _id: id },
+  { $set: { name: 'Bob' }, $inc: { loginCount: 1 } }
+);
+await collection.updateMany({ active: false }, { $set: { archived: true } });
+
+// DELETE
+await collection.deleteOne({ _id: id });
+await collection.deleteMany({ created: { $lt: cutoff } });
+```
+
+**Query operators** (prefix `$`):
+- Comparison: `$eq`, `$ne`, `$gt`, `$gte`, `$lt`, `$lte`, `$in`, `$nin`
+- Logical: `$and`, `$or`, `$not`, `$nor`
+- Element: `$exists`, `$type`
+- Array: `$all`, `$elemMatch`, `$size`
+
+**Update operators:**
+- `$set`, `$unset` — set/remove fields
+- `$inc`, `$mul` — atomic numeric ops
+- `$push`, `$pull`, `$addToSet` — array ops","typed","Type the MongoDB method name (camelCase) used to insert ONE document into a collection:","","","","","insertOne","","mc","What does `{ age: { $gt: 18 } }` filter?","Equals 18","Documents where `age` is GREATER THAN 18","Less than 18","Sum of ages","B","","typed","Type the MongoDB update operator (with `$`, lowercase) used to SET field value(s):","","","","","$set","set","mc","Which operator atomically INCREMENTS a number field?","$add","$inc","$plus","$update","B","","typed","Type the MongoDB method (camelCase) used to remove a SINGLE document matching a filter:","","","","","deleteOne","","Topic 7 batch v1"
+"7","MongoDB (with Mongoose)","7.3","Mongoose ODM","**Mongoose** = the most popular MongoDB ODM (Object Document Mapper) for Node.js. Adds schemas, validation, hooks, type-safe models.
+
+**Define a schema + model:**
+```ts
+import mongoose, { Schema, model } from 'mongoose';
+
+const UserSchema = new Schema({
+  email:    { type: String, required: true, unique: true, lowercase: true, trim: true },
+  password: { type: String, required: true, minlength: 8, select: false }, // hide by default
+  role:     { type: String, enum: ['admin', 'user'], default: 'user' },
+  createdAt:{ type: Date, default: Date.now },
+});
+
+export const User = model('User', UserSchema);
+```
+
+**CRUD via Mongoose:**
+```ts
+const user = await User.create({ email: 'a@x.com', password: hashed });
+const found = await User.findOne({ email: 'a@x.com' }).select('+password');
+await User.updateOne({ _id: id }, { role: 'admin' });
+await User.findByIdAndDelete(id);
+```
+
+**Middleware (hooks):**
+```ts
+UserSchema.pre('save', async function() {
+  if (this.isModified('password')) {
+    this.password = await bcrypt.hash(this.password, 10);
+  }
+});
+```
+
+**Virtuals** — computed fields not stored:
+```ts
+UserSchema.virtual('fullName').get(function() { return `${this.firstName} ${this.lastName}`; });
+```","typed","Type the Mongoose class name (PascalCase, 6 letters) used to define a document structure:","","","","","Schema","","mc","What does `select: false` on a schema field do?","Field is required","Field is EXCLUDED from queries by default — must explicitly include with `.select('+field')`","Field is read-only","Field is encrypted","B","","typed","Type the Mongoose method (lowercase, 3 letters) used to register a hook that runs BEFORE save:","","","","","pre","","mc","What's a Mongoose VIRTUAL?","Imaginary doc","A computed field NOT stored in the DB — derived from other fields (e.g. `fullName` from `first + last`)","Default value","Required field","B","","mc","Why use Mongoose over the native MongoDB driver?","Faster","Schemas + validation + hooks + virtuals + TypeScript types + cleaner API","Required","Free","B","","Topic 7 batch v1"
+"7","MongoDB (with Mongoose)","7.4","Aggregation pipeline","**Aggregation pipeline** = a sequence of stages that transform documents. Powerful for analytics, reports, complex joins.
+
+Each stage takes documents in, transforms them, passes to next stage.
+
+**Common stages:**
+- `$match` — filter (like WHERE)
+- `$project` — reshape fields (like SELECT)
+- `$group` — group + aggregate (like GROUP BY)
+- `$sort`, `$limit`, `$skip`
+- `$lookup` — JOIN with another collection
+- `$unwind` — flatten an array field into multiple docs
+- `$addFields` — compute new fields
+
+**Example: top 5 customers by total spend, last 30 days:**
+```js
+db.orders.aggregate([
+  { $match: { createdAt: { $gt: thirtyDaysAgo } } },
+  { $group: { _id: '$userId', total: { $sum: '$amount' }, count: { $sum: 1 } } },
+  { $sort: { total: -1 } },
+  { $limit: 5 },
+  { $lookup: { from: 'users', localField: '_id', foreignField: '_id', as: 'user' } },
+  { $unwind: '$user' },
+  { $project: { name: '$user.name', total: 1, count: 1 } },
+]);
+```
+
+**Why aggregation?** Push computation to DB (faster than pulling all data into Node + computing). Avoid N+1 queries via `$lookup`.","typed","Type the aggregation stage (with `$`, lowercase) used to FILTER documents at the start of a pipeline:","","","","","$match","match","mc","What does `$lookup` do in an aggregation pipeline?","Find docs","JOIN with another collection — adds matching docs as an array field","Sort","Index lookup","B","","typed","Type the aggregation stage (with `$`, lowercase, 7 chars including $) used to GROUP documents and compute aggregates (sum, count, avg):","","","","","$group","group","mc","Why use aggregation pipeline instead of pulling all data into Node and computing there?","Faster","Push computation to the DB — less data transfer, uses indexes, avoids N+1 queries","Required","Cosmetic","B","","typed","Type the aggregation stage (with `$`, lowercase) used to flatten an ARRAY field into multiple documents (1 per array element):","","","","","$unwind","unwind","Topic 7 batch v1"
+"7","MongoDB (with Mongoose)","7.5","Indexing","Without indexes, MongoDB does a **COLLSCAN** — full collection scan. Slow on big collections.
+
+**Create an index:**
+```js
+// Single field
+db.users.createIndex({ email: 1 });            // 1 = ascending, -1 = descending
+
+// Unique constraint
+db.users.createIndex({ email: 1 }, { unique: true });
+
+// Compound (multiple fields — ORDER matters)
+db.orders.createIndex({ userId: 1, createdAt: -1 });
+// Supports queries on `userId` alone, or `userId + createdAt` — but NOT `createdAt` alone
+
+// Text index for full-text search
+db.posts.createIndex({ title: 'text', content: 'text' });
+db.posts.find({ $text: { $search: 'mongodb' } });
+
+// Sparse index — only indexes docs that HAVE the field
+db.users.createIndex({ phone: 1 }, { sparse: true });
+
+// TTL index — auto-delete docs after N seconds
+db.sessions.createIndex({ createdAt: 1 }, { expireAfterSeconds: 86400 });
+```
+
+**Inspect query plan:** `db.users.find({...}).explain('executionStats')` — look at `winningPlan.stage`. Want `IXSCAN`, not `COLLSCAN`.
+
+**In Mongoose:** define indexes on the schema:
+```ts
+UserSchema.index({ email: 1 }, { unique: true });
+UserSchema.index({ createdAt: -1 });
+```","mc","What is a COLLSCAN in MongoDB?","Indexed query","Collection SCAN — read every document. Slow on big collections. Means no usable index.","Compound index","Cluster lookup","B","","typed","Type the MongoDB CLI command (camelCase) called on a collection to define an index (e.g. `db.users.____({...})`):","","","","","createIndex","","mc","What does a TTL index do?","Speeds queries","Auto-deletes documents after N seconds — great for sessions, logs, temp data","Compresses","Encrypts","B","","mc","Why does compound index `{userId:1, createdAt:-1}` NOT help a query filtering only on `createdAt`?","Bug","Compound indexes are usable LEFT-TO-RIGHT — query must include userId to benefit","Random","Required","B","","typed","Type the MongoDB method (lowercase, 7 letters) appended to a query to inspect its execution plan:","","","","","explain","","Topic 7 batch v1"
+"7","MongoDB (with Mongoose)","7.6","MongoDB vs PostgreSQL","When to pick which:
+
+**Pick PostgreSQL when:**
+- Strong relationships, multi-row transactions critical (banking, e-commerce, inventory)
+- Schema is well-defined and stable
+- Complex multi-table joins frequently
+- Reports + analytics over relational data (SQL excels here)
+- ACID guarantees across many tables
+
+**Pick MongoDB when:**
+- Flexible/evolving schema (rapid prototyping, content management, varied user profiles)
+- Documents naturally nested (e.g. blog posts with comments + tags)
+- Horizontal scaling (sharding) is essential
+- Mostly single-document operations (each request reads/writes one doc)
+- Aggregation pipelines fit the use case
+
+**Real-world:**
+- VORA uses MongoDB (good fit for roadmap content: topics → sections → quiz/questions are nested structures)
+- Banks use PostgreSQL (need cross-account transactions)
+- Many large apps use BOTH: PostgreSQL for core relational data, MongoDB for flexible user-generated content
+
+**Pitfalls of picking wrong:**
+- MongoDB for cross-doc transactions → painful workarounds
+- Postgres for highly varied documents → many sparse columns or JSONB everywhere (defeats purpose)
+
+**Reality:** modern Postgres handles many """"NoSQL"""" use cases well with `JSONB`. Often start with Postgres unless you have a specific reason for MongoDB.","mc","When does MongoDB shine over PostgreSQL?","Always","When schema is flexible/evolving, documents are naturally nested, and most operations are single-document","For analytics","Never","B","","mc","Why does VORA use MongoDB?","Faster","Roadmap data is nested (topic → sections → quiz/questions) and the team is more comfortable with JSON-like docs","Required by competition","MongoDB is free","B","","mc","When should you DEFAULT to PostgreSQL?","Always","When you need multi-row ACID transactions, complex joins, strong relationships, and reporting","Never","Only with React","B","","typed","Type the PostgreSQL data type (lowercase, 5 chars) that stores arbitrary JSON and is queryable/indexable (closes the gap with MongoDB):","","","","","jsonb","","mc","What's a common PITFALL of picking MongoDB for the wrong use case?","Always fine","Need cross-document transactions (e.g. transfer money between accounts) — painful in MongoDB (single-doc atomic only by default)","Slow setup","Cost","B","","Topic 7 batch v1"
+"8","Authentication & Authorization","8.1","Password hashing","**NEVER** store passwords in plain text. NEVER. Even encrypted (reversible) is not enough — hash them.
+
+**bcrypt** = the industry standard. Slow-by-design (resistant to GPU brute force). One-way function.
+
+```ts
+import bcrypt from 'bcrypt';
+
+// Register: hash before saving
+const SALT_ROUNDS = 10;  // higher = slower = more secure. 10-12 typical.
+const hashed = await bcrypt.hash(plainPassword, SALT_ROUNDS);
+await User.create({ email, password: hashed });
+
+// Login: compare entered vs stored hash
+const ok = await bcrypt.compare(plainPassword, user.password);
+if (!ok) throw new ApiError(401, 'Wrong password');
+```
+
+**Salt** = random data added per password — prevents rainbow table attacks (two users with same password get DIFFERENT hashes). bcrypt embeds the salt in the hash itself.
+
+**Why hash is slow on purpose:** if a user has a weak password and your DB leaks, attackers run brute force. bcrypt at 10 rounds takes ~100ms per attempt → 100M guesses takes 4 months. SHA-256 takes microseconds → done in minutes.
+
+**Modern alternative:** `argon2id` (winner of password hashing competition). Even better resistance. Use if available.
+
+**Don't:** roll your own crypto. Don't `md5`, `sha1`, `sha256` passwords directly. Don't store the salt separately if using bcrypt (it's embedded).","typed","Type the most popular password hashing library name (lowercase, 6 letters) for Node.js:","","","","","bcrypt","","mc","Why is bcrypt SLOW on purpose?","Bug","Resistant to brute force — slow hashing means attackers can't try billions of guesses per second","Required by HTTP","Cosmetic","B","","mc","What does SALT prevent in password hashing?","Slow lookups","Rainbow table attacks — random per-password salt makes precomputed hash tables useless","SQL injection","XSS","B","","typed","Type the bcrypt function (camelCase, 7 letters) used to verify a plain password against a stored hash:","","","","","compare","","mc","Which is the MODERN alternative to bcrypt for password hashing?","MD5","argon2id","SHA-256","base64","B","","Topic 8 batch v1"
+"8","Authentication & Authorization","8.2","JWT (JSON Web Tokens)","**JWT** = compact, signed token for stateless auth. After login, the server gives the client a JWT; the client sends it back with every request.
+
+**Anatomy** (3 base64-url parts separated by `.`):
+```
+HEADER.PAYLOAD.SIGNATURE
+eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOiIxMjMifQ.SflKxw...
+```
+- HEADER: `{ ""alg"": ""HS256"", ""typ"": ""JWT"" }`
+- PAYLOAD (claims): `{ ""userId"": ""123"", ""role"": ""admin"", ""exp"": 1730000000 }`
+- SIGNATURE: HMAC of header+payload signed with SECRET
+
+**Sign + verify in Node:**
+```ts
+import jwt from 'jsonwebtoken';
+
+const token = jwt.sign(
+  { userId: user.id, role: user.role },
+  process.env.JWT_SECRET,
+  { expiresIn: '15m' }
+);
+
+// On each request:
+try {
+  const payload = jwt.verify(token, process.env.JWT_SECRET);
+  req.user = payload;
+} catch { /* invalid or expired */ }
+```
+
+**Important security:**
+- JWT_SECRET must be ≥32 chars, random, server-only. Generate: `openssl rand -base64 48`
+- DON'T put sensitive data in payload — it's BASE64-encoded, not encrypted (anyone can read it)
+- Always set `expiresIn` (15-60 min for access tokens)
+- Use refresh tokens for long sessions (see 8.3)","mc","What are the 3 parts of a JWT (separated by `.`)?","Username.Password.Token","Header.Payload.Signature","Algo.Data.Hash","Auth.User.Time","B","","typed","Type the npm package name (lowercase, 13 letters) commonly used in Node to sign and verify JWTs:","","","","","jsonwebtoken","","mc","Is the JWT payload ENCRYPTED?","Yes","NO — base64-encoded only. Anyone with the token can READ it. Don't put secrets in the payload.","Sometimes","Yes with HTTPS","B","","typed","Type the JWT field name (lowercase, 3 letters) used to specify the token's EXPIRATION time:","","","","","exp","","mc","What's the safest place to store a JWT on the FRONTEND (against XSS)?","localStorage (XSS can read it)","An `httpOnly` cookie — JavaScript can't access it","URL","sessionStorage","B","","Topic 8 batch v1"
+"8","Authentication & Authorization","8.3","Session-based auth","Alternative to JWT: **server-side sessions**. Server stores session data; client only has an opaque session ID in a cookie.
+
+**Flow:**
+1. Login → server creates session record (Redis/DB), returns cookie `sessionId=abc123`
+2. Each request → server looks up session by ID, gets user
+3. Logout → delete session
+
+**`express-session` setup:**
+```ts
+import session from 'express-session';
+import RedisStore from 'connect-redis';
+
+app.use(session({
+  store: new RedisStore({ client: redisClient }),
+  secret: process.env.SESSION_SECRET,
+  cookie: {
+    httpOnly: true,
+    secure: true,           // HTTPS only in prod
+    sameSite: 'lax',
+    maxAge: 7 * 24 * 3600 * 1000,
+  },
+}));
+
+app.post('/login', async (req, res) => {
+  const user = await verifyCredentials(req.body);
+  req.session.userId = user.id;
+  res.json({ ok: true });
+});
+
+app.post('/logout', (req, res) => {
+  req.session.destroy(() => res.json({ ok: true }));
+});
+```
+
+**Sessions vs JWT — trade-offs:**
+
+| Feature | Sessions | JWT |
+|---------|----------|-----|
+| Server state | Yes (DB lookup per req) | No (stateless) |
+| Easy revoke | Yes (delete session) | Hard (needs blocklist) |
+| Scaling | Need shared store | Trivial (any server validates) |
+| Mobile/API clients | Awkward (cookies) | Natural (Bearer header) |
+
+**Web apps:** sessions are simpler + safer (revocable). **APIs/mobile:** JWT.","mc","What's the KEY difference between session-based auth and JWT?","Identical","Sessions = server stores state (DB lookup per request); JWT = stateless (signed token contains data)","Speed","Cost","B","","typed","Type the cookie attribute (lowercase, 8 chars) that prevents JavaScript from reading the cookie (XSS defense):","","","","","httpOnly","","mc","Why is session-based auth EASIER to revoke than JWT?","Faster","Delete the session record from the DB → next request fails. JWT requires a blocklist or short expiry.","Required","Cosmetic","B","","mc","Which is better for MOBILE app + REST API auth?","Sessions","JWT (Bearer header — no cookie management needed across native + web clients)","Both equal","Neither","B","","typed","Type the cookie attribute (lowercase, 6 chars) that ensures the cookie is only sent over HTTPS:","","","","","secure","","Topic 8 batch v1"
+"8","Authentication & Authorization","8.4","OAuth 2.0","**OAuth 2.0** = standard for letting users log in via Google / GitHub / Facebook without sharing their password with you.
+
+**Flow (Authorization Code with PKCE — modern recommended):**
+1. User clicks """"Sign in with Google""""
+2. Browser → Google's OAuth URL with your `client_id` + redirect URL
+3. Google asks user to approve
+4. Google redirects back to your `/auth/google/callback?code=XYZ`
+5. Your server exchanges `code` for an access token (server-to-server with `client_secret`)
+6. Your server fetches user profile from Google
+7. Your server creates/links a local user, issues YOUR session/JWT
+
+**Implementation: Passport.js or Better Auth.**
+
+```ts
+// Better Auth example
+import { betterAuth } from 'better-auth';
+export const auth = betterAuth({
+  socialProviders: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    },
+  },
+});
+```
+
+**Key safety:**
+- ALWAYS validate the `state` parameter (CSRF defense)
+- Use PKCE for SPAs/mobile (proof key for code exchange — no client_secret needed)
+- Verify the email is VERIFIED by the provider before trusting it
+- Store provider IDs (`google_id`, `github_id`) on your User to allow multiple OAuth methods per account","mc","What problem does OAuth 2.0 solve?","Speed","Lets users log in with Google/GitHub/etc. without sharing their password with your app","Database","Caching","B","","typed","Type the OAuth security parameter name (lowercase, 5 letters) used to prevent CSRF attacks during the redirect flow:","","","","","state","","mc","What's PKCE used for in OAuth?","Random","Proof Key for Code Exchange — securely lets SPAs/mobile clients do OAuth without storing a `client_secret`","Cookie sync","Logging","B","","typed","Type the OAuth env variable name commonly used (UPPER_SNAKE_CASE with prefix) for Google client ID (one example, e.g. ____):","","","","","GOOGLE_CLIENT_ID","","mc","Should you trust an unverified email from an OAuth provider as user identity?","Yes always","NO — only trust emails the provider has marked verified, or you allow account takeover via email spoofing","Sometimes","Required by spec","B","","Topic 8 batch v1"
+"8","Authentication & Authorization","8.5","Authorization (RBAC)","**Authentication** = WHO you are. **Authorization** = WHAT you can do.
+
+**RBAC (Role-Based Access Control)** — assign roles to users, gate actions by role.
+
+**Simple roles:**
+```ts
+type Role = 'admin' | 'editor' | 'viewer';
+
+// On User model
+role: { type: String, enum: ['admin', 'editor', 'viewer'], default: 'viewer' }
+```
+
+**Middleware to gate routes:**
+```ts
+function authorize(...allowedRoles: Role[]) {
+  return (req, res, next) => {
+    if (!req.user) return res.status(401).json({ error: 'Unauthenticated' });
+    if (!allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    next();
+  };
+}
+
+app.post('/api/admin/users', authenticate, authorize('admin'), createUser);
+app.delete('/posts/:id', authenticate, authorize('admin', 'editor'), deletePost);
+```
+
+**Resource-level (more granular):**
+```ts
+async function canEditPost(user, postId) {
+  const post = await Post.findById(postId);
+  return post.authorId.toString() === user.id || user.role === 'admin';
+}
+```
+
+**Best practices:**
+- Deny by default. Explicitly allow.
+- Check on the SERVER. Never trust the client.
+- 401 = not logged in. 403 = logged in but forbidden.
+- Log every authorization failure","mc","What's the difference between AUTHENTICATION and AUTHORIZATION?","Identical","Authentication = WHO you are (login). Authorization = WHAT you can do (permissions).","Random","Just the spelling","B","","mc","What's the right HTTP status for 'logged in but NOT permitted to do this action'?","401 Unauthorized","403 Forbidden","404 Not Found","200 OK","B","","typed","Type the access-control acronym (uppercase, 4 letters) that stands for Role-Based Access Control:","","","","","RBAC","","mc","Where MUST authorization checks live?","Frontend only (faster UX)","Server — frontend can be bypassed by anyone with DevTools or curl","Database only","URL params","B","","mc","What's the SAFE default for permissions?","Allow everything; block specific things","DENY everything; explicitly ALLOW (allowlist) — failure-safe","Random","All admin","B","","Topic 8 batch v1"
+"8","Authentication & Authorization","8.6","Security (CSRF, XSS, secure cookies)","Top web attack classes to defend against:
+
+**XSS (Cross-Site Scripting):** attacker injects JS that runs in your page. Steals cookies, hijacks accounts.
+- **Defense:** never `innerHTML = userInput`. Use frameworks (React escapes by default). Set `Content-Security-Policy` header (helmet does this). Sanitize HTML with `sanitize-html` if you MUST render user HTML.
+
+**CSRF (Cross-Site Request Forgery):** attacker tricks logged-in user's browser to POST to your site (using their cookies).
+- **Defense:** `SameSite=Lax` (or `Strict`) cookie attribute (most browsers default now). Or use CSRF tokens (`csurf` middleware). API with `Authorization: Bearer` header (no cookies) is naturally immune.
+
+**SQL Injection:** untrusted input concatenated into SQL.
+- **Defense:** parameterized queries / ORMs (Prisma, Mongoose do this).
+
+**Mass Assignment:** attacker sends `{ role: 'admin' }` in update body, you blindly merge.
+- **Defense:** explicit allowlist of editable fields. Zod schemas filter.
+
+**Insecure Direct Object Reference (IDOR):** `/api/orders/42` — attacker changes 42 to others. Server must verify ownership.
+- **Defense:** check `order.userId === req.user.id` before returning.
+
+**Secure cookie flags:**
+```ts
+{ httpOnly: true, secure: true, sameSite: 'lax', maxAge: ... }
+```
+
+**Always use HTTPS** in production. Modern hosts (Vercel, Render) give free SSL.","typed","Type the web security acronym (uppercase, 3 letters) for attacks that inject JavaScript into a page:","","","","","XSS","","mc","What's the BEST defense against XSS for HTML content?","Hope for the best","Use a framework that escapes by default (React), set Content-Security-Policy header, sanitize user HTML","Block JavaScript","Disable forms","B","","typed","Type the cookie attribute (PascalCase, 8 letters) that mitigates CSRF by limiting cookie sending across sites (often set to 'lax' or 'strict'):","","","","","SameSite","","mc","What's MASS ASSIGNMENT vulnerability?","Bulk insert","Blindly merging request body into a DB record — attacker can set fields like `role: admin`. Use Zod allowlist.","Memory leak","Cookie issue","B","","mc","An attacker changes `/api/orders/42` → `/api/orders/43`. What attack class?","XSS","Insecure Direct Object Reference (IDOR) — server must verify the user OWNS the resource","CSRF","SQL injection","B","","Topic 8 batch v1"
+"8","Authentication & Authorization","8.7","Password reset flow","Standard 'forgot password' flow:
+
+**1. User requests reset:** `POST /auth/forgot-password { email }`
+   - Server: lookup user by email. **If not found, still return 200** (don't leak which emails are registered)
+   - Generate random token: `crypto.randomBytes(32).toString('hex')`
+   - Store HASHED token + expiry (1 hour typical): `{ resetToken: hash(token), resetTokenExpiry: Date.now() + 3600_000 }`
+   - Email link: `https://yoursite.com/reset?token=<raw-token>` (raw token in link, NEVER store raw)
+
+**2. User clicks link, sets new password:** `POST /auth/reset-password { token, newPassword }`
+   - Server: hash token, find user with matching hash AND non-expired expiry
+   - Validate new password strength (Zod schema)
+   - Hash new password (bcrypt), save
+   - Invalidate token (`resetToken: null`)
+   - INVALIDATE all existing sessions/refresh tokens (force re-login everywhere) — recommended
+
+**Rate limit** `/forgot-password` (e.g. 3 requests / 15 min per email) — prevents email bombing.
+
+**Reuse strategy:**
+- Use a transactional email service (Resend, Postmark, SES) — not raw SMTP
+- Template the email; include the user's name, link, and expiry
+- Don't include the raw token in logs","mc","When a user requests password reset for an email that DOESN'T exist, what should the API return?","404 Not Found","200 OK (same as success) — don't leak which emails are registered (enumeration)","401","Error message","B","","typed","Type the Node module name (lowercase, 6 letters) used to generate cryptographically random bytes for reset tokens:","","","","","crypto","","mc","Should the reset token be stored RAW or HASHED in the database?","Raw — easy to compare","HASHED — if DB leaks, attackers can't use the tokens. Compare hash(received) == stored.","Encrypted","Plain text","B","","mc","After a successful password reset, what's recommended?","Do nothing","Invalidate all existing sessions/refresh tokens — force re-login everywhere (in case the account was compromised)","Hide the user","Delete their data","B","","typed","Type the typical password-reset token expiry duration (1 word + 'hour', e.g. '1 hour' as just the number, lowercase 1 character):","","","","","1","1 hour|one hour","Topic 8 batch v1"
