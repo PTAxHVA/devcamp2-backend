@@ -10,7 +10,7 @@ export interface IMasterRoadmap {
 
 const masterRoadmapSchema = new Schema<IMasterRoadmap>(
   {
-    roleName: { type: String, required: true, trim: true },
+    roleName: { type: String, required: true, unique: true, trim: true },
     description: { type: String, required: true },
     isPublished: { type: Boolean, default: false, index: true },
   },

@@ -3,7 +3,7 @@ import { TopicStatus } from '../types/enums.js'
 
 export interface IUserTopic {
   userRoadmapId: Types.ObjectId
-  masterTopicId: Types.ObjectId
+  topicId: Types.ObjectId
   customName: string | null
   status: TopicStatus
   orderIndex: number
@@ -19,7 +19,7 @@ const userTopicSchema = new Schema<IUserTopic>(
       required: true,
       index: true,
     },
-    masterTopicId: {
+    topicId: {
       type: Schema.Types.ObjectId,
       ref: 'MasterTopic',
       required: true,

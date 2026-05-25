@@ -3,7 +3,7 @@ import { RoadmapSource } from '../types/enums.js'
 
 export interface IUserRoadmap {
   userId: Types.ObjectId
-  masterRoadmapId: Types.ObjectId
+  roadmapId: Types.ObjectId
   sourceType: RoadmapSource
   isActive: boolean
   createdAt?: Date
@@ -13,7 +13,7 @@ export interface IUserRoadmap {
 const userRoadmapSchema = new Schema<IUserRoadmap>(
   {
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
-    masterRoadmapId: {
+    roadmapId: {
       type: Schema.Types.ObjectId,
       ref: 'MasterRoadmap',
       required: true,
