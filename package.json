@@ -14,7 +14,7 @@
     "start": "node dist/server.js",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "type-check": "tsc --noEmit",
+    "type-check": "tsc -p tsconfig.scripts.json",
     "seed": "tsx scripts/seed-content.ts",
     "seed:dry": "tsx scripts/seed-content.ts --dry-run",
     "seed:reset": "tsx scripts/seed-content.ts --reset",
