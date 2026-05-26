@@ -16,31 +16,36 @@ export const getTopicById = async (topicId: string, userId: string) => {
     throw new ApiError(404, 'User roadmap not found', 'USER_ROADMAP_NOT_FOUND')
   }
 
-  const userTopic = await UserTopic.find({
+  const userTopic = await UserTopic.findOne({
     userRoadmapId: { $in: userRoadmap.map((r) => r._id) },
     topicId,
-  })
-    .select('_id')
-    .lean()
-  if (userTopic.length === 0) {
+  }).lean()
+  if (!userTopic) {
     throw new ApiError(404, 'User topic not found', 'USER_TOPIC_NOT_FOUND')
   }
 
-  const topic = await MasterTopic.findById(topicId).select('_id').lean()
+  const topic = await MasterTopic.findById(topicId).lean()
   if (!topic) {
     throw new ApiError(404, 'Topic not found', 'TOPIC_NOT_FOUND')
   }
 
   const sections = await Section.find({ topicId, isPublished: true }).sort({ orderIndex: 1 }).lean()
-  if (!sections) {
-    throw new ApiError(404, 'Sections not found', 'SECTIONS_NOT_FOUND')
-  }
   const sectionsId = sections.map((s) => s._id)
 
   const userProgress = await UserSectionProgress.find({
-    userTopicId: { $in: userTopic.map((u) => u._id) },
+    userTopicId: userTopic._id,
     sectionId: { $in: sectionsId },
   }).lean()
 
-  return { userTopic, sections, userProgress }
+  const topicDetails = {
+    _id: topic._id,
+    name: topic.name,
+    description: topic.description,
+    resources: [],
+    orderIndex: userTopic.orderIndex,
+    sectionList: sections,
+    userProgress: userProgress,
+  }
+
+  return topicDetails
 }
