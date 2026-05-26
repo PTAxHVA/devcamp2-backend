@@ -4,6 +4,7 @@ import { UserSectionProgress } from '../models/user-section-progress.model.js'
 import { UserTopic } from '../models/user-topic.model.js'
 import { Section } from '../models/section.model.js'
 import { Quiz } from '../models/quiz.model.js'
+import { UserRoadmap } from '../models/user-roadmap.model.js'
 
 export const getSectionById = async (sectionId: string, userId: string) => {
   if (!isValidObjectId(sectionId)) {
@@ -16,9 +17,14 @@ export const getSectionById = async (sectionId: string, userId: string) => {
   }
   const topicId = section.topicId
 
+  const userRoadmap = await UserRoadmap.find({ userId, isActive: true }).select('_id').lean()
+  if (userRoadmap.length === 0) {
+    throw new ApiError(404, 'User roadmap not found', 'USER_ROADMAP_NOT_FOUND')
+  }
+
   const userTopic = await UserTopic.findOne({
     topicId,
-    userId,
+    userRoadmapId: { $in: userRoadmap.map((r) => r._id) },
   })
     .select('_id')
     .lean()
@@ -26,15 +32,9 @@ export const getSectionById = async (sectionId: string, userId: string) => {
     throw new ApiError(404, 'User topic not found', 'USER_TOPIC_NOT_FOUND')
   }
 
-  const quiz = await Quiz.find({
-    sectionId: sectionId,
-  })
-    .select('sectionId')
-    .lean()
+  const hasQuiz = await Quiz.exists({ sectionId })
 
-  const hasQuizSet = new Set(quiz.map((q) => q.sectionId.toString()))
-
-  const userProgress = await UserSectionProgress.find({
+  const userProgress = await UserSectionProgress.findOne({
     userTopicId: userTopic._id,
     sectionId: sectionId,
   }).lean()
@@ -53,8 +53,8 @@ export const getSectionById = async (sectionId: string, userId: string) => {
     contentOverview: section.contentOverview,
     orderIndex: section.orderIndex,
     resourceList: sectionDTOs,
-    hasQuiz: hasQuizSet.has(sectionId),
-    isCompleted: userProgress[0]?.isCompleted ?? false,
+    hasQuiz: hasQuiz,
+    isCompleted: userProgress?.isCompleted ?? false,
   }
 
   return sectionDetails
