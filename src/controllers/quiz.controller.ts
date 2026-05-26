@@ -5,9 +5,8 @@ import * as QuizService from '../services/quiz.service.js'
 export const getQuizBySectionId = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const sectionId = req.params.sectionId as string
-    const userId = req.user?.id as string
 
-    const result = await QuizService.getQuizBySectionId(sectionId, userId)
+    const result = await QuizService.getQuizBySectionId(sectionId)
 
     res.json(ok(result))
   } catch (error) {
