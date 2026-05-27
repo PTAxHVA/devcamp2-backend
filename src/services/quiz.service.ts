@@ -1,11 +1,12 @@
 import { ApiError } from '../utils/api-error.js'
-import { isValidObjectId } from 'mongoose'
+import { isValidObjectId, startSession } from 'mongoose'
 import { Quiz } from '../models/quiz.model.js'
 import { Question } from '../models/question.model.js'
 import { QuizAttempt } from '../models/quiz-attempt.model.js'
 import { QuestionOption } from '../models/question-option.model.js'
 import { Section } from '../models/section.model.js'
 import { verifyTopicEnrollment } from './section.service.js'
+import { QuizAttemptAnswer } from '../models/quiz-attempt-answer.model.js'
 
 export const getQuizBySectionId = async (sectionId: string, userId: string) => {
   if (!isValidObjectId(sectionId))
@@ -27,74 +28,99 @@ export const getQuizBySectionId = async (sectionId: string, userId: string) => {
 }
 
 export const startQuizAttempt = async (quizId: string, userId: string) => {
-  if (!isValidObjectId(quizId)) throw new ApiError(400, 'Invalid quiz id', 'INVALID_QUIZ_ID')
-  const quiz = await Quiz.findOne({ _id: quizId }).lean()
-  if (!quiz) throw new ApiError(404, 'Quiz not found', 'QUIZ_NOT_FOUND')
+  const session = await startSession()
+  session.startTransaction()
+  try {
+    if (!isValidObjectId(quizId)) throw new ApiError(400, 'Invalid quiz id', 'INVALID_QUIZ_ID')
+    const quiz = await Quiz.findOne({ _id: quizId }).lean()
+    if (!quiz) throw new ApiError(404, 'Quiz not found', 'QUIZ_NOT_FOUND')
 
-  const section = await Section.findById(quiz.sectionId).lean()
-  if (!section) throw new ApiError(404, 'Section not found', 'SECTION_NOT_FOUND')
-  await verifyTopicEnrollment(section.topicId.toString(), userId)
+    const section = await Section.findById(quiz.sectionId).lean()
+    if (!section) throw new ApiError(404, 'Section not found', 'SECTION_NOT_FOUND')
+    await verifyTopicEnrollment(section.topicId.toString(), userId)
 
-  const questions = await Question.find({ quizId: quiz._id })
-    .select({
-      _id: 1,
-      type: 1,
-      content: 1,
-      orderIndex: 1,
-      createdAt: 1,
-      updatedAt: 1,
-    })
-    .sort({ orderIndex: 1, _id: 1 })
-    .lean()
+    const questions = await Question.find({ quizId: quiz._id })
+      .select({
+        _id: 1,
+        type: 1,
+        content: 1,
+        orderIndex: 1,
+        createdAt: 1,
+        updatedAt: 1,
+      })
+      .sort({ orderIndex: 1, _id: 1 })
+      .lean()
 
-  if (questions.length === 0) throw new ApiError(404, 'Questions not found', 'QUESTIONS_NOT_FOUND')
+    if (questions.length === 0)
+      throw new ApiError(404, 'Questions not found', 'QUESTIONS_NOT_FOUND')
 
-  const attemptExists = await QuizAttempt.findOne({ quizId, userId })
-  let quizAttempt
+    const attemptExists = await QuizAttempt.findOne({ quizId, userId })
+    let quizAttempt
 
-  if (attemptExists) {
-    if (!attemptExists.submittedAt) {
-      throw new ApiError(409, 'Quiz already started', 'QUIZ_ALREADY_STARTED')
+    if (attemptExists) {
+      if (!attemptExists.submittedAt) {
+        throw new ApiError(409, 'Quiz already started', 'QUIZ_ALREADY_STARTED')
+      }
+      if (attemptExists.cooldownUntil && attemptExists.cooldownUntil > new Date()) {
+        throw new ApiError(403, 'Quiz is on cooldown', 'QUIZ_ON_COOLDOWN')
+      }
+      attemptExists.startedAt = new Date()
+      attemptExists.submittedAt = null
+      attemptExists.score = null
+      attemptExists.isPassed = false
+      attemptExists.cooldownUntil = null
+
+      const deleteOldQuizAttemptAnswers = await QuizAttemptAnswer.deleteMany({
+        quizAttemptId: attemptExists._id,
+      })
+      console.log(`Deleted ${deleteOldQuizAttemptAnswers.deletedCount} previous answers`)
+
+      await attemptExists.save()
+      quizAttempt = attemptExists
+    } else {
+      quizAttempt = new QuizAttempt({
+        userId,
+        quizId,
+        startedAt: new Date(),
+      })
+      try {
+        await quizAttempt.save()
+      } catch (error: any) {
+        if (error.code === 11000) {
+          throw new ApiError(409, 'Quiz already started', 'QUIZ_ALREADY_STARTED')
+        }
+        throw error
+      }
     }
-    if (attemptExists.cooldownUntil && attemptExists.cooldownUntil > new Date()) {
-      throw new ApiError(403, 'Quiz is on cooldown', 'QUIZ_ON_COOLDOWN')
-    }
-    attemptExists.startedAt = new Date()
-    attemptExists.submittedAt = null
-    attemptExists.score = null
-    await attemptExists.save()
-    quizAttempt = attemptExists
-  } else {
-    quizAttempt = new QuizAttempt({
-      userId,
-      quizId,
-      startedAt: new Date(),
+
+    const questionOptions = await QuestionOption.find({
+      questionId: { $in: questions.map((question) => question._id) },
     })
-    await quizAttempt.save()
+      .sort({ orderIndex: 1 })
+      .select({ questionId: 1, content: 1, orderIndex: 1 })
+      .lean()
+
+    const questionsWithOptions = questions.map((question) => ({
+      ...question,
+      options: questionOptions.filter(
+        (option) => option.questionId.toString() === question._id.toString(),
+      ),
+    }))
+
+    const quizDetails = {
+      quizAttempt: {
+        attemptId: quizAttempt._id,
+        quizId: quizAttempt.quizId,
+        startedAt: quizAttempt.startedAt,
+      },
+      questions: questionsWithOptions,
+    }
+    await session.commitTransaction()
+    session.endSession()
+    return quizDetails
+  } catch (error) {
+    await session.abortTransaction()
+    session.endSession()
+    throw error
   }
-
-  const questionOptions = await QuestionOption.find({
-    questionId: { $in: questions.map((question) => question._id) },
-  })
-    .sort({ orderIndex: 1 })
-    .select({ questionId: 1, content: 1, orderIndex: 1 })
-    .lean()
-
-  const questionsWithOptions = questions.map((question) => ({
-    ...question,
-    options: questionOptions.filter(
-      (option) => option.questionId.toString() === question._id.toString(),
-    ),
-  }))
-
-  const quizDetails = {
-    quizAttempt: {
-      attemptId: quizAttempt._id,
-      quizId: quizAttempt.quizId,
-      startedAt: quizAttempt.startedAt,
-    },
-    questions: questionsWithOptions,
-  }
-
-  return quizDetails
 }
