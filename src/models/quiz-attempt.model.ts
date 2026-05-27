@@ -25,4 +25,6 @@ const quizAttemptSchema = new Schema<IQuizAttempt>(
   { timestamps: true },
 )
 
+quizAttemptSchema.index({ userId: 1, quizId: 1 }, { unique: true })
+
 export const QuizAttempt = model<IQuizAttempt>('QuizAttempt', quizAttemptSchema)
