@@ -5,5 +5,6 @@ import * as QuizController from '../../controllers/quiz.controller.js'
 const router = Router()
 
 router.post('/:id/start', authenticate, QuizController.startQuizAttempt)
+router.post('/attempts/:id/submit', authenticate, QuizController.submitAndGradeQuiz)
 
 export default router
