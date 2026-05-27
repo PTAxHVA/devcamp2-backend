@@ -82,7 +82,12 @@ export const startQuizAttempt = async (quizId: string, userId: string) => {
       try {
         await quizAttempt.save({ session })
       } catch (error) {
-        if (error.code === 11000) {
+        if (
+          typeof error === 'object' &&
+          error !== null &&
+          'code' in error &&
+          error.code === 11000
+        ) {
           throw new ApiError(409, 'Quiz already started', 'QUIZ_ALREADY_STARTED')
         }
         throw error
