@@ -70,12 +70,8 @@ export const startQuizAttempt = async (quizId: string, userId: string) => {
       attemptExists.isPassed = false
       attemptExists.cooldownUntil = null
 
-      const deleteOldQuizAttemptAnswers = await QuizAttemptAnswer.deleteMany({
-        quizAttemptId: attemptExists._id,
-      })
-      console.log(`Deleted ${deleteOldQuizAttemptAnswers.deletedCount} previous answers`)
-
-      await attemptExists.save()
+      await QuizAttemptAnswer.deleteMany({ quizAttemptId: attemptExists._id }).session(session)
+      await attemptExists.save({ session })
       quizAttempt = attemptExists
     } else {
       quizAttempt = new QuizAttempt({
@@ -84,8 +80,8 @@ export const startQuizAttempt = async (quizId: string, userId: string) => {
         startedAt: new Date(),
       })
       try {
-        await quizAttempt.save()
-      } catch (error: any) {
+        await quizAttempt.save({ session })
+      } catch (error) {
         if (error.code === 11000) {
           throw new ApiError(409, 'Quiz already started', 'QUIZ_ALREADY_STARTED')
         }
