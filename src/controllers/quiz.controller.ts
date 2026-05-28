@@ -33,9 +33,10 @@ export const startQuizAttempt = async (req: Request, res: Response, next: NextFu
 export const submitAndGradeQuiz = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = req.user?.id as string
+    const attemptId = req.params.id as string
     const answers = req.body.answers as SubmitAttemptSchema['answers']
 
-    const result = await QuizGradingService.submitAndGradeQuiz(answers, userId)
+    const result = await QuizGradingService.submitAndGradeQuiz(attemptId, answers, userId)
 
     res.json(ok(result))
   } catch (error) {

@@ -5,86 +5,95 @@ import { UserSectionProgress } from '../models/user-section-progress.model.js'
 import { QuizAttempt } from '../models/quiz-attempt.model.js'
 import { QuizAttemptAnswer } from '../models/quiz-attempt-answer.model.js'
 import { Quiz } from '../models/quiz.model.js'
-import { UserRoadmap } from '../models/user-roadmap.model.js'
-import { UserTopic } from '../models/user-topic.model.js'
-import { TopicStatus } from '../types/enums.js'
+import { Section } from '../models/section.model.js'
 import { ApiError } from '../utils/api-error.js'
+import { verifyTopicEnrollment } from './section.service.js'
+import { startSession } from 'mongoose'
 
 export const submitAndGradeQuiz = async (
+  attemptId: string,
   answers: SubmitAttemptSchema['answers'],
   userId: string,
 ) => {
+  const session = await startSession()
+  session.startTransaction()
   if (!answers || answers.length === 0) {
     throw new ApiError(400, 'Answers array cannot be empty', 'EMPTY_ANSWERS')
   }
 
-  const getQuizIdFromQuestion = await Question.findOne({ _id: answers[0]?.questionId })
-    .select('quizId')
-    .lean()
-  if (!getQuizIdFromQuestion) {
-    throw new ApiError(404, 'Question not found', 'QUESTION_NOT_FOUND')
+  const quizAttempt = await QuizAttempt.findOne({ _id: attemptId, userId, submittedAt: null })
+  if (!quizAttempt) {
+    throw new ApiError(400, 'Active quiz attempt not found', 'QUIZ_ATTEMPT_NOT_FOUND')
   }
 
-  const quiz = await Quiz.findById(getQuizIdFromQuestion.quizId).lean()
+  const quiz = await Quiz.findById(quizAttempt.quizId).lean()
   if (!quiz) {
     throw new ApiError(404, 'Quiz not found', 'QUIZ_NOT_FOUND')
   }
 
-  const quizAttempt = await QuizAttempt.findOne({ userId, quizId: quiz._id, submittedAt: null })
-  if (!quizAttempt) {
-    throw new ApiError(400, 'Active quiz attempt not found', 'QUIZ_ATTEMPT_NOT_FOUND')
+  const questions = await Question.find({ quizId: quiz._id }).lean()
+  if (questions.length === 0) {
+    throw new ApiError(404, 'Questions not found', 'QUESTIONS_NOT_FOUND')
   }
 
   let totalCorrect = 0
   const attemptAnswers = []
 
-  for (const answer of answers) {
-    if (answer.selectedOptionId) {
-      const correctOption = await QuestionOption.findOne({
-        questionId: answer.questionId,
-        isCorrect: true,
-      }).lean()
+  for (const question of questions) {
+    const answer = answers.find((a) => String(a.questionId) === String(question._id))
 
-      const isCorrectMCQ = String(answer.selectedOptionId) === String(correctOption?._id)
-      if (isCorrectMCQ) {
+    let isCorrect = false
+    let selectedOptionId = null
+    let userInput = null
+
+    if (answer) {
+      if (question.type === 'MULTIPLE_CHOICE') {
+        if (answer.selectedOptionId) {
+          selectedOptionId = answer.selectedOptionId
+          const correctOption = await QuestionOption.findOne({
+            questionId: question._id,
+            isCorrect: true,
+          }).lean()
+
+          if (correctOption && String(selectedOptionId) === String(correctOption._id)) {
+            isCorrect = true
+          }
+        }
+      } else {
+        // FILL_IN_BLANK
+        if (answer.userInput !== undefined && answer.userInput !== null) {
+          userInput = answer.userInput
+          const norm = (s: string) => s.trim().toLowerCase()
+
+          const accepted = [question.correctAnswer, ...(question.acceptableAnswers ?? [])]
+            .map(String)
+            .map((ans) => norm(ans))
+
+          if (accepted.includes(norm(userInput))) {
+            isCorrect = true
+          }
+        }
+      }
+
+      if (isCorrect) {
         totalCorrect++
       }
 
       attemptAnswers.push({
         quizAttemptId: quizAttempt._id,
-        questionId: answer.questionId,
-        selectedOptionId: answer.selectedOptionId,
-        userInput: null,
-        isCorrect: isCorrectMCQ,
-      })
-    } else if (answer.userInput !== undefined && answer.userInput !== null) {
-      const norm = (s: string) => s.trim().toLowerCase()
-
-      const question = await Question.findById(answer.questionId).lean()
-      const accepted = [question?.correctAnswer, ...(question?.acceptableAnswers ?? [])]
-        .map(String)
-        .map((ans) => norm(ans))
-
-      const isAccepted = accepted.includes(norm(answer.userInput ?? ''))
-      if (isAccepted) {
-        totalCorrect++
-      }
-
-      attemptAnswers.push({
-        quizAttemptId: quizAttempt._id,
-        questionId: answer.questionId,
-        selectedOptionId: null,
-        userInput: answer.userInput,
-        isCorrect: isAccepted,
+        questionId: question._id,
+        selectedOptionId,
+        userInput,
+        isCorrect,
       })
     }
   }
 
   if (attemptAnswers.length > 0) {
-    await QuizAttemptAnswer.insertMany(attemptAnswers)
+    await QuizAttemptAnswer.insertMany(attemptAnswers, { session })
   }
 
-  const totalQuestions = await Question.countDocuments({ quizId: quiz._id })
+  const totalQuestions = questions.length
   const score = totalQuestions > 0 ? (totalCorrect / totalQuestions) * 100 : 0
   const isPassed = score >= quiz.minPassScore
 
@@ -93,25 +102,18 @@ export const submitAndGradeQuiz = async (
   quizAttempt.submittedAt = new Date()
 
   if (!isPassed) {
-    quizAttempt.cooldownUntil = new Date(Date.now() + 2 * 60 * 60 * 1000)
+    quizAttempt.cooldownUntil = new Date(Date.now() + 60)
   } else {
     quizAttempt.cooldownUntil = null
   }
-  await quizAttempt.save()
+  await quizAttempt.save({ session })
 
-  const userRoadmap = await UserRoadmap.findOne({ userId, isActive: true }).select('_id').lean()
-  if (!userRoadmap) {
-    throw new ApiError(404, 'User roadmap not found', 'USER_ROADMAP_NOT_FOUND')
+  const section = await Section.findOne({ _id: quiz.sectionId }).select('topicId').lean()
+  if (!section) {
+    throw new ApiError(404, 'Section not found', 'SECTION_NOT_FOUND')
   }
-  const userTopic = await UserTopic.findOne({
-    userRoadmapId: userRoadmap._id,
-    status: TopicStatus.IN_PROGRESS,
-  })
-    .select('_id topicId')
-    .lean()
-  if (!userTopic) {
-    throw new ApiError(404, 'User topic not found', 'USER_TOPIC_NOT_FOUND')
-  }
+
+  const userTopic = await verifyTopicEnrollment(section.topicId.toString(), userId)
 
   const currentProgress = await UserSectionProgress.findOne({
     userTopicId: userTopic._id,
@@ -121,15 +123,28 @@ export const submitAndGradeQuiz = async (
     if (isPassed && !currentProgress.isCompleted) {
       currentProgress.isCompleted = true
       currentProgress.completedAt = new Date()
-      await currentProgress.save()
+      await currentProgress.save({ session })
     }
   } else {
-    await UserSectionProgress.create({
-      userTopicId: userTopic._id,
-      sectionId: quiz.sectionId,
-      isCompleted: isPassed,
-      startedAt: quizAttempt.startedAt,
-      completedAt: isPassed ? new Date() : null,
-    })
+    await UserSectionProgress.create(
+      [
+        {
+          userTopicId: userTopic._id,
+          sectionId: quiz.sectionId,
+          isCompleted: isPassed,
+          startedAt: quizAttempt.startedAt,
+          completedAt: isPassed ? new Date() : null,
+        },
+      ],
+      { session },
+    )
+  }
+  await session.commitTransaction()
+  session.endSession()
+  return {
+    quizAttemptId: quizAttempt._id,
+    score,
+    isPassed,
+    cooldownUntil: quizAttempt.cooldownUntil,
   }
 }
