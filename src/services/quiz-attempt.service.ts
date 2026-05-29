@@ -1,13 +1,11 @@
 import { ApiError } from '../utils/api-error.js'
-import { isValidObjectId } from 'mongoose'
 import { QuizAttempt } from '../models/quiz-attempt.model.js'
 import { QuizAttemptAnswer } from '../models/quiz-attempt-answer.model.js'
+import { Question } from '../models/question.model.js'
+import { QuestionOption } from '../models/question-option.model.js'
 
 export const getAttempt = async (attemptId: string, userId: string) => {
-  if (!isValidObjectId(attemptId))
-    throw new ApiError(400, 'Invalid attempt id', 'INVALID_OBJECT_ID')
-
-  const attempt = await QuizAttempt.findOne({ _id: attemptId, userId }).lean()
+  const attempt = await QuizAttempt.findOne({ _id: attemptId, userId, submittedAt: null }).lean()
 
   if (!attempt) throw new ApiError(404, 'Attempt not found', 'ATTEMPT_NOT_FOUND')
 
@@ -16,25 +14,88 @@ export const getAttempt = async (attemptId: string, userId: string) => {
     .select('_id quizAttemptId questionId selectedOptionId userInput createdAt updatedAt')
     .lean()
 
-  return {
-    attempt,
-    attemptAnswers,
+  const questions = await Question.find({ quizId: attempt.quizId })
+    .select({
+      _id: 1,
+      type: 1,
+      content: 1,
+      orderIndex: 1,
+      createdAt: 1,
+      updatedAt: 1,
+    })
+    .sort({ orderIndex: 1, _id: 1 })
+    .lean()
+
+  const questionOptions = await QuestionOption.find({
+    questionId: { $in: questions.map((q) => q._id) },
+  })
+    .select({ isCorrect: 0 })
+    .sort({ orderIndex: 1 })
+    .lean()
+  const questionsWithOptions = questions.map((question) => ({
+    ...question,
+    options: questionOptions.filter(
+      (option) => option.questionId.toString() === question._id.toString(),
+    ),
+    userAnswer: attemptAnswers.find(
+      (answer) => answer.questionId.toString() === question._id.toString(),
+    ),
+  }))
+
+  const quizDetails = {
+    quizAttempt: {
+      attemptId: attempt._id,
+      quizId: attempt.quizId,
+      startedAt: attempt.startedAt,
+    },
+    questions: questionsWithOptions,
   }
+
+  return quizDetails
 }
 
 export const getAttemptResult = async (attemptId: string, userId: string) => {
-  if (!isValidObjectId(attemptId))
-    throw new ApiError(400, 'Invalid attempt id', 'INVALID_OBJECT_ID')
-
-  const attempt = await QuizAttempt.findOne({ _id: attemptId, userId }).lean()
+  const attempt = await QuizAttempt.findOne({
+    _id: attemptId,
+    userId,
+    submittedAt: { $ne: null },
+  }).lean()
 
   if (!attempt) throw new ApiError(404, 'Attempt not found', 'ATTEMPT_NOT_FOUND')
 
-  // Gets attempt result for user to review their answers
   const attemptAnswers = await QuizAttemptAnswer.find({ quizAttemptId: attemptId }).lean()
 
-  return {
-    attempt,
-    attemptAnswers,
+  const questions = await Question.find({ quizId: attempt.quizId })
+    .sort({ orderIndex: 1, _id: 1 })
+    .lean()
+
+  const questionOptions = await QuestionOption.find({
+    questionId: { $in: questions.map((q) => q._id) },
+  })
+    .sort({ orderIndex: 1 })
+    .lean()
+
+  const questionsWithOptions = questions.map((question) => ({
+    ...question,
+    options: questionOptions.filter(
+      (option) => option.questionId.toString() === question._id.toString(),
+    ),
+    userAnswer: attemptAnswers.find(
+      (answer) => answer.questionId.toString() === question._id.toString(),
+    ),
+  }))
+
+  const resultDetails = {
+    quizAttempt: {
+      attemptId: attempt._id,
+      quizId: attempt.quizId,
+      startedAt: attempt.startedAt,
+      submittedAt: attempt.submittedAt,
+      score: attempt.score,
+      isPassed: attempt.isPassed,
+    },
+    questions: questionsWithOptions,
   }
+
+  return resultDetails
 }
