@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from 'express'
 import { ok } from '../utils/api-response.js'
 import * as QuizService from '../services/quiz.service.js'
 import * as QuizGradingService from '../services/quiz-grading.service.js'
+import * as QuizAttemptService from '../services/quiz-attempt.service.js'
 import { SubmitAttemptSchema, objectIdSchema } from '../schemas/quiz.schema.js'
 
 export const getQuizBySectionId = async (req: Request, res: Response, next: NextFunction) => {
@@ -37,6 +38,32 @@ export const submitAndGradeQuiz = async (req: Request, res: Response, next: Next
     const answers = req.body.answers as SubmitAttemptSchema['answers']
 
     const result = await QuizGradingService.submitAndGradeQuiz(attemptId, answers, userId)
+
+    res.json(ok(result))
+  } catch (error) {
+    next(error)
+  }
+}
+
+export const getAttempt = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const attemptId = objectIdSchema.parse(req.params.id)
+    const userId = req.user?.id as string
+
+    const result = await QuizAttemptService.getAttempt(attemptId, userId)
+
+    res.json(ok(result))
+  } catch (error) {
+    next(error)
+  }
+}
+
+export const getAttemptResult = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const attemptId = objectIdSchema.parse(req.params.id)
+    const userId = req.user?.id as string
+
+    const result = await QuizAttemptService.getAttemptResult(attemptId, userId)
 
     res.json(ok(result))
   } catch (error) {
