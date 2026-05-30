@@ -8,5 +8,6 @@ export const geminiModel = genAI.getGenerativeModel({
   generationConfig: {
     temperature: 0.7,
     maxOutputTokens: 2048,
+    responseMimeType: 'application/json',
   },
 })

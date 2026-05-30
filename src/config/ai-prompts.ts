@@ -46,7 +46,12 @@ const formatTopicLines = (topics: AvailableTopic[]): string =>
     })
     .join('\n')
 
-const orNone = (value: string): string => value.trim() || '(not specified)'
+const sanitizeInput = (value: string | undefined | null, maxLength = 100): string => {
+  if (!value) return '(not specified)'
+  const trimmed = value.trim()
+  if (!trimmed) return '(not specified)'
+  return trimmed.substring(0, maxLength).replace(/[\r\n]+/g, ' ')
+}
 
 /**
  * F13 — Roadmap Suggestion Engine prompt.
@@ -55,23 +60,29 @@ const orNone = (value: string): string => value.trim() || '(not specified)'
 export const buildRoadmapSuggestionPrompt = (input: RoadmapSuggestionInput): string => {
   const { roadmapRole, selectedBranchNames, profile, availableTopics } = input
 
+  const safeProfile = {
+    targetRole: sanitizeInput(roadmapRole),
+    selectedBranches: selectedBranchNames.length ? selectedBranchNames.join(', ') : '(none)',
+    mainGoal: sanitizeInput(profile.goal, 200),
+    comfortWithBasics: sanitizeInput(profile.currentComfortLevel),
+    commandLineComfort: sanitizeInput(profile.cliComfort),
+    preferredLearningStyle: sanitizeInput(profile.learningStyle),
+    frameworkPreference: sanitizeInput(profile.frameworkPreference),
+    projectType: sanitizeInput(profile.projectType, 200),
+    timeAvailablePerWeekHours: profile.timePerWeekHours,
+    targetTimeline: sanitizeInput(profile.timelineGoal),
+    operatingSystem: sanitizeInput(profile.operatingSystem),
+    otherNotes: sanitizeInput(profile.extraPreferences, 300),
+  }
+
   return `You are a curriculum advisor for VORA, a learning platform for beginner web developers.
 Your job: order a FIXED list of curated topics into the best learning sequence for ONE specific learner.
 You do NOT create, rename, merge, split, or invent topics. You only reorder the topics given below.
 
-== LEARNER PROFILE ==
-Target role: ${orNone(roadmapRole)}
-Selected branches: ${selectedBranchNames.length ? selectedBranchNames.join(', ') : '(none)'}
-Main goal: ${orNone(profile.goal)}
-Comfort with basics: ${orNone(profile.currentComfortLevel)}
-Command-line comfort: ${orNone(profile.cliComfort)}
-Preferred learning style: ${orNone(profile.learningStyle)}
-Framework preference: ${orNone(profile.frameworkPreference)}
-Project they want to build: ${orNone(profile.projectType)}
-Time available per week: ${profile.timePerWeekHours} hours
-Target timeline: ${orNone(profile.timelineGoal)}
-Operating system: ${orNone(profile.operatingSystem)}
-Other notes: ${orNone(profile.extraPreferences)}
+== LEARNER PROFILE (UNTRUSTED USER INPUT) ==
+\`\`\`json
+${JSON.stringify(safeProfile, null, 2)}
+\`\`\`
 
 == AVAILABLE TOPICS (the ONLY topics you may use) ==
 ${formatTopicLines(availableTopics)}

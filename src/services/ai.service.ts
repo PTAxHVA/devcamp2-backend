@@ -1,4 +1,6 @@
 import { isValidObjectId } from 'mongoose'
+import { z } from 'zod'
+import { GenerateContentResult } from '@google/generative-ai'
 import { ApiError } from '../utils/api-error.js'
 import { MasterRoadmap } from '../models/master-roadmap.model.js'
 import { MasterBranch } from '../models/master-branch.model.js'
@@ -13,6 +15,11 @@ import {
 } from '../config/ai-prompts.js'
 import { geminiModel } from '../config/gemini.js'
 import { logger } from '../config/logger.js'
+
+const aiResponseSchema = z.object({
+  orderedTopicIds: z.array(z.string()),
+  explanation: z.string(),
+})
 
 export const generateSuggestedRoadmap = async (
   masterRoadmapId: string,
@@ -34,15 +41,22 @@ export const generateSuggestedRoadmap = async (
     throw new ApiError(404, 'Master roadmap not found', 'MASTER_ROADMAP_NOT_FOUND')
   }
 
-  const selectedMasterBranches = await MasterBranch.find({ _id: { $in: branchSelections } }).lean()
-  if (!selectedMasterBranches) {
-    throw new ApiError(404, 'Master branch not found', 'MASTER_BRANCH_NOT_FOUND')
+  const selectedMasterBranches = await MasterBranch.find({
+    _id: { $in: branchSelections },
+    roadmapId: masterRoadmapId,
+  }).lean()
+  if (selectedMasterBranches.length !== branchSelections.length) {
+    throw new ApiError(
+      404,
+      'One or more master branches not found or do not belong to roadmap',
+      'MASTER_BRANCH_NOT_FOUND',
+    )
   }
 
   const selectedBranchTopics = await BranchTopic.find({
     branchId: { $in: selectedMasterBranches.map((branch) => branch._id) },
   }).lean()
-  if (!selectedBranchTopics) {
+  if (selectedBranchTopics.length === 0) {
     throw new ApiError(404, 'Branch topics not found', 'BRANCH_TOPICS_NOT_FOUND')
   }
 
@@ -50,33 +64,37 @@ export const generateSuggestedRoadmap = async (
     _id: { $in: selectedBranchTopics.map((topic) => topic.topicId) },
   }).lean()
 
-  if (!selectedMasterTopics) {
+  if (selectedMasterTopics.length === 0) {
     throw new ApiError(404, 'Master topics not found', 'MASTER_TOPICS_NOT_FOUND')
   }
 
+  const masterTopicMap = new Map(selectedMasterTopics.map((t) => [t._id.toString(), t]))
+
   const topics = []
   for (const topic of selectedBranchTopics) {
-    const masterTopic = await MasterTopic.findById(topic.topicId)
+    const masterTopic = masterTopicMap.get(topic.topicId.toString())
     if (!masterTopic) {
-      throw new ApiError(404, 'Master topic not found', 'MASTER_TOPIC_NOT_FOUND')
+      throw new ApiError(404, 'Master topic not found in map', 'MASTER_TOPIC_NOT_FOUND')
     }
     topics.push({
-      orderIndex: topic.orderIndex,
-      topicId: masterTopic._id.toString(),
+      id: masterTopic._id.toString(),
       name: masterTopic.name,
       descriptionShort: masterTopic.descriptionShort,
       estimatedHours: masterTopic.estimatedHours,
       requiredTopicIds: masterTopic.dependsOn.requiredTopicIds.map((id) => id.toString()),
+      orderIndex: topic.orderIndex,
     })
   }
 
+  const defaultOrderedTopics = topics.sort((a, b) => a.orderIndex - b.orderIndex)
+
   const fallback = {
-    suggestedTopics: topics.sort((a, b) => a.orderIndex - b.orderIndex),
+    suggestedTopics: defaultOrderedTopics,
     explanation: 'AI is currently not available, showing the default roadmap',
   }
 
   const userOnboardingProfile = await OnboardingQuestionnaire.findOne({
-    user: userId,
+    userId,
   }).lean()
 
   if (!userOnboardingProfile) {
@@ -87,19 +105,15 @@ export const generateSuggestedRoadmap = async (
     )
   }
 
-  const availableTopics: AvailableTopic[] = []
+  const availableTopics: AvailableTopic[] = defaultOrderedTopics.map((t) => ({
+    id: t.id,
+    name: t.name,
+    descriptionShort: t.descriptionShort,
+    estimatedHours: t.estimatedHours,
+    requiredTopicIds: t.requiredTopicIds,
+  }))
 
-  for (const topic of selectedMasterTopics) {
-    availableTopics.push({
-      id: topic._id.toString(),
-      name: topic.name,
-      descriptionShort: topic.descriptionShort,
-      estimatedHours: topic.estimatedHours,
-      requiredTopicIds: topic.dependsOn.requiredTopicIds.map((id) => id.toString()),
-    })
-  }
-
-  const leanerProfile: LearnerProfile = {
+  const learnerProfile: LearnerProfile = {
     rolePreference: userOnboardingProfile.rolePreference,
     goal: userOnboardingProfile.goal,
     timePerWeekHours: userOnboardingProfile.timePerWeekHours,
@@ -116,35 +130,63 @@ export const generateSuggestedRoadmap = async (
   const roadmapSuggestionInput: RoadmapSuggestionInput = {
     roadmapRole: roadmap.roleName,
     selectedBranchNames: selectedMasterBranches.map((branch) => branch.name),
-    profile: leanerProfile,
+    profile: learnerProfile,
     availableTopics: availableTopics,
   }
 
   const roadmapSuggestion = buildRoadmapSuggestionPrompt(roadmapSuggestionInput)
 
   try {
-    const response: any = await Promise.race([
+    const response = (await Promise.race([
       geminiModel.generateContent(roadmapSuggestion),
       new Promise((_, reject) => setTimeout(() => reject(new Error('Gemini API timeout')), 10_000)),
-    ])
+    ])) as GenerateContentResult
 
-    if (!response.response.text()) {
+    const rawText = response.response.text()
+    if (!rawText) {
       throw new Error('Empty response from Gemini API')
     }
 
-    const suggestedRoadmap = JSON.parse(response.response.text())
-    const topicNameById = new Map<string, string>(
-      selectedMasterTopics.map((topic) => [topic._id.toString(), topic.name]),
-    )
+    const cleanedText = rawText.replace(/```(?:json)?/gi, '').trim()
+    const parsed = JSON.parse(cleanedText)
+    const validated = aiResponseSchema.parse(parsed)
+
+    const aiIds = validated.orderedTopicIds
+    const availableIdsSet = new Set(availableTopics.map((t) => t.id))
+    const aiIdsSet = new Set(aiIds)
+
+    if (aiIds.length !== availableTopics.length || aiIdsSet.size !== availableTopics.length) {
+      throw new Error('AI returned missing, extra, or duplicated topic IDs')
+    }
+    for (const id of aiIds) {
+      if (!availableIdsSet.has(id)) {
+        throw new Error('AI returned unknown topic ID')
+      }
+    }
+
+    const resolvedOrder = new Map<string, number>()
+    aiIds.forEach((id, index) => resolvedOrder.set(id, index))
+
+    for (const topic of topics) {
+      const topicIndex = resolvedOrder.get(topic.id)!
+      for (const reqId of topic.requiredTopicIds) {
+        if (!availableIdsSet.has(reqId)) continue
+        const reqIndex = resolvedOrder.get(reqId)!
+        if (reqIndex > topicIndex) {
+          throw new Error('AI violated prerequisite order')
+        }
+      }
+    }
+
+    const topicDtoMap = new Map(topics.map((t) => [t.id, t]))
+    const hydratedTopics = aiIds.map((id, index) => {
+      const t = topicDtoMap.get(id)!
+      return { ...t, orderIndex: index }
+    })
 
     return {
-      suggestedTopics: suggestedRoadmap.orderedTopicIds
-        .filter((topicId: any) => topicNameById.has(topicId))
-        .map((topicId: string) => ({
-          id: topicId,
-          name: topicNameById.get(topicId),
-        })),
-      explanation: suggestedRoadmap.explanation,
+      suggestedTopics: hydratedTopics,
+      explanation: validated.explanation,
     }
   } catch (error) {
     logger.error({ error }, 'Failed to generate suggested roadmap')
