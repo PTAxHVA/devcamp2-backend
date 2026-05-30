@@ -8,8 +8,9 @@ export const suggestRoadmap = async (req: Request, res: Response, next: NextFunc
       masterRoadmapId: string
       branchSelections: string[]
     }
+    const userId = req.user?.id as string
 
-    const result = await generateSuggestedRoadmap(masterRoadmapId, branchSelections)
+    const result = await generateSuggestedRoadmap(masterRoadmapId, branchSelections, userId)
     res.json(ok(result))
   } catch (error) {
     next(error)
