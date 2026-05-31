@@ -12,7 +12,7 @@ export const generalRateLimiter = rateLimit({
 export const aiRateLimiter = rateLimit({
   windowMs: 60 * 1000,
   limit: 10,
-  keyGenerator: (req) => req.user?.id ?? req.ip ?? 'anon',
+  keyGenerator: (req) => req.user?.id || 'unauthenticated',
   handler: (_req, res) =>
     res.status(429).json({
       success: false,

@@ -70,22 +70,32 @@ export const generateSuggestedRoadmap = async (
 
   const masterTopicMap = new Map(selectedMasterTopics.map((t) => [t._id.toString(), t]))
 
-  const topics = []
+  const topicDedupMap = new Map<string, any>()
   for (const topic of selectedBranchTopics) {
-    const masterTopic = masterTopicMap.get(topic.topicId.toString())
+    const masterTopicId = topic.topicId.toString()
+    const masterTopic = masterTopicMap.get(masterTopicId)
     if (!masterTopic) {
       throw new ApiError(404, 'Master topic not found in map', 'MASTER_TOPIC_NOT_FOUND')
     }
-    topics.push({
-      id: masterTopic._id.toString(),
-      name: masterTopic.name,
-      descriptionShort: masterTopic.descriptionShort,
-      estimatedHours: masterTopic.estimatedHours,
-      requiredTopicIds: masterTopic.dependsOn.requiredTopicIds.map((id) => id.toString()),
-      orderIndex: topic.orderIndex,
-    })
+
+    if (!topicDedupMap.has(masterTopicId)) {
+      topicDedupMap.set(masterTopicId, {
+        id: masterTopicId,
+        name: masterTopic.name,
+        descriptionShort: masterTopic.descriptionShort,
+        estimatedHours: masterTopic.estimatedHours,
+        requiredTopicIds: masterTopic.dependsOn.requiredTopicIds.map((id) => id.toString()),
+        orderIndex: topic.orderIndex,
+      })
+    } else {
+      const existing = topicDedupMap.get(masterTopicId)
+      if (topic.orderIndex < existing.orderIndex) {
+        existing.orderIndex = topic.orderIndex
+      }
+    }
   }
 
+  const topics = Array.from(topicDedupMap.values())
   const defaultOrderedTopics = topics.sort((a, b) => a.orderIndex - b.orderIndex)
 
   const fallback = {
@@ -147,7 +157,11 @@ export const generateSuggestedRoadmap = async (
       throw new Error('Empty response from Gemini API')
     }
 
-    const cleanedText = rawText.replace(/```(?:json)?/gi, '').trim()
+    const cleanedText = rawText
+      .trim()
+      .replace(/^```(?:json)?\s*/i, '')
+      .replace(/\s*```$/i, '')
+      .trim()
     const parsed = JSON.parse(cleanedText)
     const validated = aiResponseSchema.parse(parsed)
 
