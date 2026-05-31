@@ -4,6 +4,7 @@ import topicRoute from './topic.route.js'
 import sectionRoute from './section.route.js'
 import quizRoute from './quiz.route.js'
 import attemptRoute from './attempt.route.js'
+import aiRoute from './ai.route.js'
 
 export const mountClientRoutes = (app: Express) => {
   const base = '/api/v1/client'
@@ -12,4 +13,5 @@ export const mountClientRoutes = (app: Express) => {
   app.use(`${base}/sections`, sectionRoute)
   app.use(`${base}/quizzes`, quizRoute)
   app.use(`${base}/attempts`, attemptRoute)
+  app.use(`${base}/ai`, aiRoute)
 }

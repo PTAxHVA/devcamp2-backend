@@ -1,15 +1,13 @@
 import { z } from 'zod'
-
-const objectIdRegex = /^[0-9a-fA-F]{24}$/
-export const objectIdSchema = z.string().regex(objectIdRegex, 'Invalid ObjectId')
+import { objectId } from './object-id.schema.js'
 
 export const submitAttemptSchema = z.object({
   answers: z
     .array(
       z
         .object({
-          questionId: objectIdSchema,
-          selectedOptionId: objectIdSchema.optional(),
+          questionId: objectId,
+          selectedOptionId: objectId.optional(),
           userInput: z.string().optional(),
         })
         .refine(

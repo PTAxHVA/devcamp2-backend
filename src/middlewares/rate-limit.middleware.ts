@@ -1,4 +1,4 @@
-import rateLimit, { ipKeyGenerator } from 'express-rate-limit'
+import rateLimit from 'express-rate-limit'
 
 export const generalRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -8,9 +8,17 @@ export const generalRateLimiter = rateLimit({
 })
 
 // Stricter limit for Gemini AI (15 RPM free tier)
-// ipKeyGenerator normalizes IPv6 to /64 subnet so users can't spam from random IPv6 addresses
+// Keys by user ID (since this is authenticated) or IP as fallback
 export const aiRateLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 10,
-  keyGenerator: (req) => req.user?.id ?? ipKeyGenerator(req.ip ?? ''),
+  limit: 10,
+  keyGenerator: (req) => req.user?.id || 'unauthenticated',
+  handler: (_req, res) =>
+    res.status(429).json({
+      success: false,
+      error: {
+        code: 'RATE_LIMITED',
+        message: 'You have exceeded the rate limit for AI requests. Please try again later.',
+      },
+    }),
 })

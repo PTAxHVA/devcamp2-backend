@@ -3,7 +3,8 @@ import { ok } from '../utils/api-response.js'
 import * as QuizService from '../services/quiz.service.js'
 import * as QuizGradingService from '../services/quiz-grading.service.js'
 import * as QuizAttemptService from '../services/quiz-attempt.service.js'
-import { SubmitAttemptSchema, objectIdSchema } from '../schemas/quiz.schema.js'
+import { SubmitAttemptSchema } from '../schemas/quiz.schema.js'
+import { objectId } from '../schemas/object-id.schema.js'
 
 export const getQuizBySectionId = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -34,7 +35,7 @@ export const startQuizAttempt = async (req: Request, res: Response, next: NextFu
 export const submitAndGradeQuiz = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = req.user?.id as string
-    const attemptId = objectIdSchema.parse(req.params.id)
+    const attemptId = objectId.parse(req.params.id)
     const answers = req.body.answers as SubmitAttemptSchema['answers']
 
     const result = await QuizGradingService.submitAndGradeQuiz(attemptId, answers, userId)
@@ -47,7 +48,7 @@ export const submitAndGradeQuiz = async (req: Request, res: Response, next: Next
 
 export const getAttempt = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const attemptId = objectIdSchema.parse(req.params.id)
+    const attemptId = objectId.parse(req.params.id)
     const userId = req.user?.id as string
 
     const result = await QuizAttemptService.getAttempt(attemptId, userId)
@@ -60,7 +61,7 @@ export const getAttempt = async (req: Request, res: Response, next: NextFunction
 
 export const getAttemptResult = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const attemptId = objectIdSchema.parse(req.params.id)
+    const attemptId = objectId.parse(req.params.id)
     const userId = req.user?.id as string
 
     const result = await QuizAttemptService.getAttemptResult(attemptId, userId)
