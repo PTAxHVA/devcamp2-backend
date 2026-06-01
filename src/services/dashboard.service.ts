@@ -2,7 +2,8 @@ import { UserProfile } from '../models/user-profile.model.js'
 import { Section } from '../models/section.model.js'
 import { UserTopic } from '../models/user-topic.model.js'
 import { UserRoadmap } from '../models/user-roadmap.model.js'
-import { UserSectionProgress } from '../models/user-section-progress.model.js'
+import { UserSectionProgress, IUserSectionProgress } from '../models/user-section-progress.model.js'
+import { SkillLevel } from '../types/enums.js'
 
 export const getDashboardAnalytics = async (userId: string) => {
   const [userProfile, userRoadmaps] = await Promise.all([
@@ -14,15 +15,9 @@ export const getDashboardAnalytics = async (userId: string) => {
   if (userProfile?.lastActivityDate) {
     const now = new Date()
     const lastActivity = userProfile.lastActivityDate
-    const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
-    const lastDate = new Date(
-      Date.UTC(
-        lastActivity.getUTCFullYear(),
-        lastActivity.getUTCMonth(),
-        lastActivity.getUTCDate(),
-      ),
-    )
-    if (Math.floor((today.getTime() - lastDate.getTime()) / 86400000) > 1) {
+    const getDayNumberUTC7 = (d: Date) => Math.floor((d.getTime() + 7 * 60 * 60 * 1000) / 86400000)
+
+    if (getDayNumberUTC7(now) - getDayNumberUTC7(lastActivity) > 1) {
       currentStreak = 0
     }
   }
@@ -44,8 +39,8 @@ export const getDashboardAnalytics = async (userId: string) => {
     UserSectionProgress.find({ userTopicId: { $in: userTopicIds } }).lean(),
   ])
 
-  const masterTopicToRoadmap = new Map(
-    userTopics.map((t) => [t.topicId.toString(), t.userRoadmapId.toString()]),
+  const userTopicToMasterTopic = new Map(
+    userTopics.map((t) => [t._id.toString(), t.topicId.toString()]),
   )
   const userTopicToRoadmap = new Map(
     userTopics.map((t) => [t._id.toString(), t.userRoadmapId.toString()]),
@@ -54,16 +49,23 @@ export const getDashboardAnalytics = async (userId: string) => {
 
   const roadmapSectionCounts = new Map<string, number>()
   const roadmapCompletedCounts = new Map<string, number>()
-  const latestProgressPerRoadmap = new Map<string, any>()
+  const latestProgressPerRoadmap = new Map<string, IUserSectionProgress>()
 
   for (const r of userRoadmaps) {
     roadmapSectionCounts.set(r._id.toString(), 0)
     roadmapCompletedCounts.set(r._id.toString(), 0)
   }
 
+  const sectionsPerMasterTopic = new Map<string, number>()
   for (const s of sections) {
-    const rId = masterTopicToRoadmap.get(s.topicId.toString())
-    if (rId) roadmapSectionCounts.set(rId, (roadmapSectionCounts.get(rId) || 0) + 1)
+    const tId = s.topicId.toString()
+    sectionsPerMasterTopic.set(tId, (sectionsPerMasterTopic.get(tId) || 0) + 1)
+  }
+
+  for (const t of userTopics) {
+    const count = sectionsPerMasterTopic.get(t.topicId.toString()) || 0
+    const rId = t.userRoadmapId.toString()
+    roadmapSectionCounts.set(rId, (roadmapSectionCounts.get(rId) || 0) + count)
   }
 
   for (const p of sectionProgresses) {
@@ -102,7 +104,7 @@ export const getDashboardAnalytics = async (userId: string) => {
     let currentTopicId = null
 
     if (latestProgress) {
-      currentTopicId = latestProgress.userTopicId
+      currentTopicId = userTopicToMasterTopic.get(latestProgress.userTopicId.toString()) || null
       const sectionDetails = sectionMap.get(latestProgress.sectionId.toString())
       if (sectionDetails) {
         currentSection = {
@@ -128,7 +130,7 @@ export const getDashboardAnalytics = async (userId: string) => {
     streak,
     stats: {
       progress,
-      level: userProfile?.level || 1,
+      level: userProfile?.level || SkillLevel.BEGINNER,
     },
   }
 }

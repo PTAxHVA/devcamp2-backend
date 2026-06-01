@@ -10,18 +10,9 @@ export const getStreak = async (userId: string) => {
   if (userProfile.lastActivityDate) {
     const now = new Date()
     const lastActivity = userProfile.lastActivityDate
-    const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
-    const lastDate = new Date(
-      Date.UTC(
-        lastActivity.getUTCFullYear(),
-        lastActivity.getUTCMonth(),
-        lastActivity.getUTCDate(),
-      ),
-    )
+    const getDayNumberUTC7 = (d: Date) => Math.floor((d.getTime() + 7 * 60 * 60 * 1000) / 86400000)
 
-    const diffDays = Math.floor((today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24))
-
-    if (diffDays > 1) {
+    if (getDayNumberUTC7(now) - getDayNumberUTC7(lastActivity) > 1) {
       currentStreak = 0
     }
   }

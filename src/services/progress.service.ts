@@ -23,18 +23,19 @@ export const getProgress = async (userId: string) => {
   const topicToRoadmapMap = new Map(
     userTopics.map((t) => [t._id.toString(), t.userRoadmapId.toString()]),
   )
-  const masterTopicToRoadmapMap = new Map(
-    userTopics.map((t) => [t.topicId.toString(), t.userRoadmapId.toString()]),
-  )
-
   const roadmapSectionCounts = new Map<string, number>()
   for (const r of userRoadmaps) roadmapSectionCounts.set(r._id.toString(), 0)
 
+  const sectionsPerMasterTopic = new Map<string, number>()
   for (const s of sections) {
-    const rId = masterTopicToRoadmapMap.get(s.topicId.toString())
-    if (rId) {
-      roadmapSectionCounts.set(rId, (roadmapSectionCounts.get(rId) || 0) + 1)
-    }
+    const tId = s.topicId.toString()
+    sectionsPerMasterTopic.set(tId, (sectionsPerMasterTopic.get(tId) || 0) + 1)
+  }
+
+  for (const t of userTopics) {
+    const count = sectionsPerMasterTopic.get(t.topicId.toString()) || 0
+    const rId = t.userRoadmapId.toString()
+    roadmapSectionCounts.set(rId, (roadmapSectionCounts.get(rId) || 0) + count)
   }
 
   const roadmapCompletedCounts = new Map<string, number>()

@@ -1,6 +1,7 @@
 import { ApiError } from '../utils/api-error.js'
 import type { LoginInput, SignupInput } from '../schemas/auth.schema.js'
 import { User } from '../models/user.model.js'
+import { UserProfile } from '../models/user-profile.model.js'
 import { hashPassword, comparePassword } from '../utils/password.js'
 import { signToken } from '../utils/jwt.js'
 
@@ -33,6 +34,7 @@ export const signup = async (input: SignupInput) => {
 
   try {
     const created = await User.create({ username: input.username, email, passwordHash })
+    await UserProfile.create({ userId: created._id })
     return buildAuthPayload(String(created._id), created.email, created.username)
   } catch (err: unknown) {
     if ((err as { code?: number })?.code === 11000) {
