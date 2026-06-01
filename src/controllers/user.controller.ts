@@ -30,9 +30,7 @@ export const getProfile = async (req: Request, res: Response, next: NextFunction
 
 export const updateProfile = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const userId = req.user?.id as string
-
-    const profile = await userService.updateProfile(userId, req.body)
+    const profile = await userService.updateProfile(req.body)
 
     res.json(ok(profile))
   } catch (error) {

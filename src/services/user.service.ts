@@ -2,6 +2,8 @@ import { OnboardingQuestionnaire } from '../models/onboarding-questionnaire.mode
 import { UserProfile } from '../models/user-profile.model.js'
 import { User } from '../models/user.model.js'
 import { ApiError } from '../utils/api-error.js'
+import { UpdateProfileSchema } from '../schemas/profile-schema.js'
+import { startSession } from 'mongoose'
 
 export const getUser = async (userId: string) => {
   const user = await User.findById({ userId }).select('username email createdAt isActive').lean()
@@ -37,4 +39,29 @@ export const getProfile = async (userId: string) => {
     updatedAt: userProfile.updatedAt,
   }
   return userProfileDetails
+}
+
+export const updateProfile = async (input: UpdateProfileSchema) => {
+  const session = await startSession()
+  session.startTransaction()
+  try {
+    const { userId, username, level } = input
+    const userProfile = await UserProfile.findOneAndUpdate(
+      { userId: userId },
+      { $set: { username: username, level: level } },
+      { new: true, runValidators: true, session },
+    )
+    if (!userProfile) {
+      throw new ApiError(404, 'User profile not found', 'USER_PROFILE_NOT_FOUND')
+    }
+
+    await session.commitTransaction()
+    session.endSession()
+
+    return userProfile
+  } catch (error) {
+    await session.abortTransaction()
+    session.endSession()
+    throw error
+  }
 }
