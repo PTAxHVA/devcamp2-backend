@@ -6,34 +6,61 @@ import { UserSectionProgress } from '../models/user-section-progress.model.js'
 export const getProgress = async (userId: string) => {
   const userRoadmaps = await UserRoadmap.find({ userId }).lean()
 
-  const individualRoadmapProgress = []
+  if (userRoadmaps.length === 0) return []
 
-  for (const roadmap of userRoadmaps) {
-    const userTopics = await UserTopic.find({ userRoadmapId: roadmap._id }).lean()
+  const roadmapIds = userRoadmaps.map((r) => r._id)
 
-    const topicIds = userTopics.map((userTopic) => userTopic.topicId)
+  const userTopics = await UserTopic.find({ userRoadmapId: { $in: roadmapIds } }).lean()
+  const topicIds = userTopics.map((userTopic) => userTopic.topicId)
 
-    const sections = await Section.find({ topicId: { $in: topicIds } }).lean()
+  const sections = await Section.find({ topicId: { $in: topicIds } }).lean()
 
-    const totalSections = sections.length
+  const completedSections = await UserSectionProgress.find({
+    userTopicId: { $in: userTopics.map((userTopic) => userTopic._id) },
+    isCompleted: true,
+  }).lean()
 
-    const completedSections = await UserSectionProgress.find({
-      userTopicId: { $in: userTopics.map((userTopic) => userTopic._id) },
-      isCompleted: true,
-    }).lean()
+  const topicToRoadmapMap = new Map(
+    userTopics.map((t) => [t._id.toString(), t.userRoadmapId.toString()]),
+  )
+  const masterTopicToRoadmapMap = new Map(
+    userTopics.map((t) => [t.topicId.toString(), t.userRoadmapId.toString()]),
+  )
 
-    const totalCompletedSections = completedSections.length
+  const roadmapSectionCounts = new Map<string, number>()
+  for (const r of userRoadmaps) roadmapSectionCounts.set(r._id.toString(), 0)
 
+  for (const s of sections) {
+    const rId = masterTopicToRoadmapMap.get(s.topicId.toString())
+    if (rId) {
+      roadmapSectionCounts.set(rId, (roadmapSectionCounts.get(rId) || 0) + 1)
+    }
+  }
+
+  const roadmapCompletedCounts = new Map<string, number>()
+  for (const r of userRoadmaps) roadmapCompletedCounts.set(r._id.toString(), 0)
+
+  for (const c of completedSections) {
+    const rId = topicToRoadmapMap.get(c.userTopicId.toString())
+    if (rId) {
+      roadmapCompletedCounts.set(rId, (roadmapCompletedCounts.get(rId) || 0) + 1)
+    }
+  }
+
+  const individualRoadmapProgress = userRoadmaps.map((roadmap) => {
+    const rId = roadmap._id.toString()
+    const totalSections = roadmapSectionCounts.get(rId) || 0
+    const totalCompletedSections = roadmapCompletedCounts.get(rId) || 0
     const roadmapCompletionPercentage =
       totalSections > 0 ? (totalCompletedSections / totalSections) * 100 : 0
 
-    individualRoadmapProgress.push({
+    return {
       roadmapId: roadmap.roadmapId,
       totalSections,
       totalCompletedSections,
       roadmapCompletionPercentage,
-    })
-  }
+    }
+  })
 
   return individualRoadmapProgress
 }

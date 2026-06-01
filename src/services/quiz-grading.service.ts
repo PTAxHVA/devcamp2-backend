@@ -9,6 +9,7 @@ import { Section } from '../models/section.model.js'
 import { ApiError } from '../utils/api-error.js'
 import { verifyTopicEnrollment } from './section.service.js'
 import { startSession } from 'mongoose'
+import { UserProfile } from '../models/user-profile.model.js'
 
 export const submitAndGradeQuiz = async (
   attemptId: string,
@@ -139,6 +140,44 @@ export const submitAndGradeQuiz = async (
         { session },
       )
     }
+
+    if (isPassed) {
+      const userProfile = await UserProfile.findOne({ userId }).session(session)
+      if (userProfile) {
+        const now = new Date()
+        const lastActivity = userProfile.lastActivityDate
+
+        if (!lastActivity) {
+          userProfile.streak = 1
+        } else {
+          const today = new Date(
+            Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+          )
+          const lastDate = new Date(
+            Date.UTC(
+              lastActivity.getUTCFullYear(),
+              lastActivity.getUTCMonth(),
+              lastActivity.getUTCDate(),
+            ),
+          )
+
+          const diffDays = Math.floor(
+            (today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24),
+          )
+
+          if (diffDays === 1) {
+            userProfile.streak += 1
+          } else if (diffDays > 1) {
+            userProfile.streak = 1
+          }
+        }
+
+        userProfile.lastActivityDate = now
+        userProfile.longestStreak = Math.max(userProfile.longestStreak, userProfile.streak)
+        await userProfile.save({ session })
+      }
+    }
+
     await session.commitTransaction()
     return {
       quizAttemptId: quizAttempt._id,
