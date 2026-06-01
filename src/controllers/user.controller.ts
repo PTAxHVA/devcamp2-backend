@@ -61,3 +61,13 @@ export const getUserProgress = async (req: Request, res: Response, next: NextFun
     next(error)
   }
 }
+
+export const updateAccountCredentials = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const updatedUser = await userService.updateAccountCredentials(req.body)
+
+    res.json(ok(updatedUser))
+  } catch (error) {
+    next(error)
+  }
+}
