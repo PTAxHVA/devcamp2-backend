@@ -2,14 +2,13 @@ import z from 'zod'
 import { SkillLevel } from '../types/enums.js'
 
 export const updateProfileSchema = z.object({
-  userId: z.string(),
   username: z.string().optional(),
-  level: z.enum(Object.values(SkillLevel)).optional(),
+  level: z.nativeEnum(SkillLevel).optional(),
 })
 
 export const updateAccountCredentialsSchema = z.object({
-  userId: z.string(),
   email: z.string().email().optional(),
+  currentPassword: z.string().min(1, 'Current password is required'),
   password: z.string().min(8).optional(),
 })
 

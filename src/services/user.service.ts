@@ -2,12 +2,12 @@ import { OnboardingQuestionnaire } from '../models/onboarding-questionnaire.mode
 import { UserProfile } from '../models/user-profile.model.js'
 import { User } from '../models/user.model.js'
 import { ApiError } from '../utils/api-error.js'
-import { UpdateProfileSchema, UpdateAccountCredentialsSchema } from '../schemas/profile-schema.js'
+import { UpdateProfileSchema, UpdateAccountCredentialsSchema } from '../schemas/profile.schema.js'
 import { startSession } from 'mongoose'
 import { hashPassword, comparePassword } from '../utils/password.js'
 
 export const getUser = async (userId: string) => {
-  const user = await User.findById({ userId }).select('username email createdAt isActive').lean()
+  const user = await User.findById(userId).select('username email createdAt isActive').lean()
   if (!user) {
     throw new ApiError(404, 'User not found', 'USER_NOT_FOUND')
   }
@@ -29,29 +29,46 @@ export const getUser = async (userId: string) => {
 }
 
 export const getProfile = async (userId: string) => {
+  const user = await User.findById(userId).select('username').lean()
   const userProfile = await UserProfile.findOne({ userId }).select('streak level updatedAt').lean()
-  if (!userProfile) {
+
+  if (!userProfile || !user) {
     throw new ApiError(404, 'User profile not found', 'USER_PROFILE_NOT_FOUND')
   }
-  const userProfileDetails = {
-    userId: userId,
+
+  return {
+    userId,
+    username: user.username,
     level: userProfile.level,
     streak: userProfile.streak,
     updatedAt: userProfile.updatedAt,
   }
-  return userProfileDetails
 }
 
-export const updateProfile = async (input: UpdateProfileSchema) => {
+export const updateProfile = async (input: UpdateProfileSchema, userId: string) => {
   const session = await startSession()
   session.startTransaction()
   try {
-    const { userId, username, level } = input
-    const userProfile = await UserProfile.findOneAndUpdate(
-      { userId: userId },
-      { $set: { username: username, level: level } },
+    const { username, level } = input
+    const user = await User.findOneAndUpdate(
+      { _id: userId },
+      { $set: { username: username, updatedAt: Date.now() } },
       { new: true, runValidators: true, session },
     )
+      .select('username')
+      .lean()
+    if (!user) {
+      throw new ApiError(404, 'User not found', 'USER_NOT_FOUND')
+    }
+
+    const userProfile = await UserProfile.findOneAndUpdate(
+      { userId: userId },
+      { $set: { level: level, updatedAt: Date.now() } },
+      { new: true, runValidators: true, session },
+    )
+      .select('level streak updatedAt')
+      .lean()
+
     if (!userProfile) {
       throw new ApiError(404, 'User profile not found', 'USER_PROFILE_NOT_FOUND')
     }
@@ -59,7 +76,13 @@ export const updateProfile = async (input: UpdateProfileSchema) => {
     await session.commitTransaction()
     session.endSession()
 
-    return userProfile
+    return {
+      userId,
+      username: user.username,
+      level: userProfile.level,
+      streak: userProfile.streak,
+      updatedAt: userProfile.updatedAt,
+    }
   } catch (error) {
     await session.abortTransaction()
     session.endSession()
@@ -67,37 +90,75 @@ export const updateProfile = async (input: UpdateProfileSchema) => {
   }
 }
 
-export const updateAccountCredentials = async (input: UpdateAccountCredentialsSchema) => {
+export const updateAccountCredentials = async (
+  input: UpdateAccountCredentialsSchema,
+  userId: string,
+) => {
   const session = await startSession()
   session.startTransaction()
   try {
-    const { userId, email, password } = input
-    const userCredentials = await User.findById({ userId }).select('email passwordHash').lean()
+    const { email, currentPassword, password } = input
+    const userCredentials = await User.findById(userId).select('+passwordHash').lean()
     if (!userCredentials) {
       throw new ApiError(404, 'User not found', 'USER_NOT_FOUND')
     }
-    let isPasswordSame: boolean = false
+
+    const isCurrentPasswordCorrect = await comparePassword(
+      currentPassword,
+      userCredentials.passwordHash,
+    )
+    if (!isCurrentPasswordCorrect) {
+      throw new ApiError(401, 'Incorrect current password', 'INVALID_CREDENTIALS')
+    }
+
+    const normalizeEmail = email ? email.toLowerCase().trim() : undefined
+
+    if (normalizeEmail) {
+      const checkEmailExists = await User.exists({ email: normalizeEmail, _id: { $ne: userId } })
+      if (checkEmailExists) {
+        throw new ApiError(400, 'Email already exists', 'EMAIL_ALREADY_EXISTS')
+      }
+    }
+
+    let isPasswordSame = false
     if (password) {
       isPasswordSame = await comparePassword(password, userCredentials.passwordHash)
     }
-    if (userCredentials.email === email || isPasswordSame) {
+
+    if (userCredentials.email === normalizeEmail && isPasswordSame) {
       throw new ApiError(400, 'User credentials are same as input', 'USER_CREDENTIALS_ARE_SAME')
+    }
+
+    if (!normalizeEmail && !password) {
+      throw new ApiError(400, 'Nothing to update', 'NOTHING_TO_UPDATE')
     }
 
     const hashedPassword = password ? await hashPassword(password) : userCredentials.passwordHash
 
+    const updatePayload: any = { updatedAt: Date.now() }
+    if (normalizeEmail) updatePayload.email = normalizeEmail
+    if (password) updatePayload.passwordHash = hashedPassword
+
     const updatedUser = await User.findOneAndUpdate(
-      { userId: userId },
-      { $set: { email: email, passwordHash: hashedPassword } },
+      { _id: userId },
+      { $set: updatePayload },
       { new: true, runValidators: true, session },
     )
-      .select('username email updatedAt')
+      .select('username email')
       .lean()
+
+    if (!updatedUser) {
+      throw new ApiError(404, 'User not found during update', 'USER_NOT_FOUND')
+    }
 
     await session.commitTransaction()
     session.endSession()
 
-    return updatedUser
+    return {
+      userId: userId,
+      username: updatedUser.username,
+      email: updatedUser.email,
+    }
   } catch (error) {
     await session.abortTransaction()
     session.endSession()

@@ -30,7 +30,8 @@ export const getProfile = async (req: Request, res: Response, next: NextFunction
 
 export const updateProfile = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const profile = await userService.updateProfile(req.body)
+    const userId = req.user?.id as string
+    const profile = await userService.updateProfile(req.body, userId)
 
     res.json(ok(profile))
   } catch (error) {
@@ -64,7 +65,8 @@ export const getUserProgress = async (req: Request, res: Response, next: NextFun
 
 export const updateAccountCredentials = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const updatedUser = await userService.updateAccountCredentials(req.body)
+    const userId = req.user?.id as string
+    const updatedUser = await userService.updateAccountCredentials(req.body, userId)
 
     res.json(ok(updatedUser))
   } catch (error) {
