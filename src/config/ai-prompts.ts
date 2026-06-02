@@ -1,3 +1,4 @@
+import { EditAction } from '../types/enums.js'
 /**
  * Prompt builders for VORA's user-facing AI features.
  * Content owned by the team lead. The AI service interpolates runtime data
@@ -115,7 +116,7 @@ export interface FeedbackTopic {
 export interface RoadmapFeedbackInput {
   roadmapRole: string // MasterRoadmap.roleName, e.g. "Frontend Web"
   learnerGoal: string // OnboardingQuestionnaire.goal — UNTRUSTED user input
-  action: 'add' | 'remove' // what the user just did in the customize editor
+  action: EditAction // what the user just did in the customize editor
   editedTopic: FeedbackTopic // the topic being added or removed (curated content)
   currentTopics: FeedbackTopic[] // the OTHER topics currently in the user's roadmap (curated content)
 }
@@ -140,7 +141,7 @@ const formatFeedbackTopicLines = (topics: FeedbackTopic[]): string => {
 export const buildRoadmapFeedbackPrompt = (input: RoadmapFeedbackInput): string => {
   const { roadmapRole, learnerGoal, action, editedTopic, currentTopics } = input
 
-  const actionWord = action === 'add' ? 'ADDED' : 'REMOVED'
+  const actionWord = action
   const editedPrereqs =
     editedTopic.prerequisiteNames.length > 0 ? editedTopic.prerequisiteNames.join(', ') : '(none)'
 
@@ -166,14 +167,14 @@ Prerequisites of "${editedTopic.name}": ${editedPrereqs}
 ${formatFeedbackTopicLines(currentTopics)}
 
 == HOW TO JUDGE SEVERITY ==
-- ADDED a topic but one or more of its prerequisites are NOT in the roadmap above → "warning"; gently name the missing prerequisite.
-- REMOVED a topic that another topic still needs (listed under "needs") → "warning"; name those dependent topics.
-- Otherwise → "info"; one short, encouraging or neutral note (e.g. it fits their goal, or it is safe to remove).
+- ADDED a topic but one or more of its prerequisites are NOT in the roadmap above → "WARNING"; gently name the missing prerequisite.
+- REMOVED a topic that another topic still needs (listed under "needs") → "WARNING"; name those dependent topics.
+- Otherwise → "INFO"; one short, encouraging or neutral note (e.g. it fits their goal, or it is safe to remove).
 
 == OUTPUT ==
 - "feedback": exactly ONE short sentence in Vietnamese (max ~35 words). Friendly and concrete. Refer to topics by name only. No markdown, no IDs, no bullet points.
-- "severity": "info" or "warning".
+- "severity": "INFO" | "WARNING".
 
-Return ONLY valid JSON (no markdown): { "feedback": "...", "severity": "info" | "warning" }
+Return ONLY valid JSON (no markdown): { "feedback": "...", "severity": "INFO" | "WARNING" }
 Only mention topic names that appear above. DO NOT invent topics.`
 }
