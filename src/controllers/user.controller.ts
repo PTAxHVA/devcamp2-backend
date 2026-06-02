@@ -73,3 +73,16 @@ export const updateAccountCredentials = async (req: Request, res: Response, next
     next(error)
   }
 }
+
+export const deactivateAccount = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.user?.id as string
+    const deactivatedUser = await userService.deactivateAccount(userId, req.body)
+
+    res.clearCookie('accessToken')
+
+    res.json(ok(deactivatedUser))
+  } catch (error) {
+    next(error)
+  }
+}

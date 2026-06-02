@@ -2,7 +2,11 @@ import { OnboardingQuestionnaire } from '../models/onboarding-questionnaire.mode
 import { UserProfile } from '../models/user-profile.model.js'
 import { User } from '../models/user.model.js'
 import { ApiError } from '../utils/api-error.js'
-import { UpdateProfileSchema, UpdateAccountCredentialsSchema } from '../schemas/profile.schema.js'
+import {
+  UpdateProfileSchema,
+  UpdateAccountCredentialsSchema,
+  DeactivateAccountSchema,
+} from '../schemas/profile.schema.js'
 import { startSession } from 'mongoose'
 import { hashPassword, comparePassword } from '../utils/password.js'
 
@@ -159,6 +163,45 @@ export const updateAccountCredentials = async (
       username: updatedUser.username,
       email: updatedUser.email,
     }
+  } catch (error) {
+    await session.abortTransaction()
+    session.endSession()
+    throw error
+  }
+}
+
+export const deactivateAccount = async (userId: string, input: DeactivateAccountSchema) => {
+  const session = await startSession()
+  session.startTransaction()
+  try {
+    const user = await User.findById(userId).select('+passwordHash').lean()
+    if (!user) {
+      throw new ApiError(404, 'User not found', 'USER_NOT_FOUND')
+    }
+
+    const isCurrentPasswordCorrect = await comparePassword(input.currentPassword, user.passwordHash)
+    if (!isCurrentPasswordCorrect) {
+      throw new ApiError(401, 'Incorrect current password', 'INVALID_CREDENTIALS')
+    }
+
+    const deactivateAccount = await User.findByIdAndUpdate(
+      { _id: userId },
+      { $set: { isActive: false, updatedAt: Date.now() } },
+      { new: true, runValidators: true, session },
+    )
+    if (!deactivateAccount) {
+      throw new ApiError(404, 'User not found during deactivation', 'USER_NOT_FOUND')
+    }
+
+    await session.commitTransaction()
+    session.endSession()
+
+    const deactivateAccountDetails = {
+      status: 'success',
+      message: 'Account deactivated successfully',
+    }
+
+    return deactivateAccountDetails
   } catch (error) {
     await session.abortTransaction()
     session.endSession()
