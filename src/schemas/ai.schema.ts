@@ -1,6 +1,6 @@
 import z from 'zod'
 import { objectId } from './object-id.schema.js'
-import { EditAction, FeedbackSeverity } from '../types/enums.js'
+import { FeedbackSeverity } from '../types/enums.js'
 
 export const roadmapSuggestSchema = z.object({
   masterRoadmapId: objectId,
@@ -14,7 +14,7 @@ export const roadmapSuggestSchema = z.object({
 
 export const roadmapFeedbackSchema = z.object({
   userRoadmapId: objectId,
-  action: z.nativeEnum(EditAction),
+  action: z.enum(['add', 'remove']),
   topicId: objectId,
 })
 

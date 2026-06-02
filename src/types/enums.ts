@@ -26,6 +26,6 @@ export enum QuestionType {
 }
 
 export enum FeedbackSeverity {
-  INFO = 'INFO',
-  WARNING = 'WARNING',
+  INFO = 'info',
+  WARNING = 'warning',
 }
