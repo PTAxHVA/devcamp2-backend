@@ -8,7 +8,12 @@ export const authenticate = async (req: Request, _res: Response, next: NextFunct
     const token = req.headers.authorization?.split(' ')[1]
     if (!token) throw new ApiError(401, 'Unauthorized', 'NO_TOKEN')
 
-    const payload = verifyToken(token)
+    let payload
+    try {
+      payload = verifyToken(token)
+    } catch {
+      throw new ApiError(401, 'Invalid or expired token', 'INVALID_TOKEN')
+    }
 
     const user = await User.findById(payload.sub).select('isActive').lean()
     const checkIsActive = user?.isActive
@@ -18,13 +23,7 @@ export const authenticate = async (req: Request, _res: Response, next: NextFunct
     req.user = { id: payload.sub, role: payload.role }
     next()
   } catch (error) {
-    if (error instanceof ApiError && error.code === 'NO_TOKEN') {
-      next(error)
-    } else if (error instanceof ApiError && error.code === 'INACTIVE_USER') {
-      next(error)
-    } else {
-      next(new ApiError(401, 'Invalid or expired token', 'INVALID_TOKEN'))
-    }
+    next(error)
   }
 }
 

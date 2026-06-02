@@ -188,13 +188,17 @@ export const deactivateAccount = async (userId: string, input: DeactivateAccount
       throw new ApiError(401, 'Incorrect current password', 'INVALID_CREDENTIALS')
     }
 
-    const deactivateAccount = await User.findByIdAndUpdate(
-      userId,
+    const deactivateAccount = await User.findOneAndUpdate(
+      { _id: userId, isActive: true },
       { $set: { isActive: false } },
       { new: true, runValidators: true, session },
     )
     if (!deactivateAccount) {
-      throw new ApiError(404, 'User not found during deactivation', 'USER_NOT_FOUND')
+      throw new ApiError(
+        400,
+        'Account is already deactivated or user not found',
+        'ACCOUNT_ALREADY_DEACTIVATED',
+      )
     }
 
     await session.commitTransaction()

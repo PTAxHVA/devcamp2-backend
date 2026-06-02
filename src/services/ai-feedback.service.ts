@@ -2,6 +2,8 @@ import { Types } from 'mongoose'
 import { GenerateContentResult } from '@google/generative-ai'
 import { ApiError } from '../utils/api-error.js'
 import { MasterRoadmap } from '../models/master-roadmap.model.js'
+import { MasterBranch } from '../models/master-branch.model.js'
+import { BranchTopic } from '../models/branch-topic.model.js'
 import { UserRoadmap } from '../models/user-roadmap.model.js'
 import { MasterTopic } from '../models/master-topic.model.js'
 import { UserTopic } from '../models/user-topic.model.js'
@@ -35,9 +37,19 @@ export const feedbackRoadmap = async (userId: string, reqBody: RoadmapFeedbackSc
     throw new ApiError(404, 'Master roadmap not found', 'MASTER_ROADMAP_NOT_FOUND')
   }
 
-  const editedTopic = await MasterTopic.findById(topicId).lean()
+  const masterBranches = await MasterBranch.find({ roadmapId: userRoadmap.roadmapId }).lean()
+  const branchTopic = await BranchTopic.findOne({
+    topicId,
+    branchId: { $in: masterBranches.map((b) => b._id) },
+  }).lean()
+
+  if (!branchTopic) {
+    throw new ApiError(400, 'Topic does not belong to this roadmap', 'TOPIC_NOT_IN_ROADMAP')
+  }
+
+  const editedTopic = await MasterTopic.findOne({ _id: topicId, isPublished: true }).lean()
   if (!editedTopic) {
-    throw new ApiError(404, 'Master topic not found', 'MASTER_TOPIC_NOT_FOUND')
+    throw new ApiError(404, 'Master topic not found or not published', 'MASTER_TOPIC_NOT_FOUND')
   }
 
   const userTopics = await UserTopic.find({ userRoadmapId }).lean()

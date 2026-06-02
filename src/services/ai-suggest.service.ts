@@ -16,6 +16,48 @@ import { geminiModel } from '../config/gemini.js'
 import { logger } from '../config/logger.js'
 import { aiResponseSchema } from '../schemas/ai.schema.js'
 
+interface DedupedTopic {
+  id: string
+  name: string
+  descriptionShort: string
+  estimatedHours: number
+  requiredTopicIds: string[]
+  orderIndex: number
+}
+
+const dedupeAndOrderTopics = (
+  selectedBranchTopics: any[],
+  masterTopicMap: Map<string, any>,
+): DedupedTopic[] => {
+  const topicDedupMap = new Map<string, DedupedTopic>()
+  for (const topic of selectedBranchTopics) {
+    const masterTopicId = topic.topicId.toString()
+    const masterTopic = masterTopicMap.get(masterTopicId)
+    if (!masterTopic) {
+      throw new ApiError(404, 'Master topic not found in map', 'MASTER_TOPIC_NOT_FOUND')
+    }
+
+    if (!topicDedupMap.has(masterTopicId)) {
+      topicDedupMap.set(masterTopicId, {
+        id: masterTopicId,
+        name: masterTopic.name,
+        descriptionShort: masterTopic.descriptionShort,
+        estimatedHours: masterTopic.estimatedHours,
+        requiredTopicIds: masterTopic.dependsOn.requiredTopicIds.map((id: any) => id.toString()),
+        orderIndex: topic.orderIndex,
+      })
+    } else {
+      const existing = topicDedupMap.get(masterTopicId)
+      if (existing && topic.orderIndex < existing.orderIndex) {
+        existing.orderIndex = topic.orderIndex
+      }
+    }
+  }
+
+  const topics = Array.from(topicDedupMap.values())
+  return topics.sort((a, b) => a.orderIndex - b.orderIndex)
+}
+
 export const generateSuggestedRoadmap = async (
   masterRoadmapId: string,
   branchSelections: string[],
@@ -65,42 +107,8 @@ export const generateSuggestedRoadmap = async (
 
   const masterTopicMap = new Map(selectedMasterTopics.map((t) => [t._id.toString(), t]))
 
-  interface DedupedTopic {
-    id: string
-    name: string
-    descriptionShort: string
-    estimatedHours: number
-    requiredTopicIds: string[]
-    orderIndex: number
-  }
-
-  const topicDedupMap = new Map<string, DedupedTopic>()
-  for (const topic of selectedBranchTopics) {
-    const masterTopicId = topic.topicId.toString()
-    const masterTopic = masterTopicMap.get(masterTopicId)
-    if (!masterTopic) {
-      throw new ApiError(404, 'Master topic not found in map', 'MASTER_TOPIC_NOT_FOUND')
-    }
-
-    if (!topicDedupMap.has(masterTopicId)) {
-      topicDedupMap.set(masterTopicId, {
-        id: masterTopicId,
-        name: masterTopic.name,
-        descriptionShort: masterTopic.descriptionShort,
-        estimatedHours: masterTopic.estimatedHours,
-        requiredTopicIds: masterTopic.dependsOn.requiredTopicIds.map((id) => id.toString()),
-        orderIndex: topic.orderIndex,
-      })
-    } else {
-      const existing = topicDedupMap.get(masterTopicId)
-      if (existing && topic.orderIndex < existing.orderIndex) {
-        existing.orderIndex = topic.orderIndex
-      }
-    }
-  }
-
-  const topics = Array.from(topicDedupMap.values())
-  const defaultOrderedTopics = topics.sort((a, b) => a.orderIndex - b.orderIndex)
+  const defaultOrderedTopics = dedupeAndOrderTopics(selectedBranchTopics, masterTopicMap)
+  const topics = defaultOrderedTopics
 
   const fallback = {
     suggestedTopics: defaultOrderedTopics,
