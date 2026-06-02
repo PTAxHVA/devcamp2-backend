@@ -174,9 +174,13 @@ export const deactivateAccount = async (userId: string, input: DeactivateAccount
   const session = await startSession()
   session.startTransaction()
   try {
-    const user = await User.findById(userId).select('+passwordHash').lean()
+    const user = await User.findById(userId).select('+passwordHash isActive').lean()
     if (!user) {
       throw new ApiError(404, 'User not found', 'USER_NOT_FOUND')
+    }
+
+    if (user.isActive === false) {
+      throw new ApiError(400, 'Account is already deactivated', 'ACCOUNT_ALREADY_DEACTIVATED')
     }
 
     const isCurrentPasswordCorrect = await comparePassword(input.currentPassword, user.passwordHash)
@@ -185,8 +189,8 @@ export const deactivateAccount = async (userId: string, input: DeactivateAccount
     }
 
     const deactivateAccount = await User.findByIdAndUpdate(
-      { _id: userId },
-      { $set: { isActive: false, updatedAt: Date.now() } },
+      userId,
+      { $set: { isActive: false } },
       { new: true, runValidators: true, session },
     )
     if (!deactivateAccount) {
