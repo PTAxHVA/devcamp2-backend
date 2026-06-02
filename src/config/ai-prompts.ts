@@ -100,3 +100,80 @@ Write 1-2 short, friendly sentences (max ~40 words) in Vietnamese telling the le
 Return ONLY valid JSON (no markdown): { "orderedTopicIds": [string], "explanation": "..." }
 Only include topic IDs from the available list. DO NOT invent topics.`
 }
+
+/**
+ * A topic shown to the feedback model — referenced by NAME only, so no ObjectId
+ * ever leaks into the user-facing feedback sentence.
+ */
+export interface FeedbackTopic {
+  name: string
+  descriptionShort: string
+  prerequisiteNames: string[] // prerequisite topic NAMES (resolved from dependsOn.requiredTopicIds)
+}
+
+/** Everything the service must resolve before building the feedback prompt (F19). */
+export interface RoadmapFeedbackInput {
+  roadmapRole: string // MasterRoadmap.roleName, e.g. "Frontend Web"
+  learnerGoal: string // OnboardingQuestionnaire.goal — UNTRUSTED user input
+  action: 'add' | 'remove' // what the user just did in the customize editor
+  editedTopic: FeedbackTopic // the topic being added or removed (curated content)
+  currentTopics: FeedbackTopic[] // the OTHER topics currently in the user's roadmap (curated content)
+}
+
+/** Render the roadmap's current topics as compact lines: name + what it needs (curated, trusted). */
+const formatFeedbackTopicLines = (topics: FeedbackTopic[]): string => {
+  if (topics.length === 0) return '(no other topics in the roadmap yet)'
+  return topics
+    .map((t) => {
+      const needs =
+        t.prerequisiteNames.length > 0 ? ` | needs: ${t.prerequisiteNames.join(', ')}` : ''
+      return `- ${t.name}${needs} — ${t.descriptionShort}`
+    })
+    .join('\n')
+}
+
+/**
+ * F19 — AI Feedback on Roadmap Edit prompt.
+ * One short, non-blocking note when a learner adds/removes a topic in the customize editor.
+ * Returns a single string to pass to geminiModel.generateContent().
+ */
+export const buildRoadmapFeedbackPrompt = (input: RoadmapFeedbackInput): string => {
+  const { roadmapRole, learnerGoal, action, editedTopic, currentTopics } = input
+
+  const actionWord = action === 'add' ? 'ADDED' : 'REMOVED'
+  const editedPrereqs =
+    editedTopic.prerequisiteNames.length > 0 ? editedTopic.prerequisiteNames.join(', ') : '(none)'
+
+  const safeContext = {
+    targetRole: sanitizeInput(roadmapRole),
+    learnerGoal: sanitizeInput(learnerGoal, 200),
+  }
+
+  return `You are a curriculum advisor for VORA, a learning platform for beginner web developers.
+A learner is editing their personalized roadmap. Give ONE short, friendly note about the SINGLE edit below.
+You do NOT create, rename, or suggest new topics. You only comment on this edit, using ONLY the topic names provided.
+
+== LEARNER CONTEXT (UNTRUSTED USER INPUT) ==
+\`\`\`json
+${JSON.stringify(safeContext, null, 2)}
+\`\`\`
+
+== EDIT MADE ==
+Action: ${actionWord} the topic "${editedTopic.name}" — ${editedTopic.descriptionShort}
+Prerequisites of "${editedTopic.name}": ${editedPrereqs}
+
+== OTHER TOPICS CURRENTLY IN THE ROADMAP ==
+${formatFeedbackTopicLines(currentTopics)}
+
+== HOW TO JUDGE SEVERITY ==
+- ADDED a topic but one or more of its prerequisites are NOT in the roadmap above → "warning"; gently name the missing prerequisite.
+- REMOVED a topic that another topic still needs (listed under "needs") → "warning"; name those dependent topics.
+- Otherwise → "info"; one short, encouraging or neutral note (e.g. it fits their goal, or it is safe to remove).
+
+== OUTPUT ==
+- "feedback": exactly ONE short sentence in Vietnamese (max ~35 words). Friendly and concrete. Refer to topics by name only. No markdown, no IDs, no bullet points.
+- "severity": "info" or "warning".
+
+Return ONLY valid JSON (no markdown): { "feedback": "...", "severity": "info" | "warning" }
+Only mention topic names that appear above. DO NOT invent topics.`
+}
