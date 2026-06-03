@@ -20,8 +20,6 @@ export const login = async (input: LoginInput) => {
     throw new ApiError(401, 'Invalid email or password', 'INVALID_CREDENTIALS')
   }
 
-  if (!user.isActive) throw new ApiError(401, 'Inactive user', 'INACTIVE_USER')
-
   return buildAuthPayload(String(user._id), user.email, user.username)
 }
 
