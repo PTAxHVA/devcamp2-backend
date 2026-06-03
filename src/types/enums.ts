@@ -24,3 +24,8 @@ export enum QuestionType {
   MULTIPLE_CHOICE = 'MULTIPLE_CHOICE',
   FILL_IN_BLANK = 'FILL_IN_BLANK',
 }
+
+export enum FeedbackSeverity {
+  INFO = 'info',
+  WARNING = 'warning',
+}

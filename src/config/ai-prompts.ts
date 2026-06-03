@@ -172,7 +172,7 @@ ${formatFeedbackTopicLines(currentTopics)}
 
 == OUTPUT ==
 - "feedback": exactly ONE short sentence in Vietnamese (max ~35 words). Friendly and concrete. Refer to topics by name only. No markdown, no IDs, no bullet points.
-- "severity": "info" or "warning".
+- "severity": "info" | "warning".
 
 Return ONLY valid JSON (no markdown): { "feedback": "...", "severity": "info" | "warning" }
 Only mention topic names that appear above. DO NOT invent topics.`
