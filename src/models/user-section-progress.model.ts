@@ -21,7 +21,7 @@ const userSectionProgressSchema = new Schema<IUserSectionProgress>(
   { timestamps: true },
 )
 
-// Unique progress per (userTopic, section).
+// index for fetching and sorting user's section progress
 userSectionProgressSchema.index({ userTopicId: 1, sectionId: 1 }, { unique: true })
 
 export const UserSectionProgress = model<IUserSectionProgress>(
