@@ -171,48 +171,37 @@ export const updateAccountCredentials = async (
 }
 
 export const deactivateAccount = async (userId: string, input: DeactivateAccountSchema) => {
-  const session = await startSession()
-  session.startTransaction()
-  try {
-    const user = await User.findById(userId).select('+passwordHash isActive').lean()
-    if (!user) {
-      throw new ApiError(404, 'User not found', 'USER_NOT_FOUND')
-    }
-
-    if (user.isActive === false) {
-      throw new ApiError(400, 'Account is already deactivated', 'ACCOUNT_ALREADY_DEACTIVATED')
-    }
-
-    const isCurrentPasswordCorrect = await comparePassword(input.currentPassword, user.passwordHash)
-    if (!isCurrentPasswordCorrect) {
-      throw new ApiError(401, 'Incorrect current password', 'INVALID_CREDENTIALS')
-    }
-
-    const deactivateAccount = await User.findOneAndUpdate(
-      { _id: userId, isActive: true },
-      { $set: { isActive: false } },
-      { new: true, runValidators: true, session },
-    )
-    if (!deactivateAccount) {
-      throw new ApiError(
-        400,
-        'Account is already deactivated or user not found',
-        'ACCOUNT_ALREADY_DEACTIVATED',
-      )
-    }
-
-    await session.commitTransaction()
-    session.endSession()
-
-    const deactivateAccountDetails = {
-      status: 'success',
-      message: 'Account deactivated successfully',
-    }
-
-    return deactivateAccountDetails
-  } catch (error) {
-    await session.abortTransaction()
-    session.endSession()
-    throw error
+  const user = await User.findById(userId).select('+passwordHash isActive').lean()
+  if (!user) {
+    throw new ApiError(404, 'User not found', 'USER_NOT_FOUND')
   }
+
+  if (user.isActive === false) {
+    throw new ApiError(400, 'Account is already deactivated', 'ACCOUNT_ALREADY_DEACTIVATED')
+  }
+
+  const isCurrentPasswordCorrect = await comparePassword(input.currentPassword, user.passwordHash)
+  if (!isCurrentPasswordCorrect) {
+    throw new ApiError(401, 'Incorrect current password', 'INVALID_CREDENTIALS')
+  }
+
+  const deactivateAccount = await User.findOneAndUpdate(
+    { _id: userId, isActive: true },
+    { $set: { isActive: false } },
+    { new: true, runValidators: true },
+  )
+  if (!deactivateAccount) {
+    throw new ApiError(
+      400,
+      'Account is already deactivated or user not found',
+      'ACCOUNT_ALREADY_DEACTIVATED',
+    )
+  }
+
+  const deactivateAccountDetails = {
+    status: 'success',
+    message: 'Account deactivated successfully',
+  }
+
+  return deactivateAccountDetails
 }

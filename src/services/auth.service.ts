@@ -16,7 +16,7 @@ export const login = async (input: LoginInput) => {
   const email = normalizeEmail(input.email)
   const user = await User.findOne({ email }).select('+passwordHash +isActive')
 
-  if (!user || !user.isActive || !(await comparePassword(input.password, user.passwordHash))) {
+  if (!user || !(await comparePassword(input.password, user.passwordHash)) || !user.isActive) {
     throw new ApiError(401, 'Invalid email or password', 'INVALID_CREDENTIALS')
   }
 

@@ -3,8 +3,8 @@ import { GenerateContentResult } from '@google/generative-ai'
 import { ApiError } from '../utils/api-error.js'
 import { MasterRoadmap } from '../models/master-roadmap.model.js'
 import { MasterBranch } from '../models/master-branch.model.js'
-import { BranchTopic } from '../models/branch-topic.model.js'
-import { MasterTopic } from '../models/master-topic.model.js'
+import { BranchTopic, IBranchTopic } from '../models/branch-topic.model.js'
+import { MasterTopic, IMasterTopic } from '../models/master-topic.model.js'
 import { OnboardingQuestionnaire } from '../models/onboarding-questionnaire.model.js'
 import {
   AvailableTopic,
@@ -26,8 +26,8 @@ interface DedupedTopic {
 }
 
 const dedupeAndOrderTopics = (
-  selectedBranchTopics: any[],
-  masterTopicMap: Map<string, any>,
+  selectedBranchTopics: IBranchTopic[],
+  masterTopicMap: Map<string, IMasterTopic>,
 ): DedupedTopic[] => {
   const topicDedupMap = new Map<string, DedupedTopic>()
   for (const topic of selectedBranchTopics) {
@@ -43,7 +43,7 @@ const dedupeAndOrderTopics = (
         name: masterTopic.name,
         descriptionShort: masterTopic.descriptionShort,
         estimatedHours: masterTopic.estimatedHours,
-        requiredTopicIds: masterTopic.dependsOn.requiredTopicIds.map((id: any) => id.toString()),
+        requiredTopicIds: masterTopic.dependsOn.requiredTopicIds.map((id) => id.toString()),
         orderIndex: topic.orderIndex,
       })
     } else {
