@@ -14,11 +14,13 @@ const buildAuthPayload = (userId: string, email: string, username: string) => {
 
 export const login = async (input: LoginInput) => {
   const email = normalizeEmail(input.email)
-  const user = await User.findOne({ email }).select('+passwordHash')
+  const user = await User.findOne({ email }).select('+passwordHash +isActive')
 
   if (!user || !(await comparePassword(input.password, user.passwordHash))) {
     throw new ApiError(401, 'Invalid email or password', 'INVALID_CREDENTIALS')
   }
+
+  if (!user.isActive) throw new ApiError(401, 'Inactive user', 'INACTIVE_USER')
 
   return buildAuthPayload(String(user._id), user.email, user.username)
 }

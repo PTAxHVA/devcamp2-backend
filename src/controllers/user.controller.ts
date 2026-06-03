@@ -31,6 +31,7 @@ export const getProfile = async (req: Request, res: Response, next: NextFunction
 export const updateProfile = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = req.user?.id as string
+
     const profile = await userService.updateProfile(req.body, userId)
 
     res.json(ok(profile))
@@ -66,9 +67,22 @@ export const getUserProgress = async (req: Request, res: Response, next: NextFun
 export const updateAccountCredentials = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = req.user?.id as string
+
     const updatedUser = await userService.updateAccountCredentials(req.body, userId)
 
     res.json(ok(updatedUser))
+  } catch (error) {
+    next(error)
+  }
+}
+
+export const deactivateAccount = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.user?.id as string
+
+    const deactivatedUser = await userService.deactivateAccount(userId, req.body)
+
+    res.json(ok(deactivatedUser))
   } catch (error) {
     next(error)
   }

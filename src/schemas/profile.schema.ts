@@ -12,5 +12,10 @@ export const updateAccountCredentialsSchema = z.object({
   password: z.string().min(8).optional(),
 })
 
+export const deactivateAccountSchema = z.object({
+  currentPassword: z.string().min(1, 'Current password is required'),
+})
+
 export type UpdateProfileSchema = z.infer<typeof updateProfileSchema>
 export type UpdateAccountCredentialsSchema = z.infer<typeof updateAccountCredentialsSchema>
+export type DeactivateAccountSchema = z.infer<typeof deactivateAccountSchema>
