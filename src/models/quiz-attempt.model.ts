@@ -25,7 +25,7 @@ const quizAttemptSchema = new Schema<IQuizAttempt>(
   { timestamps: true },
 )
 
-// index for fetching latest quiz attempts and for query optimization
-quizAttemptSchema.index({ userId: 1, quizId: 1, submittedAt: -1 }, { unique: true })
+// index for fetching the latest quiz attempt and for query optimization
+quizAttemptSchema.index({ userId: 1, quizId: 1 }, { unique: true })
 
 export const QuizAttempt = model<IQuizAttempt>('QuizAttempt', quizAttemptSchema)
