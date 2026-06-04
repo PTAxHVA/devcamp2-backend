@@ -6,6 +6,7 @@ import { PasswordResetToken } from '../models/password-reset-token.model.js'
 import mongoose from 'mongoose'
 import { ApiError } from '../utils/api-error.js'
 import { hashPassword } from '../utils/password.js'
+import { logger } from '../config/logger.js'
 
 export const requestPasswordReset = async (input: RequestPasswordResetInput) => {
   const { email } = input
@@ -16,8 +17,17 @@ export const requestPasswordReset = async (input: RequestPasswordResetInput) => 
   const token = rawResetToken()
   const hashedToken = hashedResetToken(token)
   const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24) // 24 hours from now
-  await PasswordResetToken.create({ userId: user._id, tokenHash: hashedToken, expiresAt })
-  await sendPasswordResetEmail(email, token)
+  const resetToken = await PasswordResetToken.create({
+    userId: user._id,
+    tokenHash: hashedToken,
+    expiresAt,
+  })
+  try {
+    await sendPasswordResetEmail(email, token)
+  } catch (err) {
+    await PasswordResetToken.findByIdAndDelete(resetToken._id)
+    logger.error({ error: err }, 'Failed to send password reset email')
+  }
   return { message: 'If the email exists, a reset link has been sent to it.' }
 }
 
