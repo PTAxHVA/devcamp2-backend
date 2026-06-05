@@ -7,7 +7,11 @@ export const errorMiddleware = (err: Error, _req: Request, res: Response, _next:
   if (err instanceof ApiError) {
     res.status(err.statusCode).json({
       success: false,
-      error: { code: err.code, message: err.message },
+      error: {
+        code: err.code,
+        message: err.message,
+        ...(err.details !== undefined ? { details: err.details } : {}),
+      },
     })
     return
   }
