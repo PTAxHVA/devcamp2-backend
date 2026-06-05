@@ -2,14 +2,24 @@ import { UserProfile } from '../models/user-profile.model.js'
 import { Section } from '../models/section.model.js'
 import { UserTopic } from '../models/user-topic.model.js'
 import { UserRoadmap } from '../models/user-roadmap.model.js'
+import { MasterRoadmap } from '../models/master-roadmap.model.js'
 import { UserSectionProgress, IUserSectionProgress } from '../models/user-section-progress.model.js'
 import { SkillLevel } from '../types/enums.js'
 
 export const getDashboardAnalytics = async (userId: string) => {
-  const [userProfile, userRoadmaps] = await Promise.all([
+  // Only active roadmaps drive dashboard UI — soft-deleted ones (isActive:false)
+  // must not appear in roadmaps / continueLearning / progress.
+  const [userProfile, userRoadmaps, publishedRoadmaps] = await Promise.all([
     UserProfile.findOne({ userId }).lean(),
-    UserRoadmap.find({ userId }).lean(),
+    UserRoadmap.find({ userId, isActive: true }).lean(),
+    MasterRoadmap.find({ isPublished: true }).select('roleName').lean(),
   ])
+
+  // F18: roles the learner can still add = published roadmaps minus active ones.
+  const activeRoadmapIds = new Set(userRoadmaps.map((r) => r.roadmapId.toString()))
+  const availableRolesForAdd = publishedRoadmaps
+    .filter((r) => !activeRoadmapIds.has(r._id.toString()))
+    .map((r) => ({ id: r._id, roleName: r.roleName }))
 
   let currentStreak = userProfile?.streak || 0
   if (userProfile?.lastActivityDate) {
@@ -127,6 +137,7 @@ export const getDashboardAnalytics = async (userId: string) => {
   return {
     continueLearningList,
     roadmaps: userRoadmaps.map((roadmap) => roadmap.roadmapId),
+    availableRolesForAdd,
     streak,
     stats: {
       progress,

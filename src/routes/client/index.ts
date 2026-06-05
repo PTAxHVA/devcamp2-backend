@@ -7,6 +7,7 @@ import attemptRoute from './attempt.route.js'
 import aiRoute from './ai.route.js'
 import dashboardRoute from './dashboard.route.js'
 import userRoute from './user.route.js'
+import userRoadmapRoute from './user-roadmap.route.js'
 
 export const mountClientRoutes = (app: Express) => {
   const base = '/api/v1/client'
@@ -18,4 +19,5 @@ export const mountClientRoutes = (app: Express) => {
   app.use(`${base}/ai`, aiRoute)
   app.use(`${base}/dashboard`, dashboardRoute)
   app.use(`${base}/me`, userRoute)
+  app.use(`${base}/roadmaps`, userRoadmapRoute)
 }
