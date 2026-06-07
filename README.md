@@ -132,11 +132,11 @@ Type hợp lệ: `feat`, `fix`, `refactor`, `docs`, `style`, `test`, `chore`, `p
 
 ## Deploy
 
-Render (free tier):
+Render (free tier) — xem thêm section **Live Deployment** ở đầu README:
 
-- Build: `yarn install && yarn build`
+- Build: `yarn install --production=false && yarn build` (`--production=false` để cài devDependencies cho `tsc`, vì `NODE_ENV=production` khiến yarn bỏ qua chúng)
 - Start: `yarn start`
-- Env vars: add tất cả trong bảng trên qua Render dashboard
+- Env vars: add tất cả trong bảng trên qua Render dashboard (KHÔNG set `PORT` — Render tự cấp)
 
 ## License
 
