@@ -6,8 +6,7 @@ import { mountRoutes } from './routes/index.js'
 import { errorMiddleware } from './middlewares/error.middleware.js'
 import { notFoundMiddleware } from './middlewares/not-found.middleware.js'
 import { generalRateLimiter } from './middlewares/rate-limit.middleware.js'
-import { geminiModel } from './config/gemini.js'
-import { connectDB } from './config/database.js'
+import mongoose from 'mongoose'
 
 const app = express()
 
@@ -18,18 +17,17 @@ app.use(express.urlencoded({ extended: true }))
 app.use(generalRateLimiter)
 
 app.get('/health', async (_req, res) => {
-  try {
-    await Promise.all([
-      connectDB(),
-      geminiModel.generateContent({
-        contents: [{ role: 'user', parts: [{ text: 'Hello, how are you?' }] }],
-      }),
-    ])
+  res.json({ success: true, data: { status: 'ok' } })
+})
+
+app.get('/ready', (_req, res) => {
+  if (mongoose.connection.readyState === 1) {
     res.json({ success: true, data: { status: 'ok' } })
-  } catch (error) {
-    res
-      .status(500)
-      .json({ success: false, data: { status: 'error', message: (error as Error).message } })
+  } else {
+    res.status(503).json({
+      success: false,
+      error: { code: 'SERVICE_UNAVAILABLE', message: 'Database is not connected' },
+    })
   }
 })
 
