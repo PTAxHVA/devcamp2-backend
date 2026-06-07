@@ -62,7 +62,7 @@ export const startQuizAttempt = async (quizId: string, userId: string) => {
         throw new ApiError(409, 'Quiz already started', 'QUIZ_ALREADY_STARTED')
       }
       if (attemptExists.cooldownUntil && attemptExists.cooldownUntil > new Date()) {
-        throw new ApiError(403, 'Quiz is on cooldown', 'QUIZ_ON_COOLDOWN')
+        throw new ApiError(409, 'Cooldown period is still active', 'COOLDOWN_ACTIVE')
       }
       attemptExists.startedAt = new Date()
       attemptExists.submittedAt = null
