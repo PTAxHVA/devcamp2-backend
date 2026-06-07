@@ -8,6 +8,14 @@ import { notFoundMiddleware } from './middlewares/not-found.middleware.js'
 import { generalRateLimiter } from './middlewares/rate-limit.middleware.js'
 import mongoose from 'mongoose'
 
+// Allowed browser origins: the configured client origin + this project's Vercel
+// deploys (production alias + per-PR preview URLs like
+// devcamp2-frontend-<hash>.vercel.app). Any other origin is rejected by CORS.
+const VERCEL_DEPLOY_PATTERN = /^https:\/\/devcamp2-frontend[a-z0-9-]*\.vercel\.app$/
+
+const isAllowedOrigin = (origin: string): boolean =>
+  origin === env.CLIENT_URL || VERCEL_DEPLOY_PATTERN.test(origin)
+
 const app = express()
 
 // Trust the first proxy hop (Render/any reverse proxy) so req.ip reflects the
@@ -15,7 +23,19 @@ const app = express()
 app.set('trust proxy', 1)
 
 app.use(helmet())
-app.use(cors({ credentials: true, origin: env.CLIENT_URL }))
+app.use(
+  cors({
+    credentials: true,
+    origin: (origin, callback) => {
+      // No Origin header = non-browser request (curl, health checks) — allow.
+      if (!origin || isAllowedOrigin(origin)) {
+        callback(null, true)
+      } else {
+        callback(null, false)
+      }
+    },
+  }),
+)
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(generalRateLimiter)
