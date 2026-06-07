@@ -9,6 +9,10 @@ import { generalRateLimiter } from './middlewares/rate-limit.middleware.js'
 
 const app = express()
 
+// Trust the first proxy hop (Render/any reverse proxy) so req.ip reflects the
+// real client IP from X-Forwarded-For — required for correct rate limiting.
+app.set('trust proxy', 1)
+
 app.use(helmet())
 app.use(cors({ credentials: true, origin: env.CLIENT_URL }))
 app.use(express.json())
