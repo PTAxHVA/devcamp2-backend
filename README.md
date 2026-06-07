@@ -2,6 +2,19 @@
 
 REST API backend cho Personalized Code Learning Platform.
 
+## 🚀 Live Deployment
+
+| Endpoint          | URL                                                 |
+| ----------------- | --------------------------------------------------- |
+| API base (client) | https://devcamp2-backend.onrender.com/api/v1/client |
+| Health check      | https://devcamp2-backend.onrender.com/health        |
+| Frontend (Vercel) | https://devcamp2-frontend.vercel.app                |
+
+- **Host**: Render (Singapore, free tier). **Auto-deploy** khi merge vào `main`.
+- **Build Command**: `yarn install --production=false && yarn build` (cần `--production=false` để cài devDependencies cho `tsc`). **Start**: `yarn start`.
+- **Env** (Render → Environment): `NODE_ENV=production`, `MONGO_URI`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `GEMINI_API_KEY`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `CLIENT_URL`. KHÔNG set `PORT` (Render tự cấp).
+- Free tier ngủ sau ~15 phút không request → request đầu mất ~50s (cold start); gọi `/health` để đánh thức.
+
 ## Tech Stack
 
 - **Express 5 + TypeScript strict**
@@ -119,11 +132,11 @@ Type hợp lệ: `feat`, `fix`, `refactor`, `docs`, `style`, `test`, `chore`, `p
 
 ## Deploy
 
-Render (free tier):
+Render (free tier) — xem thêm section **Live Deployment** ở đầu README:
 
-- Build: `yarn install && yarn build`
+- Build: `yarn install --production=false && yarn build` (`--production=false` để cài devDependencies cho `tsc`, vì `NODE_ENV=production` khiến yarn bỏ qua chúng)
 - Start: `yarn start`
-- Env vars: add tất cả trong bảng trên qua Render dashboard
+- Env vars: add tất cả trong bảng trên qua Render dashboard (KHÔNG set `PORT` — Render tự cấp)
 
 ## License
 
