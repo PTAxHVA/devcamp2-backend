@@ -2,11 +2,15 @@ import { isValidObjectId, startSession } from 'mongoose'
 import { ApiError } from '../utils/api-error.js'
 import { MasterRoadmap } from '../models/master-roadmap.model.js'
 import { MasterBranch } from '../models/master-branch.model.js'
+import { MasterTopic } from '../models/master-topic.model.js'
+import { Section } from '../models/section.model.js'
 import { UserRoadmap } from '../models/user-roadmap.model.js'
 import { UserTopic } from '../models/user-topic.model.js'
+import { UserSectionProgress } from '../models/user-section-progress.model.js'
 import { RoadmapSource, TopicStatus } from '../types/enums.js'
 import type { CreateRoadmapSchema } from '../schemas/roadmap.schema.js'
 import { resolveBranchTopicOrder, assertPrerequisiteOrder } from './roadmap-topic-resolver.js'
+import { buildRoadmapGraph, type GraphTopicInput } from './roadmap-graph.js'
 
 // F18: a learner may keep at most this many roadmaps active at once.
 const MAX_ACTIVE_ROADMAPS = 2
@@ -137,6 +141,86 @@ export const listActiveRoadmaps = async (userId: string) => {
     isActive: r.isActive,
     createdAt: r.createdAt,
   }))
+}
+
+/**
+ * Roadmap detail for the React Flow view (F5). Returns the owner's roadmap as a
+ * domain graph: meta + topics (with 4-state status + section progress) + prereq edges.
+ * The FE maps topics -> nodes and computes layout (dagre); BE owns data, FE owns visuals.
+ */
+export const getUserRoadmapDetail = async (userId: string, roadmapId: string) => {
+  if (!isValidObjectId(roadmapId)) {
+    throw new ApiError(400, 'Invalid roadmap id', 'INVALID_ROADMAP_ID')
+  }
+
+  const userRoadmap = await UserRoadmap.findOne({ _id: roadmapId, userId }).lean()
+  if (!userRoadmap) {
+    throw new ApiError(404, 'User roadmap not found', 'USER_ROADMAP_NOT_FOUND')
+  }
+
+  const [master, userTopics] = await Promise.all([
+    MasterRoadmap.findById(userRoadmap.roadmapId).select('roleName').lean(),
+    UserTopic.find({ userRoadmapId: userRoadmap._id }).sort({ orderIndex: 1 }).lean(),
+  ])
+
+  const masterTopicIds = userTopics.map((t) => t.topicId)
+  const userTopicIds = userTopics.map((t) => t._id)
+
+  const [masterTopics, sections, completedProgress] = await Promise.all([
+    MasterTopic.find({ _id: { $in: masterTopicIds } })
+      .select('name estimatedHours dependsOn.requiredTopicIds')
+      .lean(),
+    Section.find({ topicId: { $in: masterTopicIds }, isPublished: true })
+      .select('topicId')
+      .lean(),
+    UserSectionProgress.find({ userTopicId: { $in: userTopicIds }, isCompleted: true })
+      .select('userTopicId')
+      .lean(),
+  ])
+
+  const masterById = new Map(masterTopics.map((m) => [m._id.toString(), m]))
+
+  const sectionTotalByTopic = new Map<string, number>()
+  for (const s of sections) {
+    const id = s.topicId.toString()
+    sectionTotalByTopic.set(id, (sectionTotalByTopic.get(id) ?? 0) + 1)
+  }
+
+  const completedByUserTopic = new Map<string, number>()
+  for (const p of completedProgress) {
+    const id = p.userTopicId.toString()
+    completedByUserTopic.set(id, (completedByUserTopic.get(id) ?? 0) + 1)
+  }
+
+  const inputs: GraphTopicInput[] = userTopics.map((ut) => {
+    const masterTopicId = ut.topicId.toString()
+    const m = masterById.get(masterTopicId)
+    return {
+      masterTopicId,
+      userTopicId: ut._id.toString(),
+      name: ut.customName ?? m?.name ?? 'Untitled topic',
+      orderIndex: ut.orderIndex,
+      estimatedHours: m?.estimatedHours ?? 0,
+      prerequisiteTopicIds: (m?.dependsOn?.requiredTopicIds ?? []).map((id) => id.toString()),
+      rawStatus: ut.status,
+      sectionTotal: sectionTotalByTopic.get(masterTopicId) ?? 0,
+      sectionCompleted: completedByUserTopic.get(ut._id.toString()) ?? 0,
+    }
+  })
+
+  const graph = buildRoadmapGraph(inputs)
+
+  return {
+    roadmap: {
+      userRoadmapId: userRoadmap._id,
+      masterRoadmapId: userRoadmap.roadmapId,
+      roleName: master?.roleName ?? null,
+      sourceType: userRoadmap.sourceType,
+      isActive: userRoadmap.isActive,
+    },
+    topics: graph.topics,
+    edges: graph.edges,
+  }
 }
 
 export const softDeleteRoadmap = async (userId: string, roadmapId: string) => {
