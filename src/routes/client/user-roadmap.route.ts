@@ -8,6 +8,7 @@ const router = Router()
 
 router.post('/', authenticate, validate(createRoadmapSchema), userRoadmapController.createRoadmap)
 router.get('/', authenticate, userRoadmapController.listRoadmaps)
+router.get('/:id', authenticate, userRoadmapController.getRoadmapDetail)
 router.delete('/:id', authenticate, userRoadmapController.deleteRoadmap)
 
 export default router

@@ -22,6 +22,16 @@ export const listRoadmaps = async (req: Request, res: Response, next: NextFuncti
   }
 }
 
+export const getRoadmapDetail = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.user?.id as string
+    const result = await userRoadmapService.getUserRoadmapDetail(userId, req.params.id as string)
+    res.json(ok(result))
+  } catch (error) {
+    next(error)
+  }
+}
+
 export const deleteRoadmap = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = req.user?.id as string
