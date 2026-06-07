@@ -22,3 +22,19 @@ export const aiRateLimiter = rateLimit({
       },
     }),
 })
+
+// Rate limit login attempts: 5 attempts per 1 minute per IP
+export const authRateLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 5,
+  keyGenerator: (req) => req.ip || 'unauthenticated',
+  handler: (_req, res) =>
+    res.status(429).json({
+      success: false,
+      error: {
+        code: 'RATE_LIMITED',
+        message:
+          'You have exceeded the rate limit for authentication requests. Please try again later.',
+      },
+    }),
+})

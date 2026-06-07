@@ -7,17 +7,24 @@ import {
   requestPasswordResetSchema,
   resetPasswordSchema,
 } from '../../schemas/password-reset.schema.js'
+import { authRateLimiter } from '../../middlewares/rate-limit.middleware.js'
 
 const router = Router()
 
-router.post('/login', validate(loginSchema), authController.login)
-router.post('/signup', validate(signupSchema), authController.signup)
+router.post('/login', authRateLimiter, validate(loginSchema), authController.login)
+router.post('/signup', authRateLimiter, validate(signupSchema), authController.signup)
 
 router.post(
   '/request-password-reset',
+  authRateLimiter,
   validate(requestPasswordResetSchema),
   passwordResetController.requestPasswordReset,
 )
-router.post('/reset-password', validate(resetPasswordSchema), passwordResetController.resetPassword)
+router.post(
+  '/reset-password',
+  authRateLimiter,
+  validate(resetPasswordSchema),
+  passwordResetController.resetPassword,
+)
 
 export default router
