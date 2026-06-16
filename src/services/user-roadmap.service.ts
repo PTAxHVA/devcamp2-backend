@@ -1,14 +1,16 @@
-import { isValidObjectId, startSession } from 'mongoose'
+import { isValidObjectId, startSession, Types } from 'mongoose'
 import { ApiError } from '../utils/api-error.js'
 import { MasterRoadmap } from '../models/master-roadmap.model.js'
 import { MasterBranch } from '../models/master-branch.model.js'
 import { MasterTopic } from '../models/master-topic.model.js'
 import { Section } from '../models/section.model.js'
+import { BranchTopic } from '../models/branch-topic.model.js'
 import { UserRoadmap } from '../models/user-roadmap.model.js'
 import { UserTopic } from '../models/user-topic.model.js'
 import { UserSectionProgress } from '../models/user-section-progress.model.js'
-import { RoadmapSource, TopicStatus } from '../types/enums.js'
-import type { CreateRoadmapSchema } from '../schemas/roadmap.schema.js'
+import { RoadmapEditLog } from '../models/roadmap-edit-log.model.js'
+import { RoadmapSource, TopicStatus, EditAction } from '../types/enums.js'
+import type { CreateRoadmapSchema, UpdateRoadmapSchema } from '../schemas/roadmap.schema.js'
 import { resolveBranchTopicOrder, assertPrerequisiteOrder } from './roadmap-topic-resolver.js'
 import { buildRoadmapGraph, type GraphTopicInput } from './roadmap-graph.js'
 
@@ -282,4 +284,232 @@ export const softDeleteRoadmap = async (userId: string, roadmapId: string) => {
   }
 
   return { deleted: true }
+}
+
+/**
+ * F15 Customize Editor: add/remove topics on an existing active roadmap.
+ * Rules:
+ *  - Only NOT_STARTED topics may be removed — in-progress/completed topics keep
+ *    their history (409 TOPIC_NOT_REMOVABLE otherwise).
+ *  - Added topics must belong to one of the roadmap's branches (Scenario B library).
+ *  - The resulting topic list is re-ordered by canonical branch order so a
+ *    prerequisite never lands after a topic that depends on it.
+ *  - Every change is recorded in RoadmapEditLog (aiFeedback left empty — the FE
+ *    asks /ai/roadmap-feedback separately so AI stays non-blocking).
+ *  - The first edit promotes a SUGGESTED roadmap to CUSTOMIZED.
+ * All writes run inside one transaction.
+ */
+export const editUserRoadmap = async (
+  userId: string,
+  roadmapId: string,
+  body: UpdateRoadmapSchema,
+) => {
+  if (!isValidObjectId(roadmapId)) {
+    throw new ApiError(400, 'Invalid roadmap id', 'INVALID_ROADMAP_ID')
+  }
+
+  const addTopicIds = body.addTopicIds ?? []
+  const removeTopicIds = body.removeTopicIds ?? []
+
+  const userRoadmap = await UserRoadmap.findOne({ _id: roadmapId, userId, isActive: true }).lean()
+  if (!userRoadmap) {
+    throw new ApiError(404, 'User roadmap not found', 'USER_ROADMAP_NOT_FOUND')
+  }
+
+  const currentTopics = await UserTopic.find({ userRoadmapId: userRoadmap._id }).lean()
+  const currentTopicIds = new Set(currentTopics.map((t) => t.topicId.toString()))
+
+  // Branches of this roadmap — used for both add-validation and re-ordering.
+  const branchIds = (
+    await MasterBranch.find({ roadmapId: userRoadmap.roadmapId }).select('_id').lean()
+  ).map((b) => b._id)
+
+  // --- Validate removals: must be in the roadmap and NOT_STARTED. ---
+  if (removeTopicIds.length > 0) {
+    const notInRoadmap = removeTopicIds.filter((id) => !currentTopicIds.has(id))
+    if (notInRoadmap.length > 0) {
+      throw new ApiError(400, 'A topic to remove is not in this roadmap', 'TOPIC_NOT_IN_ROADMAP', {
+        topicIds: notInRoadmap,
+      })
+    }
+    const blocked = currentTopics
+      .filter(
+        (t) =>
+          removeTopicIds.includes(t.topicId.toString()) && t.status !== TopicStatus.NOT_STARTED,
+      )
+      .map((t) => ({ topicId: t.topicId.toString(), status: t.status }))
+    if (blocked.length > 0) {
+      throw new ApiError(
+        409,
+        'Cannot remove a topic that is already in progress or completed',
+        'TOPIC_NOT_REMOVABLE',
+        { topics: blocked },
+      )
+    }
+  }
+
+  // --- Validate additions: not already present, and belong to the roadmap. ---
+  if (addTopicIds.length > 0) {
+    const already = addTopicIds.filter((id) => currentTopicIds.has(id))
+    if (already.length > 0) {
+      throw new ApiError(
+        400,
+        'A topic to add is already in this roadmap',
+        'TOPIC_ALREADY_IN_ROADMAP',
+        { topicIds: already },
+      )
+    }
+    const validBranchTopics = await BranchTopic.find({
+      branchId: { $in: branchIds },
+      topicId: { $in: addTopicIds },
+    })
+      .select('topicId')
+      .lean()
+    const validAddIds = new Set(validBranchTopics.map((bt) => bt.topicId.toString()))
+    const invalid = addTopicIds.filter((id) => !validAddIds.has(id))
+    if (invalid.length > 0) {
+      throw new ApiError(
+        400,
+        'A topic to add does not belong to this roadmap',
+        'TOPIC_NOT_IN_ROADMAP',
+        { topicIds: invalid },
+      )
+    }
+  }
+
+  // --- Compute + order the final topic set. ---
+  const removeSet = new Set(removeTopicIds)
+  const finalTopicIds = [...[...currentTopicIds].filter((id) => !removeSet.has(id)), ...addTopicIds]
+  if (finalTopicIds.length === 0) {
+    throw new ApiError(400, 'A roadmap must keep at least one topic', 'ROADMAP_EMPTY')
+  }
+
+  const canonicalOrder = await resolveBranchTopicOrder(branchIds.map((id) => id.toString()))
+  const finalSet = new Set(finalTopicIds)
+  const orderedFinal = canonicalOrder.filter((id) => finalSet.has(id))
+  if (orderedFinal.length !== finalSet.size) {
+    // Internal inconsistency (e.g. a BranchTopic row vanished between validation
+    // and reorder) — not something the client can fix.
+    throw new ApiError(
+      500,
+      'Roadmap topics are inconsistent with its branches',
+      'ROADMAP_TOPIC_MISMATCH',
+    )
+  }
+  await assertPrerequisiteOrder(orderedFinal)
+
+  const session = await startSession()
+  session.startTransaction()
+  try {
+    if (removeTopicIds.length > 0) {
+      const removedUserTopicIds = currentTopics
+        .filter((t) => removeSet.has(t.topicId.toString()))
+        .map((t) => t._id)
+      // NOT_STARTED topics have no progress, but clean defensively.
+      await UserSectionProgress.deleteMany(
+        { userTopicId: { $in: removedUserTopicIds } },
+        { session },
+      )
+      await UserTopic.deleteMany(
+        { userRoadmapId: userRoadmap._id, topicId: { $in: removeTopicIds } },
+        { session },
+      )
+    }
+
+    if (addTopicIds.length > 0) {
+      await UserTopic.insertMany(
+        addTopicIds.map((topicId) => ({
+          userRoadmapId: userRoadmap._id,
+          topicId: new Types.ObjectId(topicId),
+          customName: null,
+          status: TopicStatus.NOT_STARTED,
+          orderIndex: 0,
+        })),
+        { session },
+      )
+    }
+
+    // Re-index every remaining topic by canonical order.
+    const orderPos = new Map(orderedFinal.map((id, index) => [id, index]))
+    const remaining = await UserTopic.find({ userRoadmapId: userRoadmap._id })
+      .select('topicId')
+      .session(session)
+    await UserTopic.bulkWrite(
+      remaining.map((ut) => {
+        const orderIndex = orderPos.get(ut.topicId.toString())
+        if (orderIndex === undefined) {
+          throw new ApiError(500, 'Topic missing from canonical order', 'REORDER_FAILED')
+        }
+        return {
+          updateOne: {
+            filter: { _id: ut._id },
+            update: { $set: { orderIndex } },
+          },
+        }
+      }),
+      { session },
+    )
+
+    const userObjectId = new Types.ObjectId(userId)
+    const logs = [
+      ...addTopicIds.map((topicId) => ({
+        userRoadmapId: userRoadmap._id,
+        userId: userObjectId,
+        editType: EditAction.ADD,
+        topicId: new Types.ObjectId(topicId),
+        aiFeedback: '',
+      })),
+      ...removeTopicIds.map((topicId) => ({
+        userRoadmapId: userRoadmap._id,
+        userId: userObjectId,
+        editType: EditAction.REMOVE,
+        topicId: new Types.ObjectId(topicId),
+        aiFeedback: '',
+      })),
+    ]
+    await RoadmapEditLog.insertMany(logs, { session })
+
+    // First edit promotes a suggested roadmap to customized. Atomic + conditional
+    // so a concurrent edit can't lose the write (the doc was read with .lean()).
+    if (userRoadmap.sourceType === RoadmapSource.SUGGESTED) {
+      await UserRoadmap.updateOne(
+        { _id: userRoadmap._id, sourceType: RoadmapSource.SUGGESTED },
+        { $set: { sourceType: RoadmapSource.CUSTOMIZED } },
+        { session },
+      )
+    }
+
+    await session.commitTransaction()
+  } catch (error) {
+    await session.abortTransaction()
+    // A concurrent add of the same topic hit the unique (userRoadmapId, topicId) index.
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      (error as { code?: number }).code === 11000
+    ) {
+      throw new ApiError(
+        409,
+        'A topic to add is already in this roadmap',
+        'TOPIC_ALREADY_IN_ROADMAP',
+      )
+    }
+    throw error
+  } finally {
+    session.endSession()
+  }
+
+  const sourceType =
+    userRoadmap.sourceType === RoadmapSource.SUGGESTED
+      ? RoadmapSource.CUSTOMIZED
+      : userRoadmap.sourceType
+
+  return {
+    updated: true,
+    addedCount: addTopicIds.length,
+    removedCount: removeTopicIds.length,
+    topicCount: finalTopicIds.length,
+    sourceType,
+  }
 }

@@ -33,6 +33,20 @@ export const getRoadmapDetail = async (req: Request, res: Response, next: NextFu
   }
 }
 
+export const updateRoadmap = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.user?.id as string
+    const result = await userRoadmapService.editUserRoadmap(
+      userId,
+      req.params.id as string,
+      req.body,
+    )
+    res.json(ok(result))
+  } catch (error) {
+    next(error)
+  }
+}
+
 export const deleteRoadmap = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = req.user?.id as string
