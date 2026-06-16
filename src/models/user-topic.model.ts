@@ -35,4 +35,8 @@ const userTopicSchema = new Schema<IUserTopic>(
   { timestamps: true },
 )
 
+// A topic appears at most once per user roadmap. Guards the customize editor
+// (F15) against concurrent add races inserting duplicate rows for the same topic.
+userTopicSchema.index({ userRoadmapId: 1, topicId: 1 }, { unique: true })
+
 export const UserTopic = model<IUserTopic>('UserTopic', userTopicSchema)

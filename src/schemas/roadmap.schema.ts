@@ -17,3 +17,23 @@ export const createRoadmapSchema = z.object({
 })
 
 export type CreateRoadmapSchema = z.infer<typeof createRoadmapSchema>
+
+// F15 Customize Editor: add/remove topics on an existing roadmap. Both lists are
+// optional but at least one change is required, and the same topic can't be in both.
+export const updateRoadmapSchema = z
+  .object({
+    addTopicIds: uniqueArray('addTopicIds').optional(),
+    removeTopicIds: uniqueArray('removeTopicIds').optional(),
+  })
+  .refine((b) => (b.addTopicIds?.length ?? 0) + (b.removeTopicIds?.length ?? 0) > 0, {
+    message: 'Provide at least one topic to add or remove',
+  })
+  .refine(
+    (b) => {
+      const add = new Set(b.addTopicIds ?? [])
+      return !(b.removeTopicIds ?? []).some((id) => add.has(id))
+    },
+    { message: 'A topic cannot be both added and removed' },
+  )
+
+export type UpdateRoadmapSchema = z.infer<typeof updateRoadmapSchema>

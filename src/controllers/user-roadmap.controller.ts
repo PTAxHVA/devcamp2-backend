@@ -6,7 +6,8 @@ export const createRoadmap = async (req: Request, res: Response, next: NextFunct
   try {
     const userId = req.user?.id as string
     const result = await userRoadmapService.createUserRoadmap(userId, req.body)
-    res.status(201).json(ok(result))
+    // 201 for a fresh enrollment, 200 when restoring (reactivating) a prior one.
+    res.status(result.reactivated ? 200 : 201).json(ok(result))
   } catch (error) {
     next(error)
   }
@@ -26,6 +27,20 @@ export const getRoadmapDetail = async (req: Request, res: Response, next: NextFu
   try {
     const userId = req.user?.id as string
     const result = await userRoadmapService.getUserRoadmapDetail(userId, req.params.id as string)
+    res.json(ok(result))
+  } catch (error) {
+    next(error)
+  }
+}
+
+export const updateRoadmap = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.user?.id as string
+    const result = await userRoadmapService.editUserRoadmap(
+      userId,
+      req.params.id as string,
+      req.body,
+    )
     res.json(ok(result))
   } catch (error) {
     next(error)
