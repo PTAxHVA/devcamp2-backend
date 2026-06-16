@@ -36,6 +36,45 @@ export const createUserRoadmap = async (userId: string, body: CreateRoadmapSchem
     throw new ApiError(409, 'This roadmap is already active', 'ROADMAP_ALREADY_ACTIVE')
   }
 
+  // Re-enroll: if the learner previously followed then soft-deleted this exact
+  // roadmap, restore that enrollment instead of inserting a duplicate. This keeps
+  // their prior UserTopic list + section progress (preserve progress — no orphaned
+  // docs). The new branchSelections/orderedTopicIds are intentionally ignored here:
+  // re-enrolling resumes the existing roadmap as-is. Most recent archive wins.
+  const archived = await UserRoadmap.findOne({
+    userId,
+    roadmapId: masterRoadmapId,
+    isActive: false,
+  }).sort({ updatedAt: -1 })
+  if (archived) {
+    archived.isActive = true
+    try {
+      await archived.save()
+    } catch (error) {
+      // Lost a concurrent re-enroll race against the partial-unique active index.
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'code' in error &&
+        (error as { code?: number }).code === 11000
+      ) {
+        throw new ApiError(409, 'This roadmap is already active', 'ROADMAP_ALREADY_ACTIVE')
+      }
+      throw error
+    }
+
+    const topicCount = await UserTopic.countDocuments({ userRoadmapId: archived._id })
+    return {
+      _id: archived._id,
+      roadmapId: archived.roadmapId,
+      roleName: roadmap.roleName,
+      sourceType: archived.sourceType,
+      isActive: true,
+      topicCount,
+      reactivated: true,
+    }
+  }
+
   // Branches must belong to the roadmap.
   const branches = await MasterBranch.find({
     _id: { $in: branchSelections },
@@ -107,6 +146,7 @@ export const createUserRoadmap = async (userId: string, body: CreateRoadmapSchem
       sourceType: userRoadmap.sourceType,
       isActive: userRoadmap.isActive,
       topicCount: userTopics.length,
+      reactivated: false,
     }
   } catch (error) {
     await session.abortTransaction()
@@ -153,7 +193,9 @@ export const getUserRoadmapDetail = async (userId: string, roadmapId: string) =>
     throw new ApiError(400, 'Invalid roadmap id', 'INVALID_ROADMAP_ID')
   }
 
-  const userRoadmap = await UserRoadmap.findOne({ _id: roadmapId, userId }).lean()
+  // Active-only: a soft-deleted roadmap must not leak its topic graph to the FE
+  // (the caller could otherwise render a deleted roadmap by guessing its id).
+  const userRoadmap = await UserRoadmap.findOne({ _id: roadmapId, userId, isActive: true }).lean()
   if (!userRoadmap) {
     throw new ApiError(404, 'User roadmap not found', 'USER_ROADMAP_NOT_FOUND')
   }
