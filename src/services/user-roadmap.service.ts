@@ -210,17 +210,26 @@ export const getUserRoadmapDetail = async (userId: string, roadmapId: string) =>
   const masterTopicIds = userTopics.map((t) => t.topicId)
   const userTopicIds = userTopics.map((t) => t._id)
 
-  const [masterTopics, sections, completedProgress] = await Promise.all([
+  const [masterTopics, sections] = await Promise.all([
     MasterTopic.find({ _id: { $in: masterTopicIds } })
       .select('name estimatedHours dependsOn.requiredTopicIds')
       .lean(),
     Section.find({ topicId: { $in: masterTopicIds }, isPublished: true })
       .select('topicId')
       .lean(),
-    UserSectionProgress.find({ userTopicId: { $in: userTopicIds }, isCompleted: true })
-      .select('userTopicId')
-      .lean(),
   ])
+
+  // Count completed progress only for CURRENTLY published sections. A stale
+  // completion for a section later unpublished/deleted would otherwise inflate
+  // sectionCompleted and wrongly mark a topic completed (status is derived from
+  // these counts), unlocking dependents incorrectly.
+  const completedProgress = await UserSectionProgress.find({
+    userTopicId: { $in: userTopicIds },
+    sectionId: { $in: sections.map((s) => s._id) },
+    isCompleted: true,
+  })
+    .select('userTopicId')
+    .lean()
 
   const masterById = new Map(masterTopics.map((m) => [m._id.toString(), m]))
 

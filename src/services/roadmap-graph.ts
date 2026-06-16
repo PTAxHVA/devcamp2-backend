@@ -2,11 +2,13 @@ import { TopicStatus } from '../types/enums.js'
 
 /**
  * 4-state status the FE renders per topic node.
- * Derived from the raw UserTopic status + prerequisite completion:
- * - completed   : UserTopic.status === COMPLETED
- * - in_progress : UserTopic.status === IN_PROGRESS
- * - available   : NOT_STARTED and every in-roadmap prerequisite is completed
- * - locked      : NOT_STARTED and at least one in-roadmap prerequisite is not completed
+ * Derived from SECTION progress (sectionCompleted/sectionTotal) + prerequisite
+ * completion — NOT from UserTopic.status, which is never advanced past NOT_STARTED
+ * anywhere in the codebase (progress lives only in UserSectionProgress).
+ * - completed   : has sections and every section is completed
+ * - in_progress : at least one section completed, but not all
+ * - available   : no section progress and every in-roadmap prerequisite is completed
+ * - locked      : no section progress and at least one in-roadmap prerequisite is not completed
  */
 export type RoadmapTopicStatus = 'locked' | 'available' | 'in_progress' | 'completed'
 
@@ -19,7 +21,10 @@ export interface GraphTopicInput {
   estimatedHours: number
   /** Prerequisite master topic ids (may include ids outside this roadmap — filtered here). */
   prerequisiteTopicIds: string[]
-  /** Raw UserTopic status, or null when there is no user progress (demo). */
+  /**
+   * @deprecated No longer used for status derivation (status now comes from section
+   * progress). Kept for input compatibility; safe to drop once all callers stop passing it.
+   */
   rawStatus: TopicStatus | null
   sectionTotal: number
   sectionCompleted: number
@@ -51,19 +56,21 @@ export interface RoadmapGraph {
 export const buildRoadmapGraph = (inputs: GraphTopicInput[]): RoadmapGraph => {
   const idSet = new Set(inputs.map((t) => t.masterTopicId))
 
+  // A topic is completed when it has sections and all of them are completed.
+  const isTopicCompleted = (t: GraphTopicInput) =>
+    t.sectionTotal > 0 && t.sectionCompleted >= t.sectionTotal
+
   // Completed set first — needed to decide available vs locked for the rest.
-  const completed = new Set(
-    inputs.filter((t) => t.rawStatus === TopicStatus.COMPLETED).map((t) => t.masterTopicId),
-  )
+  const completed = new Set(inputs.filter(isTopicCompleted).map((t) => t.masterTopicId))
 
   const topics: GraphTopic[] = inputs.map((t) => {
     // Only prerequisites inside this roadmap affect status / edges.
     const prereqs = t.prerequisiteTopicIds.filter((id) => idSet.has(id))
 
     let status: RoadmapTopicStatus
-    if (t.rawStatus === TopicStatus.COMPLETED) {
+    if (isTopicCompleted(t)) {
       status = 'completed'
-    } else if (t.rawStatus === TopicStatus.IN_PROGRESS) {
+    } else if (t.sectionCompleted > 0) {
       status = 'in_progress'
     } else {
       status = prereqs.every((id) => completed.has(id)) ? 'available' : 'locked'
