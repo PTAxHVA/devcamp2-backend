@@ -310,6 +310,7 @@ export const editUserRoadmap = async (
 
   const addTopicIds = body.addTopicIds ?? []
   const removeTopicIds = body.removeTopicIds ?? []
+  const removeSet = new Set(removeTopicIds)
 
   const userRoadmap = await UserRoadmap.findOne({ _id: roadmapId, userId, isActive: true }).lean()
   if (!userRoadmap) {
@@ -324,7 +325,7 @@ export const editUserRoadmap = async (
     await MasterBranch.find({ roadmapId: userRoadmap.roadmapId }).select('_id').lean()
   ).map((b) => b._id)
 
-  // --- Validate removals: must be in the roadmap and NOT_STARTED. ---
+  // --- Validate removals: in the roadmap, and with no learning progress. ---
   if (removeTopicIds.length > 0) {
     const notInRoadmap = removeTopicIds.filter((id) => !currentTopicIds.has(id))
     if (notInRoadmap.length > 0) {
@@ -332,18 +333,35 @@ export const editUserRoadmap = async (
         topicIds: notInRoadmap,
       })
     }
-    const blocked = currentTopics
-      .filter(
-        (t) =>
-          removeTopicIds.includes(t.topicId.toString()) && t.status !== TopicStatus.NOT_STARTED,
-      )
-      .map((t) => ({ topicId: t.topicId.toString(), status: t.status }))
-    if (blocked.length > 0) {
+
+    // Progress lives in UserSectionProgress (a row is created the moment a section
+    // quiz is submitted), NOT in UserTopic.status (which currently stays NOT_STARTED).
+    // Block removal of any topic the learner has already engaged with so quiz
+    // history is never silently deleted.
+    const removeUserTopics = currentTopics.filter((t) => removeSet.has(t.topicId.toString()))
+    const topicIdByUserTopic = new Map(
+      removeUserTopics.map((t) => [t._id.toString(), t.topicId.toString()]),
+    )
+    const progressRows = await UserSectionProgress.find({
+      userTopicId: { $in: removeUserTopics.map((t) => t._id) },
+    })
+      .select('userTopicId')
+      .lean()
+    const blocked = new Set(
+      progressRows
+        .map((p) => topicIdByUserTopic.get(p.userTopicId.toString()))
+        .filter((id): id is string => id !== undefined),
+    )
+    // Defensive: also honour UserTopic.status if it is ever advanced beyond NOT_STARTED.
+    for (const t of removeUserTopics) {
+      if (t.status !== TopicStatus.NOT_STARTED) blocked.add(t.topicId.toString())
+    }
+    if (blocked.size > 0) {
       throw new ApiError(
         409,
-        'Cannot remove a topic that is already in progress or completed',
+        'Cannot remove a topic that already has learning progress',
         'TOPIC_NOT_REMOVABLE',
-        { topics: blocked },
+        { topicIds: [...blocked] },
       )
     }
   }
@@ -378,7 +396,6 @@ export const editUserRoadmap = async (
   }
 
   // --- Compute + order the final topic set. ---
-  const removeSet = new Set(removeTopicIds)
   const finalTopicIds = [...[...currentTopicIds].filter((id) => !removeSet.has(id)), ...addTopicIds]
   if (finalTopicIds.length === 0) {
     throw new ApiError(400, 'A roadmap must keep at least one topic', 'ROADMAP_EMPTY')
@@ -402,14 +419,8 @@ export const editUserRoadmap = async (
   session.startTransaction()
   try {
     if (removeTopicIds.length > 0) {
-      const removedUserTopicIds = currentTopics
-        .filter((t) => removeSet.has(t.topicId.toString()))
-        .map((t) => t._id)
-      // NOT_STARTED topics have no progress, but clean defensively.
-      await UserSectionProgress.deleteMany(
-        { userTopicId: { $in: removedUserTopicIds } },
-        { session },
-      )
+      // Removable topics are guaranteed progress-free by the validation above,
+      // so there is no UserSectionProgress to clean up — only drop the UserTopic.
       await UserTopic.deleteMany(
         { userRoadmapId: userRoadmap._id, topicId: { $in: removeTopicIds } },
         { session },
