@@ -388,8 +388,8 @@ export const editUserRoadmap = async (
     if (invalid.length > 0) {
       throw new ApiError(
         400,
-        'A topic to add does not belong to this roadmap',
-        'TOPIC_NOT_IN_ROADMAP',
+        "A topic to add does not belong to this roadmap's branches",
+        'TOPIC_NOT_IN_BRANCH',
         { topicIds: invalid },
       )
     }
@@ -445,21 +445,15 @@ export const editUserRoadmap = async (
     const remaining = await UserTopic.find({ userRoadmapId: userRoadmap._id })
       .select('topicId')
       .session(session)
-    await UserTopic.bulkWrite(
-      remaining.map((ut) => {
-        const orderIndex = orderPos.get(ut.topicId.toString())
-        if (orderIndex === undefined) {
-          throw new ApiError(500, 'Topic missing from canonical order', 'REORDER_FAILED')
-        }
-        return {
-          updateOne: {
-            filter: { _id: ut._id },
-            update: { $set: { orderIndex } },
-          },
-        }
-      }),
-      { session },
-    )
+    const reorderOps = []
+    for (const ut of remaining) {
+      const orderIndex = orderPos.get(ut.topicId.toString())
+      if (orderIndex === undefined) {
+        throw new ApiError(500, 'Topic missing from canonical order', 'REORDER_FAILED')
+      }
+      reorderOps.push({ updateOne: { filter: { _id: ut._id }, update: { $set: { orderIndex } } } })
+    }
+    await UserTopic.bulkWrite(reorderOps, { session })
 
     const userObjectId = new Types.ObjectId(userId)
     const logs = [
