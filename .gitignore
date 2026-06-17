@@ -30,3 +30,8 @@ coverage
 # Vercel / Render artifacts
 .vercel
 .render
+
+# Helper
+fetch-ids.ts
+get-user.ts
+check-resources.ts

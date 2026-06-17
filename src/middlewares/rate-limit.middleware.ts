@@ -27,7 +27,6 @@ export const aiRateLimiter = rateLimit({
 export const authRateLimiter = rateLimit({
   windowMs: 60 * 1000,
   limit: 5,
-  keyGenerator: (req) => req.ip || 'unauthenticated',
   handler: (_req, res) =>
     res.status(429).json({
       success: false,

@@ -5,6 +5,10 @@ import { User } from '../models/user.model.js'
 
 export const authenticate = async (req: Request, _res: Response, next: NextFunction) => {
   try {
+    // // TEMPORARY AUTH BYPASS FOR DEVELOPMENT (Uncomment to bypass auth)
+    // req.user = { id: '6a315b830f172fecd7c7a540', role: 'user' }
+    // return next()
+
     const token = req.headers.authorization?.split(' ')[1]
     if (!token) throw new ApiError(401, 'Unauthorized', 'NO_TOKEN')
 
