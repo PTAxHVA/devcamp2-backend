@@ -32,6 +32,6 @@ coverage
 .render
 
 # Helper
-fetch-ids.ts
-get-user.ts
-check-resources.ts
+/fetch-ids.ts
+/get-user.ts
+/check-resources.ts
