@@ -59,10 +59,16 @@ export const startQuizAttempt = async (quizId: string, userId: string) => {
 
     if (attemptExists) {
       if (!attemptExists.submittedAt) {
-        throw new ApiError(409, 'Quiz already started', 'QUIZ_ALREADY_STARTED')
+        // Surface the existing attempt id so the client can resume it (GET /attempts/:id).
+        throw new ApiError(409, 'Quiz already started', 'QUIZ_ALREADY_STARTED', {
+          attemptId: attemptExists._id,
+        })
       }
       if (attemptExists.cooldownUntil && attemptExists.cooldownUntil > new Date()) {
-        throw new ApiError(409, 'Cooldown period is still active', 'COOLDOWN_ACTIVE')
+        // Surface the attempt id so the client can show its result/cooldown screen.
+        throw new ApiError(409, 'Cooldown period is still active', 'COOLDOWN_ACTIVE', {
+          attemptId: attemptExists._id,
+        })
       }
       attemptExists.startedAt = new Date()
       attemptExists.submittedAt = null
