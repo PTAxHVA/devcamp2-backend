@@ -40,13 +40,16 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(generalRateLimiter)
 
-app.get('/health', async (_req, res) => {
+// Liveness: process còn sống. Luôn 200 (Render cold-start wake gọi endpoint này).
+app.get('/health', (_req, res) => {
   res.json({ success: true, data: { status: 'ok' } })
 })
 
+// Readiness: 200 chỉ khi mọi dependency đã kết nối.
 app.get('/ready', (_req, res) => {
-  if (mongoose.connection.readyState === 1) {
-    res.json({ success: true, data: { status: 'ok' } })
+  const isMongoReady = mongoose.connection.readyState === 1
+  if (isMongoReady) {
+    res.json({ success: true, data: { status: 'ok', mongo: 'ok' } })
   } else {
     res.status(503).json({
       success: false,
