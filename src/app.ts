@@ -42,27 +42,24 @@ app.use(generalRateLimiter)
 
 app.get('/health', (_req, res) => {
   const mongoStatus = mongoose.connection.readyState === 1 ? 'ok' : 'error'
-  const geminiStatus = env.GEMINI_API_KEY ? 'ok' : 'error'
-  const overallStatus = mongoStatus === 'ok' && geminiStatus === 'ok' ? 'ok' : 'error'
+  const overallStatus = mongoStatus === 'ok' ? 'ok' : 'error'
 
   res.json({
     success: true,
     data: {
       status: overallStatus,
       mongo: mongoStatus,
-      gemini: geminiStatus,
     },
   })
 })
 
 app.get('/ready', (_req, res) => {
   const isMongoReady = mongoose.connection.readyState === 1
-  const isGeminiReady = !!env.GEMINI_API_KEY
 
-  if (isMongoReady && isGeminiReady) {
+  if (isMongoReady) {
     res.json({
       success: true,
-      data: { status: 'ok', mongo: 'ok', gemini: 'ok' },
+      data: { status: 'ok', mongo: 'ok' },
     })
   } else {
     res.status(503).json({
@@ -74,7 +71,6 @@ app.get('/ready', (_req, res) => {
       data: {
         status: 'error',
         mongo: isMongoReady ? 'ok' : 'error',
-        gemini: isGeminiReady ? 'ok' : 'error',
       },
     })
   }
