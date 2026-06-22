@@ -40,38 +40,20 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(generalRateLimiter)
 
+// Liveness: process còn sống. Luôn 200 (Render cold-start wake gọi endpoint này).
 app.get('/health', (_req, res) => {
-  const mongoStatus = mongoose.connection.readyState === 1 ? 'ok' : 'error'
-  const overallStatus = mongoStatus === 'ok' ? 'ok' : 'error'
-
-  res.json({
-    success: true,
-    data: {
-      status: overallStatus,
-      mongo: mongoStatus,
-    },
-  })
+  res.json({ success: true, data: { status: 'ok' } })
 })
 
+// Readiness: 200 chỉ khi mọi dependency đã kết nối.
 app.get('/ready', (_req, res) => {
   const isMongoReady = mongoose.connection.readyState === 1
-
   if (isMongoReady) {
-    res.json({
-      success: true,
-      data: { status: 'ok', mongo: 'ok' },
-    })
+    res.json({ success: true, data: { status: 'ok', mongo: 'ok' } })
   } else {
     res.status(503).json({
       success: false,
-      error: {
-        code: 'SERVICE_UNAVAILABLE',
-        message: 'One or more dependencies are not ready',
-      },
-      data: {
-        status: 'error',
-        mongo: isMongoReady ? 'ok' : 'error',
-      },
+      error: { code: 'SERVICE_UNAVAILABLE', message: 'Database is not connected' },
     })
   }
 })
