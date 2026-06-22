@@ -40,17 +40,42 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(generalRateLimiter)
 
-app.get('/health', async (_req, res) => {
-  res.json({ success: true, data: { status: 'ok' } })
+app.get('/health', (_req, res) => {
+  const mongoStatus = mongoose.connection.readyState === 1 ? 'ok' : 'error'
+  const geminiStatus = env.GEMINI_API_KEY ? 'ok' : 'error'
+  const overallStatus = mongoStatus === 'ok' && geminiStatus === 'ok' ? 'ok' : 'error'
+
+  res.json({
+    success: true,
+    data: {
+      status: overallStatus,
+      mongo: mongoStatus,
+      gemini: geminiStatus,
+    },
+  })
 })
 
 app.get('/ready', (_req, res) => {
-  if (mongoose.connection.readyState === 1) {
-    res.json({ success: true, data: { status: 'ok' } })
+  const isMongoReady = mongoose.connection.readyState === 1
+  const isGeminiReady = !!env.GEMINI_API_KEY
+
+  if (isMongoReady && isGeminiReady) {
+    res.json({
+      success: true,
+      data: { status: 'ok', mongo: 'ok', gemini: 'ok' },
+    })
   } else {
     res.status(503).json({
       success: false,
-      error: { code: 'SERVICE_UNAVAILABLE', message: 'Database is not connected' },
+      error: {
+        code: 'SERVICE_UNAVAILABLE',
+        message: 'One or more dependencies are not ready',
+      },
+      data: {
+        status: 'error',
+        mongo: isMongoReady ? 'ok' : 'error',
+        gemini: isGeminiReady ? 'ok' : 'error',
+      },
     })
   }
 })
