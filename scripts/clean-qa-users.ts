@@ -10,23 +10,31 @@ import { QuizAttempt } from '../src/models/quiz-attempt.model.js'
 import { QuizAttemptAnswer } from '../src/models/quiz-attempt-answer.model.js'
 import { OnboardingQuestionnaire } from '../src/models/onboarding-questionnaire.model.js'
 import { RoadmapEditLog } from '../src/models/roadmap-edit-log.model.js'
+import { PasswordResetToken } from '../src/models/password-reset-token.model.js'
 
 const DRY_RUN = process.argv.includes('--dry-run')
+const FORCE = process.argv.includes('--force')
 
 async function main() {
+  if (process.env.NODE_ENV === 'production' && !DRY_RUN && !FORCE) {
+    console.error(
+      'FATAL: Running in production without --dry-run or --force. Aborting to prevent accidental deletion.',
+    )
+    process.exit(1)
+  }
   if (!process.env.MONGO_URI) {
     console.error('FATAL: MONGO_URI is not set. Add it to .env or export it.')
     process.exit(1)
   }
 
   console.log(`=== Clean QA Users Script ${DRY_RUN ? '(DRY RUN)' : ''} ===`)
-  await mongoose.connect(process.env.MONGO_URI, { dbName: 'devcamp2' })
+  await mongoose.connect(process.env.MONGO_URI)
   console.log(`  ✓ Connected to MongoDB (DB: ${mongoose.connection.db?.databaseName})`)
 
   const totalUsers = await User.countDocuments()
   console.log(`  Total users in DB: ${totalUsers}`)
 
-  const qaEmailRegex = /(@vora\.dev$|@example\.com$)/i
+  const qaEmailRegex = /^qa\.vora\..*@example\.com$/i
 
   const qaUsers = await User.find({ email: qaEmailRegex }).select('_id email').lean()
 
@@ -66,7 +74,8 @@ async function main() {
   console.log(`  QuizAttempts: ${quizAttemptIds.length}`)
   console.log(`  QuizAttemptAnswers (estimated based on attempts): (dependent on attempts)`)
   console.log(`  OnboardingQuestionnaires: (up to ${userIds.length})`)
-  console.log(`  RoadmapEditLogs: (up to ${userRoadmapIds.length})`)
+  console.log(`  RoadmapEditLogs: (up to ${userRoadmapIds.length} + orphan logs)`)
+  console.log(`  PasswordResetTokens: (up to ${userIds.length})`)
 
   if (DRY_RUN) {
     console.log('\n[DRY RUN] Would delete the above data. Re-run without --dry-run to execute.')
@@ -101,7 +110,10 @@ async function main() {
       userId: { $in: userIds },
     }).session(session)
     const editLogResult = await RoadmapEditLog.deleteMany({
-      userRoadmapId: { $in: userRoadmapIds },
+      $or: [{ userRoadmapId: { $in: userRoadmapIds } }, { userId: { $in: userIds } }],
+    }).session(session)
+    const passwordResetResult = await PasswordResetToken.deleteMany({
+      userId: { $in: userIds },
     }).session(session)
 
     await session.commitTransaction()
@@ -116,6 +128,7 @@ async function main() {
     console.log(`  QuizAttemptAnswers deleted: ${attemptAnswerResult.deletedCount}`)
     console.log(`  OnboardingQuestionnaires deleted: ${onboardingResult.deletedCount}`)
     console.log(`  RoadmapEditLogs deleted: ${editLogResult.deletedCount}`)
+    console.log(`  PasswordResetTokens deleted: ${passwordResetResult.deletedCount}`)
 
     console.log('\n✓ Cleanup complete')
   } catch (err) {
