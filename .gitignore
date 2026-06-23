@@ -31,6 +31,9 @@ coverage
 .vercel
 .render
 
+# DB backups (mongodump output from `yarn backup` — may contain user data)
+/backups/
+
 # Helper
 /fetch-ids.ts
 /get-user.ts
