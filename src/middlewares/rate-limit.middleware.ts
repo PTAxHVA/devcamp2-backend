@@ -20,7 +20,7 @@ export const generalRateLimiter = rateLimit({
 export const aiRateLimiter = rateLimit({
   windowMs: 60 * 1000,
   limit: 5,
-  keyGenerator: (req) => getRealIp(req),
+  keyGenerator: (req) => req.user?.id || getRealIp(req),
   handler: (_req, res) =>
     res.status(429).json({
       success: false,
