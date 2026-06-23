@@ -1,18 +1,40 @@
 import rateLimit from 'express-rate-limit'
+import { Request } from 'express'
+
+// Helper to extract real IP behind Cloudflare and Render
+const getRealIp = (req: Request) =>
+  (req.headers['cf-connecting-ip'] as string) || req.ip || 'unknown'
 
 export const generalRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: getRealIp,
 })
 
-// Stricter limit for Gemini AI (15 RPM free tier)
+// Global limiter for Gemini AI (15 RPM free tier)
+export const globalAiRateLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 14,
+  keyGenerator: () => 'global-ai',
+  handler: (_req, res) =>
+    res.status(429).json({
+      success: false,
+      error: {
+        code: 'RATE_LIMITED',
+        message:
+          'The AI system is currently experiencing heavy load. Please try again in a minute.',
+      },
+    }),
+})
+
+// Stricter limit for Gemini AI per user
 // Keys by user ID (since this is authenticated) or IP as fallback
 export const aiRateLimiter = rateLimit({
   windowMs: 60 * 1000,
-  limit: 10,
-  keyGenerator: (req) => req.user?.id || 'unauthenticated',
+  limit: 5,
+  keyGenerator: (req: Request) => req.user?.id || getRealIp(req),
   handler: (_req, res) =>
     res.status(429).json({
       success: false,
@@ -27,6 +49,7 @@ export const aiRateLimiter = rateLimit({
 export const authRateLimiter = rateLimit({
   windowMs: 60 * 1000,
   limit: 5,
+  keyGenerator: getRealIp,
   handler: (_req, res) =>
     res.status(429).json({
       success: false,
