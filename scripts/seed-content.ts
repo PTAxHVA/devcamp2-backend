@@ -81,6 +81,26 @@ const SEED_JOBS: SeedJob[] = [
   },
 ]
 
+const RESOURCES_PATH = join(REPO_ROOT, 'seed-data/resources.json')
+const RESOURCE_TYPES = ['article', 'video', 'docs', 'interactive'] as const
+type ResourceType = (typeof RESOURCE_TYPES)[number]
+
+interface ResourceEntry {
+  title: string
+  url: string
+  type: ResourceType
+  provider: string
+  estimatedMinutes: number
+}
+
+/**
+ * Curated learning resources keyed by topic slug, then by section slug (or
+ * '_default' for the whole topic). A section uses its own list if present,
+ * otherwise the topic '_default'. Top-level keys starting with '_' (e.g.
+ * '_comment') are ignored. Shape mirrors ISection.resourceList.
+ */
+type ResourceMap = Record<string, Record<string, ResourceEntry[]>>
+
 // ------------------------------------------------------------ Types
 
 interface QuestionPlan {
@@ -117,6 +137,7 @@ interface RoadmapPlan {
 interface SeedPlan {
   roadmaps: RoadmapPlan[]
   topics: Map<string, TopicPlan> // slug -> plan, deduped across roadmaps
+  resources: ResourceMap // topic slug -> (section slug | '_default') -> resources
 }
 
 interface ApplyStats {
@@ -131,6 +152,8 @@ interface ApplyStats {
   questionsPruned: number
   optionsUpserted: number
   optionsPruned: number
+  topicsWithPrereqs: number
+  sectionsWithResources: number
 }
 
 // ------------------------------------------------------------ Helpers
@@ -163,6 +186,90 @@ async function readCsv(path: string): Promise<Record<string, string>[]> {
     skip_empty_lines: true,
     trim: true,
   }) as Record<string, string>[]
+}
+
+/**
+ * Load + validate seed-data/resources.json. Pushes problems into `errors`
+ * (validate-then-apply: a malformed resources file aborts the seed BEFORE any
+ * DB write). Top-level keys starting with '_' (e.g. '_comment') are skipped.
+ * Returns a typed ResourceMap (empty on any structural error).
+ */
+async function loadResources(errors: string[]): Promise<ResourceMap> {
+  let raw: string
+  try {
+    raw = await readFile(RESOURCES_PATH, 'utf8')
+  } catch {
+    errors.push(`Cannot read resources file at ${RESOURCES_PATH}`)
+    return {}
+  }
+
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(raw)
+  } catch (e) {
+    errors.push(`resources.json is not valid JSON: ${(e as Error).message}`)
+    return {}
+  }
+  if (typeof parsed !== 'object' || parsed === null) {
+    errors.push('resources.json must be an object keyed by topic slug')
+    return {}
+  }
+
+  const out: ResourceMap = {}
+  for (const [topicSlug, byKey] of Object.entries(parsed as Record<string, unknown>)) {
+    if (topicSlug.startsWith('_')) continue // skip _comment and similar metadata keys
+    if (typeof byKey !== 'object' || byKey === null) {
+      errors.push(`resources["${topicSlug}"] must be an object of section lists`)
+      continue
+    }
+    const bucket: Record<string, ResourceEntry[]> = {}
+    out[topicSlug] = bucket
+    for (const [key, list] of Object.entries(byKey as Record<string, unknown>)) {
+      if (!Array.isArray(list)) {
+        errors.push(`resources["${topicSlug}"]["${key}"] must be an array`)
+        continue
+      }
+      const entries: ResourceEntry[] = []
+      list.forEach((item, i) => {
+        const ref = `resources["${topicSlug}"]["${key}"][${i}]`
+        if (typeof item !== 'object' || item === null) {
+          errors.push(`${ref} must be an object`)
+          return
+        }
+        const r = item as Record<string, unknown>
+        const title = typeof r.title === 'string' ? r.title.trim() : ''
+        const url = typeof r.url === 'string' ? r.url.trim() : ''
+        const type = r.type
+        const provider = typeof r.provider === 'string' ? r.provider : ''
+        const estimatedMinutes = typeof r.estimatedMinutes === 'number' ? r.estimatedMinutes : 0
+        if (!title) errors.push(`${ref}: missing title`)
+        if (!url) errors.push(`${ref}: missing url`)
+        if (typeof type !== 'string' || !RESOURCE_TYPES.includes(type as ResourceType)) {
+          errors.push(`${ref}: type must be one of ${RESOURCE_TYPES.join('|')}`)
+          return
+        }
+        if (estimatedMinutes < 0) {
+          errors.push(`${ref}: estimatedMinutes must be >= 0`)
+        }
+        if (title && url) {
+          entries.push({ title, url, type: type as ResourceType, provider, estimatedMinutes })
+        }
+      })
+      bucket[key] = entries
+    }
+  }
+  return out
+}
+
+/** Resolve the resource list for one section: section-specific, else topic '_default', else []. */
+function resolveResources(
+  map: ResourceMap,
+  topicSlug: string,
+  sectionSlug: string,
+): ResourceEntry[] {
+  const byKey = map[topicSlug]
+  if (!byKey) return []
+  return byKey[sectionSlug] ?? byKey['_default'] ?? []
 }
 
 class ValidationError extends Error {
@@ -365,10 +472,12 @@ async function parseAndValidate(): Promise<SeedPlan> {
     roadmaps.push({ job, topicSlugs })
   }
 
+  const resources = await loadResources(allErrors)
+
   if (allErrors.length > 0) {
     throw new ValidationError(allErrors)
   }
-  return { roadmaps, topics }
+  return { roadmaps, topics, resources }
 }
 
 // ------------------------------------------------------------ Phase 2: apply
@@ -386,6 +495,8 @@ async function applyPlan(plan: SeedPlan): Promise<ApplyStats> {
     questionsPruned: 0,
     optionsUpserted: 0,
     optionsPruned: 0,
+    topicsWithPrereqs: 0,
+    sectionsWithResources: 0,
   }
 
   // 2a. Upsert roadmaps + branches
@@ -444,6 +555,39 @@ async function applyPlan(plan: SeedPlan): Promise<ApplyStats> {
     stats.topicsUpserted++
   }
 
+  // 2b-prereqs. Derive sequential prerequisites: each topic depends on the topic
+  // immediately before it in every branch it belongs to (union across branches).
+  // This is what drives roadmap-viz edges (buildRoadmapGraph) + customize-order
+  // validation + AI suggest/feedback. Topics are shared across roadmaps (Scenario B),
+  // so a cross-branch prerequisite id is simply filtered out per-roadmap downstream
+  // (idSet.has / assertPrerequisiteOrder) — at worst a missing edge, never a wrong one.
+  // Done as a second pass so every topic's _id is known before we reference it.
+  const prereqSlugsByTopic = new Map<string, Set<string>>()
+  for (const rm of plan.roadmaps) {
+    for (let i = 1; i < rm.topicSlugs.length; i++) {
+      const cur = rm.topicSlugs[i]
+      const prev = rm.topicSlugs[i - 1]
+      if (cur === undefined || prev === undefined) continue
+      const set = prereqSlugsByTopic.get(cur) ?? new Set<string>()
+      set.add(prev)
+      prereqSlugsByTopic.set(cur, set)
+    }
+  }
+  // Set requiredTopicIds for EVERY topic (empty for the first in each branch) so the
+  // seed is convergent: re-running clears stale prereqs too.
+  for (const slug of plan.topics.keys()) {
+    const topicId = topicIdBySlug.get(slug)
+    if (!topicId) continue
+    const reqIds = [...(prereqSlugsByTopic.get(slug) ?? new Set<string>())]
+      .map((s) => topicIdBySlug.get(s))
+      .filter((id): id is mongoose.Types.ObjectId => id !== undefined)
+    await MasterTopic.updateOne(
+      { _id: topicId },
+      { $set: { 'dependsOn.requiredTopicIds': reqIds } },
+    )
+    if (reqIds.length > 0) stats.topicsWithPrereqs++
+  }
+
   // 2c. BranchTopic junctions + prune stale per branch
   for (const rm of plan.roadmaps) {
     const branchKey = branchKeyOf(rm.job)
@@ -478,6 +622,9 @@ async function applyPlan(plan: SeedPlan): Promise<ApplyStats> {
 
     // Upsert sections
     for (const sec of topicPlan.sections) {
+      // resourceList moved to $set (was $setOnInsert) so re-seeding refreshes
+      // curated links on already-seeded sections, not just new ones.
+      const resourceList = resolveResources(plan.resources, slug, sec.slug)
       const section = await Section.findOneAndUpdate(
         { topicId, slug: sec.slug },
         {
@@ -486,14 +633,16 @@ async function applyPlan(plan: SeedPlan): Promise<ApplyStats> {
             contentOverview: sec.contentOverview,
             orderIndex: sec.orderIndex,
             isPublished: true,
+            resourceList,
           },
-          $setOnInsert: { topicId, slug: sec.slug, resourceList: [] },
+          $setOnInsert: { topicId, slug: sec.slug },
         },
         { upsert: true, returnDocument: 'after' },
       )
       if (!section) throw new Error(`Failed to upsert section ${slug}/${sec.slug}`)
       sectionIdBySlug.set(sec.slug, section._id as mongoose.Types.ObjectId)
       stats.sectionsUpserted++
+      if (resourceList.length > 0) stats.sectionsWithResources++
     }
 
     // Prune stale sections under this topic (cascade quiz + questions + options)
@@ -621,6 +770,12 @@ async function main() {
   )
   const totalBranchLinks = plan.roadmaps.reduce((a, r) => a + r.topicSlugs.length, 0)
 
+  const resourceTopics = Object.keys(plan.resources).length
+  const resourceEntries = Object.values(plan.resources).reduce(
+    (a, byKey) => a + Object.values(byKey).reduce((b, list) => b + list.length, 0),
+    0,
+  )
+
   console.log(`  ✓ Validation passed`)
   console.log(`    Roadmaps:        ${plan.roadmaps.length}`)
   console.log(`    Unique topics:   ${plan.topics.size} (Scenario B dedup)`)
@@ -628,6 +783,7 @@ async function main() {
   console.log(`    Sections:        ${totalSections}`)
   console.log(`    Questions:       ${totalQuestions}`)
   console.log(`    Options:         ${totalOptions}`)
+  console.log(`    Resource topics: ${resourceTopics} (${resourceEntries} curated entries)`)
 
   if (DRY_RUN) {
     console.log('\n(dry-run: skipping DB)')
@@ -681,6 +837,8 @@ async function main() {
   console.log(
     `  QuestionOptions:        ${stats.optionsUpserted} upserted, ${stats.optionsPruned} pruned`,
   )
+  console.log(`  Topics with prereqs:    ${stats.topicsWithPrereqs} (drives roadmap-viz edges)`)
+  console.log(`  Sections w/ resources:  ${stats.sectionsWithResources}`)
 
   console.log('\n=== Phase 4: final DB counts ===')
   const [

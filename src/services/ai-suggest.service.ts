@@ -43,7 +43,13 @@ const dedupeAndOrderTopics = (
         name: masterTopic.name,
         descriptionShort: masterTopic.descriptionShort,
         estimatedHours: masterTopic.estimatedHours,
-        requiredTopicIds: masterTopic.dependsOn.requiredTopicIds.map((id) => id.toString()),
+        // Keep only prerequisites that are part of THIS selection. Topics are shared
+        // across roadmaps (Scenario B), so dependsOn.requiredTopicIds can hold ids
+        // from another branch — filter them out so the AI prompt never references a
+        // topic outside the suggested set (mirrors roadmap-graph's idSet filter).
+        requiredTopicIds: masterTopic.dependsOn.requiredTopicIds
+          .map((id) => id.toString())
+          .filter((id) => masterTopicMap.has(id)),
         orderIndex: topic.orderIndex,
       })
     } else {
