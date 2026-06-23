@@ -5,6 +5,7 @@ import { UserRoadmap } from '../models/user-roadmap.model.js'
 import { MasterRoadmap } from '../models/master-roadmap.model.js'
 import { UserSectionProgress, IUserSectionProgress } from '../models/user-section-progress.model.js'
 import { SkillLevel } from '../types/enums.js'
+import { calculateCurrentStreak } from '../utils/streak.util.js'
 
 export const getDashboardAnalytics = async (userId: string) => {
   // Only active roadmaps drive dashboard UI — soft-deleted ones (isActive:false)
@@ -21,16 +22,10 @@ export const getDashboardAnalytics = async (userId: string) => {
     .filter((r) => !activeRoadmapIds.has(r._id.toString()))
     .map((r) => ({ id: r._id, roleName: r.roleName }))
 
-  let currentStreak = userProfile?.streak || 0
-  if (userProfile?.lastActivityDate) {
-    const now = new Date()
-    const lastActivity = userProfile.lastActivityDate
-    const getDayNumberUTC7 = (d: Date) => Math.floor((d.getTime() + 7 * 60 * 60 * 1000) / 86400000)
-
-    if (getDayNumberUTC7(now) - getDayNumberUTC7(lastActivity) > 1) {
-      currentStreak = 0
-    }
-  }
+  const currentStreak = calculateCurrentStreak(
+    userProfile?.streak || 0,
+    userProfile?.lastActivityDate,
+  )
 
   const streak = {
     userId,
