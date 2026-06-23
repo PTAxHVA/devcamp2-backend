@@ -10,8 +10,8 @@ const route = Router()
 route.post(
   '/roadmap-suggest',
   authenticate,
-  globalAiRateLimiter,
   aiRateLimiter,
+  globalAiRateLimiter,
   validate(roadmapSuggestSchema),
   aiController.suggestRoadmap,
 )
@@ -19,8 +19,8 @@ route.post(
 route.post(
   '/roadmap-feedback',
   authenticate,
-  globalAiRateLimiter,
   aiRateLimiter,
+  globalAiRateLimiter,
   validate(roadmapFeedbackSchema),
   aiController.feedbackRoadmap,
 )
