@@ -9,6 +9,7 @@ import {
 } from '../schemas/profile.schema.js'
 import { startSession } from 'mongoose'
 import { hashPassword, comparePassword } from '../utils/password.js'
+import { calculateCurrentStreak } from '../utils/streak.util.js'
 
 export const getUser = async (userId: string) => {
   const user = await User.findById(userId).select('username email createdAt isActive').lean()
@@ -34,17 +35,21 @@ export const getUser = async (userId: string) => {
 
 export const getProfile = async (userId: string) => {
   const user = await User.findById(userId).select('username').lean()
-  const userProfile = await UserProfile.findOne({ userId }).select('streak level updatedAt').lean()
+  const userProfile = await UserProfile.findOne({ userId })
+    .select('streak level updatedAt lastActivityDate')
+    .lean()
 
   if (!userProfile || !user) {
     throw new ApiError(404, 'User profile not found', 'USER_PROFILE_NOT_FOUND')
   }
 
+  const currentStreak = calculateCurrentStreak(userProfile.streak, userProfile.lastActivityDate)
+
   return {
     userId,
     username: user.username,
     level: userProfile.level,
-    streak: userProfile.streak,
+    streak: currentStreak,
     updatedAt: userProfile.updatedAt,
   }
 }
@@ -70,7 +75,7 @@ export const updateProfile = async (input: UpdateProfileSchema, userId: string) 
       { $set: { level: level, updatedAt: Date.now() } },
       { new: true, runValidators: true, session },
     )
-      .select('level streak updatedAt')
+      .select('level streak updatedAt lastActivityDate')
       .lean()
 
     if (!userProfile) {
@@ -80,11 +85,13 @@ export const updateProfile = async (input: UpdateProfileSchema, userId: string) 
     await session.commitTransaction()
     session.endSession()
 
+    const currentStreak = calculateCurrentStreak(userProfile.streak, userProfile.lastActivityDate)
+
     return {
       userId,
       username: user.username,
       level: userProfile.level,
-      streak: userProfile.streak,
+      streak: currentStreak,
       updatedAt: userProfile.updatedAt,
     }
   } catch (error) {
