@@ -8,22 +8,6 @@ export const generalRateLimiter = rateLimit({
   keyGenerator: (req) => req.ip || 'unknown',
 })
 
-// Global limiter for Gemini AI (15 RPM free tier)
-export const globalAiRateLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  limit: 14,
-  keyGenerator: () => 'global-ai',
-  handler: (_req, res) =>
-    res.status(429).json({
-      success: false,
-      error: {
-        code: 'RATE_LIMITED',
-        message:
-          'The AI system is currently experiencing heavy load. Please try again in a minute.',
-      },
-    }),
-})
-
 // Stricter limit for Gemini AI per user
 // Keys by user ID (since this is authenticated) or IP as fallback
 export const aiRateLimiter = rateLimit({
@@ -36,6 +20,22 @@ export const aiRateLimiter = rateLimit({
       error: {
         code: 'RATE_LIMITED',
         message: 'You have exceeded the rate limit for AI requests. Please try again later.',
+      },
+    }),
+})
+
+// Global limiter for Gemini AI (15 RPM free tier)
+export const globalAiRateLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 14,
+  keyGenerator: () => 'global-ai',
+  handler: (_req, res) =>
+    res.status(429).json({
+      success: false,
+      error: {
+        code: 'RATE_LIMITED',
+        message:
+          'The AI system is currently experiencing heavy load. Please try again in a minute.',
       },
     }),
 })
