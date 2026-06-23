@@ -1,0 +1,353 @@
+{
+  "_comment": "Curated external learning resources, keyed by topic slug. Each topic has a '_default' list inherited by every section of that topic; add a '<section-slug>' key to override resources for a specific section. Shape matches ISection.resourceList (section.model.ts): { title, url, type: article|video|docs|interactive, provider, estimatedMinutes }. The '_comment' and any key starting with '_' other than '_default' are ignored by the seeder.",
+  "html": {
+    "_default": [
+      {
+        "title": "MDN — Learn HTML",
+        "url": "https://developer.mozilla.org/en-US/docs/Learn/HTML",
+        "type": "docs",
+        "provider": "MDN",
+        "estimatedMinutes": 120
+      },
+      {
+        "title": "web.dev — Learn HTML",
+        "url": "https://web.dev/learn/html",
+        "type": "docs",
+        "provider": "web.dev",
+        "estimatedMinutes": 180
+      },
+      {
+        "title": "freeCodeCamp — Responsive Web Design",
+        "url": "https://www.freecodecamp.org/learn/2022/responsive-web-design/",
+        "type": "interactive",
+        "provider": "freeCodeCamp",
+        "estimatedMinutes": 300
+      }
+    ]
+  },
+  "css": {
+    "_default": [
+      {
+        "title": "MDN — Learn CSS",
+        "url": "https://developer.mozilla.org/en-US/docs/Learn/CSS",
+        "type": "docs",
+        "provider": "MDN",
+        "estimatedMinutes": 150
+      },
+      {
+        "title": "web.dev — Learn CSS",
+        "url": "https://web.dev/learn/css",
+        "type": "docs",
+        "provider": "web.dev",
+        "estimatedMinutes": 240
+      },
+      {
+        "title": "CSS-Tricks — A Complete Guide to Flexbox",
+        "url": "https://css-tricks.com/snippets/css/a-guide-to-flexbox/",
+        "type": "article",
+        "provider": "CSS-Tricks",
+        "estimatedMinutes": 30
+      }
+    ]
+  },
+  "tailwind-css": {
+    "_default": [
+      {
+        "title": "Tailwind CSS — Documentation",
+        "url": "https://tailwindcss.com/docs",
+        "type": "docs",
+        "provider": "Tailwind Labs",
+        "estimatedMinutes": 120
+      },
+      {
+        "title": "Tailwind Play — Interactive Playground",
+        "url": "https://play.tailwindcss.com/",
+        "type": "interactive",
+        "provider": "Tailwind Labs",
+        "estimatedMinutes": 30
+      },
+      {
+        "title": "freeCodeCamp — Learn Tailwind CSS",
+        "url": "https://www.freecodecamp.org/news/learn-tailwind-css/",
+        "type": "article",
+        "provider": "freeCodeCamp",
+        "estimatedMinutes": 45
+      }
+    ]
+  },
+  "git-github": {
+    "_default": [
+      {
+        "title": "Pro Git (free book)",
+        "url": "https://git-scm.com/book/en/v2",
+        "type": "docs",
+        "provider": "Git",
+        "estimatedMinutes": 300
+      },
+      {
+        "title": "GitHub Skills — Interactive Courses",
+        "url": "https://skills.github.com/",
+        "type": "interactive",
+        "provider": "GitHub",
+        "estimatedMinutes": 120
+      },
+      {
+        "title": "freeCodeCamp — Git and GitHub for Beginners",
+        "url": "https://www.freecodecamp.org/news/git-and-github-for-beginners/",
+        "type": "article",
+        "provider": "freeCodeCamp",
+        "estimatedMinutes": 60
+      }
+    ]
+  },
+  "javascript-fundamentals": {
+    "_default": [
+      {
+        "title": "MDN — JavaScript Guide",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide",
+        "type": "docs",
+        "provider": "MDN",
+        "estimatedMinutes": 240
+      },
+      {
+        "title": "The Modern JavaScript Tutorial",
+        "url": "https://javascript.info/",
+        "type": "docs",
+        "provider": "javascript.info",
+        "estimatedMinutes": 360
+      },
+      {
+        "title": "freeCodeCamp — JavaScript Algorithms and Data Structures",
+        "url": "https://www.freecodecamp.org/learn/javascript-algorithms-and-data-structures/",
+        "type": "interactive",
+        "provider": "freeCodeCamp",
+        "estimatedMinutes": 300
+      }
+    ]
+  },
+  "javascript-advanced": {
+    "_default": [
+      {
+        "title": "javascript.info — Advanced topics (closures, prototypes, async)",
+        "url": "https://javascript.info/",
+        "type": "docs",
+        "provider": "javascript.info",
+        "estimatedMinutes": 300
+      },
+      {
+        "title": "MDN — Closures",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Closures",
+        "type": "docs",
+        "provider": "MDN",
+        "estimatedMinutes": 60
+      },
+      {
+        "title": "You Don't Know JS Yet (free book)",
+        "url": "https://github.com/getify/You-Dont-Know-JS",
+        "type": "docs",
+        "provider": "Kyle Simpson",
+        "estimatedMinutes": 360
+      }
+    ]
+  },
+  "typescript": {
+    "_default": [
+      {
+        "title": "TypeScript Handbook",
+        "url": "https://www.typescriptlang.org/docs/handbook/intro.html",
+        "type": "docs",
+        "provider": "Microsoft",
+        "estimatedMinutes": 240
+      },
+      {
+        "title": "TypeScript Playground",
+        "url": "https://www.typescriptlang.org/play",
+        "type": "interactive",
+        "provider": "Microsoft",
+        "estimatedMinutes": 30
+      },
+      {
+        "title": "freeCodeCamp — Learn TypeScript",
+        "url": "https://www.freecodecamp.org/news/learn-typescript-beginners-guide/",
+        "type": "article",
+        "provider": "freeCodeCamp",
+        "estimatedMinutes": 60
+      }
+    ]
+  },
+  "react": {
+    "_default": [
+      {
+        "title": "React — Learn (official docs)",
+        "url": "https://react.dev/learn",
+        "type": "docs",
+        "provider": "Meta",
+        "estimatedMinutes": 300
+      },
+      {
+        "title": "React — Tutorial: Tic-Tac-Toe",
+        "url": "https://react.dev/learn/tutorial-tic-tac-toe",
+        "type": "interactive",
+        "provider": "Meta",
+        "estimatedMinutes": 90
+      },
+      {
+        "title": "freeCodeCamp — Front End Development Libraries (React)",
+        "url": "https://www.freecodecamp.org/learn/front-end-development-libraries/",
+        "type": "interactive",
+        "provider": "freeCodeCamp",
+        "estimatedMinutes": 240
+      }
+    ]
+  },
+  "next-js": {
+    "_default": [
+      {
+        "title": "Next.js — Documentation",
+        "url": "https://nextjs.org/docs",
+        "type": "docs",
+        "provider": "Vercel",
+        "estimatedMinutes": 180
+      },
+      {
+        "title": "Next.js — Learn (official course)",
+        "url": "https://nextjs.org/learn",
+        "type": "interactive",
+        "provider": "Vercel",
+        "estimatedMinutes": 300
+      },
+      {
+        "title": "Next.js — App Router Foundations",
+        "url": "https://nextjs.org/learn/dashboard-app",
+        "type": "interactive",
+        "provider": "Vercel",
+        "estimatedMinutes": 240
+      }
+    ]
+  },
+  "dev-environment-setup": {
+    "_default": [
+      {
+        "title": "VS Code — Documentation",
+        "url": "https://code.visualstudio.com/docs",
+        "type": "docs",
+        "provider": "Microsoft",
+        "estimatedMinutes": 60
+      },
+      {
+        "title": "Node.js — Introduction & Getting Started",
+        "url": "https://nodejs.org/en/learn/getting-started/introduction-to-nodejs",
+        "type": "docs",
+        "provider": "OpenJS Foundation",
+        "estimatedMinutes": 30
+      },
+      {
+        "title": "The Missing Semester of Your CS Education",
+        "url": "https://missing.csail.mit.edu/",
+        "type": "docs",
+        "provider": "MIT",
+        "estimatedMinutes": 120
+      }
+    ]
+  },
+  "node-js-express": {
+    "_default": [
+      {
+        "title": "Node.js — Guides",
+        "url": "https://nodejs.org/en/learn",
+        "type": "docs",
+        "provider": "OpenJS Foundation",
+        "estimatedMinutes": 180
+      },
+      {
+        "title": "Express — Getting Started",
+        "url": "https://expressjs.com/en/starter/installing.html",
+        "type": "docs",
+        "provider": "Express",
+        "estimatedMinutes": 90
+      },
+      {
+        "title": "freeCodeCamp — Back End Development and APIs",
+        "url": "https://www.freecodecamp.org/learn/back-end-development-and-apis/",
+        "type": "interactive",
+        "provider": "freeCodeCamp",
+        "estimatedMinutes": 240
+      }
+    ]
+  },
+  "postgresql-with-prisma": {
+    "_default": [
+      {
+        "title": "PostgreSQL Tutorial",
+        "url": "https://www.postgresqltutorial.com/",
+        "type": "docs",
+        "provider": "PostgreSQL Tutorial",
+        "estimatedMinutes": 180
+      },
+      {
+        "title": "Prisma — Getting Started",
+        "url": "https://www.prisma.io/docs/getting-started",
+        "type": "docs",
+        "provider": "Prisma",
+        "estimatedMinutes": 120
+      },
+      {
+        "title": "Prisma — PostgreSQL Connector",
+        "url": "https://www.prisma.io/docs/orm/overview/databases/postgresql",
+        "type": "docs",
+        "provider": "Prisma",
+        "estimatedMinutes": 60
+      }
+    ]
+  },
+  "mongodb-with-mongoose": {
+    "_default": [
+      {
+        "title": "MongoDB Manual — CRUD Operations",
+        "url": "https://www.mongodb.com/docs/manual/crud/",
+        "type": "docs",
+        "provider": "MongoDB",
+        "estimatedMinutes": 120
+      },
+      {
+        "title": "Mongoose — Documentation",
+        "url": "https://mongoosejs.com/docs/guide.html",
+        "type": "docs",
+        "provider": "Mongoose",
+        "estimatedMinutes": 120
+      },
+      {
+        "title": "MongoDB University — M001: MongoDB Basics",
+        "url": "https://learn.mongodb.com/courses/m001-mongodb-basics",
+        "type": "interactive",
+        "provider": "MongoDB University",
+        "estimatedMinutes": 300
+      }
+    ]
+  },
+  "authentication-authorization": {
+    "_default": [
+      {
+        "title": "OWASP — Authentication Cheat Sheet",
+        "url": "https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html",
+        "type": "docs",
+        "provider": "OWASP",
+        "estimatedMinutes": 60
+      },
+      {
+        "title": "JWT — Introduction to JSON Web Tokens",
+        "url": "https://jwt.io/introduction",
+        "type": "article",
+        "provider": "Auth0",
+        "estimatedMinutes": 30
+      },
+      {
+        "title": "MDN — HTTP Authentication",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Authentication",
+        "type": "docs",
+        "provider": "MDN",
+        "estimatedMinutes": 45
+      }
+    ]
+  }
+}

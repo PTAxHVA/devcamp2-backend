@@ -72,8 +72,16 @@ export const feedbackRoadmap = async (userId: string, reqBody: RoadmapFeedbackSc
     .lean()
   const idToNameMap = new Map(requiredTopics.map((t) => [t._id.toString(), t.name]))
 
+  // Only surface prerequisites that are part of THIS roadmap. Shared topics (Scenario B)
+  // can carry cross-branch prereq ids in dependsOn — exclude them so the AI feedback
+  // prompt never references a topic outside the user's roadmap.
+  const inRoadmapTopicIds = new Set(masterTopics.map((t) => t._id.toString()))
   const resolveNames = (ids: Types.ObjectId[] = []) =>
-    ids.map((id) => idToNameMap.get(id.toString())).filter(Boolean) as string[]
+    ids
+      .map((id) => id.toString())
+      .filter((id) => inRoadmapTopicIds.has(id))
+      .map((id) => idToNameMap.get(id))
+      .filter(Boolean) as string[]
 
   const feedbackInput: RoadmapFeedbackInput = {
     roadmapRole: masterRoadmap.roleName,
