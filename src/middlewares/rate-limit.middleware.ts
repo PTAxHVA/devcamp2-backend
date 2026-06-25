@@ -1,5 +1,6 @@
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit'
 import { Request } from 'express'
+import { env } from '../config/env.js'
 
 // Helper to extract real IP behind Cloudflare and Render, with IPv6 /64 normalization
 const getRealIp = (req: Request) => {
@@ -7,11 +8,16 @@ const getRealIp = (req: Request) => {
   return ipKeyGenerator(ip) || 'unknown'
 }
 
+// Disable rate limiting under automated tests so integration suites that fire
+// many requests from one IP don't trip the limiter. Never true in dev/prod.
+const skipInTest = (): boolean => env.NODE_ENV === 'test'
+
 export const generalRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: skipInTest,
   keyGenerator: (req) => getRealIp(req),
 })
 
@@ -20,6 +26,7 @@ export const generalRateLimiter = rateLimit({
 export const aiRateLimiter = rateLimit({
   windowMs: 60 * 1000,
   limit: 5,
+  skip: skipInTest,
   keyGenerator: (req) => req.user?.id || getRealIp(req),
   handler: (_req, res) =>
     res.status(429).json({
@@ -35,6 +42,7 @@ export const aiRateLimiter = rateLimit({
 export const globalAiRateLimiter = rateLimit({
   windowMs: 60 * 1000,
   limit: 14,
+  skip: skipInTest,
   keyGenerator: () => 'global-ai',
   handler: (_req, res) =>
     res.status(429).json({
@@ -51,6 +59,7 @@ export const globalAiRateLimiter = rateLimit({
 export const authRateLimiter = rateLimit({
   windowMs: 60 * 1000,
   limit: 5,
+  skip: skipInTest,
   keyGenerator: (req) => getRealIp(req),
   handler: (_req, res) =>
     res.status(429).json({
