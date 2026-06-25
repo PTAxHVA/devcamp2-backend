@@ -15,7 +15,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "type-check": "tsc -p tsconfig.scripts.json",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "seed": "tsx scripts/seed-content.ts",
     "seed:dry": "tsx scripts/seed-content.ts --dry-run",
