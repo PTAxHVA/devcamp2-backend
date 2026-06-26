@@ -45,7 +45,8 @@ app.get('/health', (_req, res) => {
   res.json({ success: true, data: { status: 'ok' } })
 })
 
-// Readiness: 200 chỉ khi mọi dependency đã kết nối.
+// Readiness: 200 chỉ khi DB đã kết nối. KHÔNG gate trên Gemini — AI degrade
+// gracefully (mất Gemini vẫn học được), nên Gemini không thuộc điều kiện readiness.
 app.get('/ready', (_req, res) => {
   const isMongoReady = mongoose.connection.readyState === 1
   if (isMongoReady) {
