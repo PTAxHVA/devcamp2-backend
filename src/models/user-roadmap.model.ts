@@ -24,12 +24,6 @@ const userRoadmapSchema = new Schema<IUserRoadmap>(
   { timestamps: true },
 )
 
-// F18 allows up to 2 active roadmaps per user, so this is a plain (non-unique)
-// index for fast "active roadmaps of a user" lookups. The 2-roadmap cap is enforced
-// in the service layer (user-roadmap.service.ts). NOTE: the previous partial-UNIQUE
-// index on the SAME keys must be dropped on existing databases — see PR notes.
-userRoadmapSchema.index({ userId: 1, isActive: 1 })
-
 // A user can have at most ONE active roadmap per role (master roadmap). This is a
 // DB-level guard against enrolling the same role twice (incl. concurrent requests);
 // soft-deleted (isActive:false) roadmaps are excluded, so re-enrolling later is fine.

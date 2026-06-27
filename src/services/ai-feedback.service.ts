@@ -12,6 +12,7 @@ import { buildRoadmapFeedbackPrompt, RoadmapFeedbackInput } from '../config/ai-p
 import { geminiModel } from '../config/gemini.js'
 import { logger } from '../config/logger.js'
 import { RoadmapFeedbackSchema, aiFeedbackResponseSchema } from '../schemas/ai.schema.js'
+import { FeedbackSeverity } from '../types/enums.js'
 
 export const feedbackRoadmap = async (userId: string, reqBody: RoadmapFeedbackSchema) => {
   const { userRoadmapId, action, topicId } = reqBody
@@ -109,6 +110,18 @@ export const feedbackRoadmap = async (userId: string, reqBody: RoadmapFeedbackSc
 
   const roadmapFeedbackPrompt = buildRoadmapFeedbackPrompt(feedbackInput)
 
+  const fallbackFeedback =
+    reqBody.action === 'add'
+      ? {
+          feedback: 'Please consider topic dependencies and pre-completion before adding.',
+          severity: FeedbackSeverity.WARNING,
+        }
+      : {
+          feedback:
+            "Removing this topic might impact your roadmap's coverage of certain concepts. Please review your roadmap before removing this topic.",
+          severity: FeedbackSeverity.WARNING,
+        }
+
   try {
     const response = (await Promise.race([
       geminiModel.generateContent(roadmapFeedbackPrompt),
@@ -134,10 +147,6 @@ export const feedbackRoadmap = async (userId: string, reqBody: RoadmapFeedbackSc
     }
   } catch (error) {
     logger.error({ error }, 'Failed to generate roadmap feedback')
-    throw new ApiError(
-      503,
-      'Failed to generate roadmap feedback',
-      'FAILED_TO_GENERATE_ROADMAP_FEEDBACK',
-    )
+    return fallbackFeedback
   }
 }
