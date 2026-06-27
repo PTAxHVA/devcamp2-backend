@@ -9,6 +9,7 @@ const router = Router()
 router.post('/', authenticate, validate(createRoadmapSchema), userRoadmapController.createRoadmap)
 router.get('/', authenticate, userRoadmapController.listRoadmaps)
 router.get('/:id', authenticate, userRoadmapController.getRoadmapDetail)
+router.get('/:id/available-topics', authenticate, userRoadmapController.getAvailableTopics)
 router.patch(
   '/:id',
   authenticate,

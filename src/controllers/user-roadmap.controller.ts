@@ -56,3 +56,13 @@ export const deleteRoadmap = async (req: Request, res: Response, next: NextFunct
     next(error)
   }
 }
+
+export const getAvailableTopics = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.user?.id as string
+    const result = await userRoadmapService.getAvailableTopics(userId, req.params.id as string)
+    res.json(ok(result))
+  } catch (error) {
+    next(error)
+  }
+}

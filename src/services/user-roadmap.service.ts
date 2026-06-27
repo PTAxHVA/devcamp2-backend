@@ -276,6 +276,83 @@ export const getUserRoadmapDetail = async (userId: string, roadmapId: string) =>
   }
 }
 
+/**
+ * Shape of an addable topic in the F15 customize editor's "add topic" picker.
+ * Mirrors the field names of the roadmap-detail topic DTO so the FE reuses types.
+ */
+export interface AvailableTopic {
+  masterTopicId: string
+  name: string
+  estimatedHours: number
+  sectionTotal: number
+}
+
+/**
+ * F15 Customize Editor — add-topic picker (read side). Returns the topics in this
+ * roadmap's branches that the learner has NOT yet enrolled, ordered by canonical
+ * branch order. This is the read-side mirror of editUserRoadmap's add-validation
+ * (same branch derivation), so every id returned here is accepted by
+ * PATCH /roadmaps/:id { addTopicIds } — no TOPIC_NOT_IN_BRANCH.
+ */
+export const getAvailableTopics = async (
+  userId: string,
+  roadmapId: string,
+): Promise<AvailableTopic[]> => {
+  if (!isValidObjectId(roadmapId)) {
+    throw new ApiError(400, 'Invalid roadmap id', 'INVALID_ROADMAP_ID')
+  }
+
+  // Active + owned only — a soft-deleted or someone else's roadmap must not leak
+  // its addable topics (same IDOR convention as getUserRoadmapDetail).
+  const userRoadmap = await UserRoadmap.findOne({ _id: roadmapId, userId, isActive: true }).lean()
+  if (!userRoadmap) {
+    throw new ApiError(404, 'User roadmap not found', 'USER_ROADMAP_NOT_FOUND')
+  }
+
+  // Enrolled topics + roadmap branches — derived exactly as editUserRoadmap does.
+  const [currentTopics, branches] = await Promise.all([
+    UserTopic.find({ userRoadmapId: userRoadmap._id }).select('topicId').lean(),
+    MasterBranch.find({ roadmapId: userRoadmap.roadmapId }).select('_id').lean(),
+  ])
+  const currentTopicIds = new Set(currentTopics.map((t) => t.topicId.toString()))
+  const branchIds = branches.map((b) => b._id.toString())
+
+  // Candidate = a branch topic (canonical order) not already in the roadmap.
+  const orderedBranchTopicIds = await resolveBranchTopicOrder(branchIds)
+  const candidateIds = orderedBranchTopicIds.filter((id) => !currentTopicIds.has(id))
+  if (candidateIds.length === 0) return []
+
+  const [masterTopics, sections] = await Promise.all([
+    MasterTopic.find({ _id: { $in: candidateIds } })
+      .select('name estimatedHours')
+      .lean(),
+    Section.find({ topicId: { $in: candidateIds }, isPublished: true })
+      .select('topicId')
+      .lean(),
+  ])
+  const masterById = new Map(masterTopics.map((m) => [m._id.toString(), m]))
+
+  const sectionTotalByTopic = new Map<string, number>()
+  for (const s of sections) {
+    const id = s.topicId.toString()
+    sectionTotalByTopic.set(id, (sectionTotalByTopic.get(id) ?? 0) + 1)
+  }
+
+  // Re-shape in branch order; drop any candidate without a MasterTopic doc (defensive).
+  return candidateIds
+    .map((id) => {
+      const m = masterById.get(id)
+      if (!m) return null
+      return {
+        masterTopicId: id,
+        name: m.name,
+        estimatedHours: m.estimatedHours ?? 0,
+        sectionTotal: sectionTotalByTopic.get(id) ?? 0,
+      }
+    })
+    .filter((t): t is AvailableTopic => t !== null)
+}
+
 export const softDeleteRoadmap = async (userId: string, roadmapId: string) => {
   if (!isValidObjectId(roadmapId)) {
     throw new ApiError(400, 'Invalid roadmap id', 'INVALID_ROADMAP_ID')
