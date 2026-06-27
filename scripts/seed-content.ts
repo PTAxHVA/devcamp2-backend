@@ -38,6 +38,7 @@
  *     collections are intentionally NOT touched. Run only on dev clusters.
  */
 import { readFile } from 'node:fs/promises'
+import { realpathSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import 'dotenv/config'
@@ -52,6 +53,7 @@ import { Quiz } from '../src/models/quiz.model.js'
 import { Question } from '../src/models/question.model.js'
 import { QuestionOption } from '../src/models/question-option.model.js'
 import { QuestionType } from '../src/types/enums.js'
+import { resolveTopicDescription } from './topic-descriptions.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(__dirname, '..')
@@ -425,7 +427,7 @@ function planFromRows(
   return out
 }
 
-async function parseAndValidate(): Promise<SeedPlan> {
+export async function parseAndValidate(): Promise<SeedPlan> {
   const allErrors: string[] = []
   const topics = new Map<string, TopicPlan>()
   const roadmaps: RoadmapPlan[] = []
@@ -482,7 +484,7 @@ async function parseAndValidate(): Promise<SeedPlan> {
 
 // ------------------------------------------------------------ Phase 2: apply
 
-async function applyPlan(plan: SeedPlan): Promise<ApplyStats> {
+export async function applyPlan(plan: SeedPlan): Promise<ApplyStats> {
   const stats: ApplyStats = {
     topicsUpserted: 0,
     branchLinksUpserted: 0,
@@ -533,15 +535,20 @@ async function applyPlan(plan: SeedPlan): Promise<ApplyStats> {
 
   // 2b. Upsert topics (library, dedup by slug)
   const topicIdBySlug = new Map<string, mongoose.Types.ObjectId>()
+  const missingDescriptionSlugs: string[] = []
   for (const [slug, t] of plan.topics) {
+    // Descriptions are authored content (the CSV has no description column).
+    // Written via $set — NOT $setOnInsert — so re-seeding backfills topics that
+    // were seeded before descriptions existed (same fix as resourceList below).
+    const { description, descriptionShort } = resolveTopicDescription(slug)
+    if (!description) missingDescriptionSlugs.push(slug)
     const topic = await MasterTopic.findOneAndUpdate(
       { slug },
       {
+        $set: { description, descriptionShort },
         $setOnInsert: {
           name: t.name,
           slug,
-          description: '',
-          descriptionShort: '',
           estimatedHours: 0,
           iconUrl: '',
           isPublished: true,
@@ -553,6 +560,13 @@ async function applyPlan(plan: SeedPlan): Promise<ApplyStats> {
     if (!topic) throw new Error(`Failed to upsert topic ${slug}`)
     topicIdBySlug.set(slug, topic._id as mongoose.Types.ObjectId)
     stats.topicsUpserted++
+  }
+  if (missingDescriptionSlugs.length > 0) {
+    console.warn(
+      `  WARN: ${missingDescriptionSlugs.length} topic(s) have no curated description ` +
+        `(seeded blank): ${missingDescriptionSlugs.join(', ')}`,
+    )
+    console.warn('        Add them to scripts/topic-descriptions.ts')
   }
 
   // 2b-prereqs. Derive sequential prerequisites: each topic depends on the topic
@@ -873,7 +887,22 @@ async function main() {
   console.log('\n✓ Disconnected')
 }
 
-main().catch((err: unknown) => {
-  console.error('FATAL:', err)
-  process.exit(1)
-})
+// Only run the CLI when executed directly (yarn seed), NOT when this module is
+// imported (e.g. by tests that drive parseAndValidate / applyPlan). Importing it
+// otherwise would connect to the dummy test MONGO_URI and process.exit().
+function isRunDirectly(): boolean {
+  const entry = process.argv[1]
+  if (!entry) return false
+  try {
+    return realpathSync(entry) === realpathSync(fileURLToPath(import.meta.url))
+  } catch {
+    return false
+  }
+}
+
+if (isRunDirectly()) {
+  main().catch((err: unknown) => {
+    console.error('FATAL:', err)
+    process.exit(1)
+  })
+}
