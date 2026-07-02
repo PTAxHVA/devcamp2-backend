@@ -103,7 +103,7 @@ export const submitAndGradeQuiz = async (
     quizAttempt.submittedAt = new Date()
 
     if (!isPassed) {
-      quizAttempt.cooldownUntil = new Date(Date.now() + 2 * 60 * 60 * 1000)
+      quizAttempt.cooldownUntil = new Date(Date.now() + 1 * 60 * 1000)
     } else {
       quizAttempt.cooldownUntil = null
     }
@@ -119,7 +119,7 @@ export const submitAndGradeQuiz = async (
     const currentProgress = await UserSectionProgress.findOne({
       userTopicId: userTopic._id,
       sectionId: quiz.sectionId,
-    })
+    }).session(session)
     if (currentProgress) {
       if (isPassed && !currentProgress.isCompleted) {
         currentProgress.isCompleted = true
