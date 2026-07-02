@@ -100,6 +100,7 @@ export const getAttemptResult = async (attemptId: string, userId: string) => {
       submittedAt: attempt.submittedAt,
       score: attempt.score,
       isPassed: attempt.isPassed,
+      cooldownUntil: attempt.cooldownUntil,
     },
     questions: questionsWithOptions,
   }
