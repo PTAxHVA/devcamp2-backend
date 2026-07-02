@@ -11,6 +11,21 @@ import { verifyTopicEnrollment } from './section.service.js'
 import { startSession } from 'mongoose'
 import { UserProfile } from '../models/user-profile.model.js'
 
+// Cooldown after a failed section quiz before the learner may retry.
+// Deliberately short for DemoDay so the fail → retry flow is demonstrable;
+// revisit (e.g. move to config) for production.
+const FAILED_QUIZ_COOLDOWN_MS = 1 * 60 * 1000
+
+// Two concurrent submits of the same attempt can trip MongoDB's write conflict
+// (a transient transaction error) or the unique (quizAttemptId, questionId)
+// answer index. Translate both into a clean 409 instead of leaking a raw 500.
+const isWriteConflictError = (error: unknown): boolean => {
+  if (typeof error !== 'object' || error === null) return false
+  const err = error as { code?: number; hasErrorLabel?: (label: string) => boolean }
+  if (err.code === 112 || err.code === 11000) return true
+  return typeof err.hasErrorLabel === 'function' && err.hasErrorLabel('TransientTransactionError')
+}
+
 export const submitAndGradeQuiz = async (
   attemptId: string,
   answers: SubmitAttemptSchema['answers'],
@@ -22,7 +37,11 @@ export const submitAndGradeQuiz = async (
   const session = await startSession()
   session.startTransaction()
   try {
-    const quizAttempt = await QuizAttempt.findOne({ _id: attemptId, userId, submittedAt: null })
+    const quizAttempt = await QuizAttempt.findOne({
+      _id: attemptId,
+      userId,
+      submittedAt: null,
+    }).session(session)
     if (!quizAttempt) {
       throw new ApiError(400, 'Active quiz attempt not found', 'QUIZ_ATTEMPT_NOT_FOUND')
     }
@@ -103,7 +122,7 @@ export const submitAndGradeQuiz = async (
     quizAttempt.submittedAt = new Date()
 
     if (!isPassed) {
-      quizAttempt.cooldownUntil = new Date(Date.now() + 2 * 60 * 60 * 1000)
+      quizAttempt.cooldownUntil = new Date(Date.now() + FAILED_QUIZ_COOLDOWN_MS)
     } else {
       quizAttempt.cooldownUntil = null
     }
@@ -119,7 +138,7 @@ export const submitAndGradeQuiz = async (
     const currentProgress = await UserSectionProgress.findOne({
       userTopicId: userTopic._id,
       sectionId: quiz.sectionId,
-    })
+    }).session(session)
     if (currentProgress) {
       if (isPassed && !currentProgress.isCompleted) {
         currentProgress.isCompleted = true
@@ -178,7 +197,14 @@ export const submitAndGradeQuiz = async (
       cooldownUntil: quizAttempt.cooldownUntil,
     }
   } catch (error) {
-    await session.abortTransaction()
+    await session.abortTransaction().catch(() => {})
+    if (isWriteConflictError(error)) {
+      throw new ApiError(
+        409,
+        'This quiz is already being submitted. Please try again.',
+        'QUIZ_SUBMIT_CONFLICT',
+      )
+    }
     throw error
   } finally {
     await session.endSession()
