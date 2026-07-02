@@ -13,7 +13,7 @@ export interface IQuestion {
   correctAnswer: string
   /**
    * FILL_IN_BLANK only: additional acceptable answer variants
-   * (e.g. ['<head>'] when canonical is 'head'). Case-sensitive match after trim.
+   * (e.g. ['<head>'] when canonical is 'head'). Matched case-insensitively after trim.
    * Empty for MULTIPLE_CHOICE.
    */
   acceptableAnswers: string[]

@@ -9,6 +9,7 @@ import { buildRoadmapGraph, type GraphTopicInput } from '../src/services/roadmap
 const topic = (over: Partial<GraphTopicInput> & { masterTopicId: string }): GraphTopicInput => ({
   userTopicId: null,
   name: over.masterTopicId.toUpperCase(),
+  descriptionShort: '',
   orderIndex: 0,
   estimatedHours: 1,
   prerequisiteTopicIds: [],

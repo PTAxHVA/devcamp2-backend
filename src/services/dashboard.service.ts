@@ -4,6 +4,7 @@ import { UserTopic } from '../models/user-topic.model.js'
 import { UserRoadmap } from '../models/user-roadmap.model.js'
 import { MasterRoadmap } from '../models/master-roadmap.model.js'
 import { UserSectionProgress, IUserSectionProgress } from '../models/user-section-progress.model.js'
+import { QuizAttempt } from '../models/quiz-attempt.model.js'
 import { SkillLevel } from '../types/enums.js'
 import { calculateCurrentStreak, buildWeeklyProgress } from '../utils/streak.util.js'
 
@@ -136,6 +137,48 @@ export const getDashboardAnalytics = async (userId: string) => {
     sectionProgresses.filter((p) => p.isCompleted).map((p) => p.completedAt),
   )
 
+  // "Completed Topics" tile (H5): a topic is done when it has PUBLISHED sections
+  // and every one is completed. Counted against published sections only (matching
+  // the learner-facing topic view + roadmap graph) so an unpublished draft section
+  // can't block completion and stale/removed-section progress can't overcount.
+  const publishedSectionIds = new Set(
+    sections.filter((s) => s.isPublished).map((s) => s._id.toString()),
+  )
+  const publishedSectionsByTopic = new Map<string, number>()
+  for (const s of sections) {
+    if (!s.isPublished) continue
+    const tId = s.topicId.toString()
+    publishedSectionsByTopic.set(tId, (publishedSectionsByTopic.get(tId) ?? 0) + 1)
+  }
+  const completedSectionsByUserTopic = new Map<string, number>()
+  for (const p of sectionProgresses) {
+    if (!p.isCompleted || !publishedSectionIds.has(p.sectionId.toString())) continue
+    const id = p.userTopicId.toString()
+    completedSectionsByUserTopic.set(id, (completedSectionsByUserTopic.get(id) ?? 0) + 1)
+  }
+  let completedTopics = 0
+  for (const t of userTopics) {
+    const total = publishedSectionsByTopic.get(t.topicId.toString()) ?? 0
+    const done = completedSectionsByUserTopic.get(t._id.toString()) ?? 0
+    if (total > 0 && done >= total) completedTopics++
+  }
+
+  // "Quiz Avg" tile (H5): mean of the best score per attempted quiz (0-100),
+  // or null when the learner has no submitted attempts yet (FE shows "--").
+  const submittedAttempts = await QuizAttempt.find({ userId, submittedAt: { $ne: null } })
+    .select('quizId score')
+    .lean()
+  const bestScoreByQuiz = new Map<string, number>()
+  for (const a of submittedAttempts) {
+    const id = a.quizId.toString()
+    bestScoreByQuiz.set(id, Math.max(bestScoreByQuiz.get(id) ?? 0, a.score ?? 0))
+  }
+  const quizScores = [...bestScoreByQuiz.values()]
+  const quizAvg =
+    quizScores.length > 0
+      ? Math.round(quizScores.reduce((sum, v) => sum + v, 0) / quizScores.length)
+      : null
+
   return {
     continueLearningList,
     roadmaps: userRoadmaps.map((roadmap) => roadmap.roadmapId),
@@ -145,6 +188,8 @@ export const getDashboardAnalytics = async (userId: string) => {
     stats: {
       progress,
       level: userProfile?.level || SkillLevel.BEGINNER,
+      completedTopics,
+      quizAvg,
     },
   }
 }

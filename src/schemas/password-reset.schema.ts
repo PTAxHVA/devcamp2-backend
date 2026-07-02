@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { strongPassword } from './auth.schema.js'
 
 export const requestPasswordResetSchema = z.object({
   email: z.string().email(),
@@ -6,7 +7,7 @@ export const requestPasswordResetSchema = z.object({
 
 export const resetPasswordSchema = z.object({
   token: z.string(),
-  newPassword: z.string().min(8),
+  newPassword: strongPassword,
 })
 
 export type RequestPasswordResetInput = z.infer<typeof requestPasswordResetSchema>

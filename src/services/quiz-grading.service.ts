@@ -83,7 +83,8 @@ export const submitAndGradeQuiz = async (
           // FILL_IN_BLANK
           if (answer.userInput !== undefined && answer.userInput !== null) {
             userInput = answer.userInput
-            const norm = (s: string) => s.trim()
+            // Case-insensitive compare so `NPM` matches `npm` (beginner-friendly).
+            const norm = (s: string) => s.trim().toLowerCase()
 
             const accepted = [question.correctAnswer, ...(question.acceptableAnswers ?? [])]
               .map(String)

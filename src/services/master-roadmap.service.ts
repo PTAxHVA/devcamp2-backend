@@ -13,7 +13,31 @@ export const listMasterRoadmaps = async () => {
     .select('roleName description')
     .sort({ roleName: 1 })
     .lean()
-  return roadmaps.map((r) => ({ _id: r._id, roleName: r.roleName, description: r.description }))
+
+  // topicsCount per roadmap (M9): distinct topics across its branches. Scenario B
+  // lets a topic sit in several branches, so dedupe by topicId per roadmap.
+  const branches = await MasterBranch.find({ roadmapId: { $in: roadmaps.map((r) => r._id) } })
+    .select('_id roadmapId')
+    .lean()
+  const branchToRoadmap = new Map(branches.map((b) => [b._id.toString(), b.roadmapId.toString()]))
+  const branchTopics = await BranchTopic.find({ branchId: { $in: branches.map((b) => b._id) } })
+    .select('branchId topicId')
+    .lean()
+  const topicSetByRoadmap = new Map<string, Set<string>>()
+  for (const bt of branchTopics) {
+    const roadmapId = branchToRoadmap.get(bt.branchId.toString())
+    if (!roadmapId) continue
+    const set = topicSetByRoadmap.get(roadmapId) ?? new Set<string>()
+    set.add(bt.topicId.toString())
+    topicSetByRoadmap.set(roadmapId, set)
+  }
+
+  return roadmaps.map((r) => ({
+    _id: r._id,
+    roleName: r.roleName,
+    description: r.description,
+    topicsCount: topicSetByRoadmap.get(r._id.toString())?.size ?? 0,
+  }))
 }
 
 /** Branches of a roadmap, ordered, each annotated with how many topics it links. */
@@ -101,7 +125,7 @@ export const getDemoRoadmap = async () => {
 
   const [masterTopics, sections] = await Promise.all([
     MasterTopic.find({ _id: { $in: topicIds }, isPublished: true })
-      .select('name estimatedHours dependsOn.requiredTopicIds')
+      .select('name descriptionShort estimatedHours dependsOn.requiredTopicIds')
       .lean(),
     Section.find({ topicId: { $in: topicIds }, isPublished: true })
       .select('topicId')
@@ -120,6 +144,7 @@ export const getDemoRoadmap = async () => {
       masterTopicId,
       userTopicId: null,
       name: m.name,
+      descriptionShort: m.descriptionShort ?? '',
       orderIndex: orderByTopic.get(masterTopicId) ?? 0,
       estimatedHours: m.estimatedHours,
       prerequisiteTopicIds: (m.dependsOn?.requiredTopicIds ?? []).map((id) => id.toString()),

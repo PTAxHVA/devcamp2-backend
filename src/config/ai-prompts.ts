@@ -95,7 +95,7 @@ ${formatTopicLines(availableTopics)}
 5. Keep the sequence realistic for the learner's weekly time and target timeline.
 
 == EXPLANATION ==
-Write 1-2 short, friendly sentences (max ~40 words) in Vietnamese telling the learner why this order suits them. No markdown, no bullet points, no topic ids.
+Write 1-2 short, friendly sentences (max ~40 words) in English telling the learner why this order suits them. No markdown, no bullet points, no topic ids.
 
 Return ONLY valid JSON (no markdown): { "orderedTopicIds": [string], "explanation": "..." }
 Only include topic IDs from the available list. DO NOT invent topics.`
@@ -171,7 +171,7 @@ ${formatFeedbackTopicLines(currentTopics)}
 - Otherwise → "info"; one short, encouraging or neutral note (e.g. it fits their goal, or it is safe to remove).
 
 == OUTPUT ==
-- "feedback": exactly ONE short sentence in Vietnamese (max ~35 words). Friendly and concrete. Refer to topics by name only. No markdown, no IDs, no bullet points.
+- "feedback": exactly ONE short sentence in English (max ~35 words). Friendly and concrete. Refer to topics by name only. No markdown, no IDs, no bullet points.
 - "severity": "info" | "warning".
 
 Return ONLY valid JSON (no markdown): { "feedback": "...", "severity": "info" | "warning" }

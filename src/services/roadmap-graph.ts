@@ -17,6 +17,7 @@ export interface GraphTopicInput {
   masterTopicId: string
   userTopicId: string | null
   name: string
+  descriptionShort: string
   orderIndex: number
   estimatedHours: number
   /** Prerequisite master topic ids (may include ids outside this roadmap — filtered here). */
@@ -34,6 +35,7 @@ export interface GraphTopic {
   masterTopicId: string
   userTopicId: string | null
   name: string
+  descriptionShort: string
   status: RoadmapTopicStatus
   orderIndex: number
   estimatedHours: number
@@ -80,6 +82,7 @@ export const buildRoadmapGraph = (inputs: GraphTopicInput[]): RoadmapGraph => {
       masterTopicId: t.masterTopicId,
       userTopicId: t.userTopicId,
       name: t.name,
+      descriptionShort: t.descriptionShort,
       status,
       orderIndex: t.orderIndex,
       estimatedHours: t.estimatedHours,

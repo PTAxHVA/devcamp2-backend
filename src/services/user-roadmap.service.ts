@@ -212,7 +212,7 @@ export const getUserRoadmapDetail = async (userId: string, roadmapId: string) =>
 
   const [masterTopics, sections] = await Promise.all([
     MasterTopic.find({ _id: { $in: masterTopicIds } })
-      .select('name estimatedHours dependsOn.requiredTopicIds')
+      .select('name descriptionShort estimatedHours dependsOn.requiredTopicIds')
       .lean(),
     Section.find({ topicId: { $in: masterTopicIds }, isPublished: true })
       .select('topicId')
@@ -252,6 +252,7 @@ export const getUserRoadmapDetail = async (userId: string, roadmapId: string) =>
       masterTopicId,
       userTopicId: ut._id.toString(),
       name: ut.customName ?? m?.name ?? 'Untitled topic',
+      descriptionShort: m?.descriptionShort ?? '',
       orderIndex: ut.orderIndex,
       estimatedHours: m?.estimatedHours ?? 0,
       prerequisiteTopicIds: (m?.dependsOn?.requiredTopicIds ?? []).map((id) => id.toString()),
