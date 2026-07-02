@@ -19,10 +19,15 @@ export const getQuizBySectionId = async (sectionId: string, userId: string) => {
   const quiz = await Quiz.findOne({ sectionId }).lean()
   if (!quiz) throw new ApiError(404, 'Quiz not found', 'QUIZ_NOT_FOUND')
   const questionCount = await Question.countDocuments({ quizId: quiz._id })
+  const lastAttempt = await QuizAttempt.findOne({ quizId: quiz._id, userId })
+    .sort({ createdAt: -1 })
+    .lean()
   const quizDetails = {
     quizId: quiz._id,
     minPassScore: quiz.minPassScore,
     questionCount,
+    lastAttemptId: lastAttempt?._id ?? null,
+    lastAttemptPassed: lastAttempt?.isPassed ?? false,
   }
   return quizDetails
 }
@@ -54,7 +59,7 @@ export const startQuizAttempt = async (quizId: string, userId: string) => {
     if (questions.length === 0)
       throw new ApiError(404, 'Questions not found', 'QUESTIONS_NOT_FOUND')
 
-    const attemptExists = await QuizAttempt.findOne({ quizId, userId })
+    const attemptExists = await QuizAttempt.findOne({ quizId, userId }).session(session)
     let quizAttempt
 
     if (attemptExists) {
