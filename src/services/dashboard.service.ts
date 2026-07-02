@@ -5,7 +5,7 @@ import { UserRoadmap } from '../models/user-roadmap.model.js'
 import { MasterRoadmap } from '../models/master-roadmap.model.js'
 import { UserSectionProgress, IUserSectionProgress } from '../models/user-section-progress.model.js'
 import { SkillLevel } from '../types/enums.js'
-import { calculateCurrentStreak } from '../utils/streak.util.js'
+import { calculateCurrentStreak, buildWeeklyProgress } from '../utils/streak.util.js'
 
 export const getDashboardAnalytics = async (userId: string) => {
   // Only active roadmaps drive dashboard UI — soft-deleted ones (isActive:false)
@@ -129,11 +129,19 @@ export const getDashboardAnalytics = async (userId: string) => {
     }
   })
 
+  // Sections completed per day this week (Mon→Sun, UTC+7). Drives the dashboard
+  // Weekly Progress chart and the real streak activity dots. Only completed
+  // sections with a completedAt count.
+  const weeklyProgress = buildWeeklyProgress(
+    sectionProgresses.filter((p) => p.isCompleted).map((p) => p.completedAt),
+  )
+
   return {
     continueLearningList,
     roadmaps: userRoadmaps.map((roadmap) => roadmap.roadmapId),
     availableRolesForAdd,
     streak,
+    weeklyProgress,
     stats: {
       progress,
       level: userProfile?.level || SkillLevel.BEGINNER,

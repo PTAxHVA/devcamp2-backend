@@ -41,6 +41,7 @@ export const getTopicById = async (topicId: string, userId: string) => {
     _id: topic._id,
     name: topic.name,
     description: topic.description,
+    estimatedHours: topic.estimatedHours,
     resources: [],
     orderIndex: userTopic.orderIndex,
     sectionList: sections,

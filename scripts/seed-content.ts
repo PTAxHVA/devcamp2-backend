@@ -274,6 +274,21 @@ function resolveResources(
   return byKey[sectionSlug] ?? byKey['_default'] ?? []
 }
 
+/**
+ * A topic's estimated hours = sum of its '_default' resource minutes / 60, rounded
+ * to 1 decimal. The '_default' list is the topic-wide reference set (every section
+ * inherits it), so the topic's time is that set counted ONCE — NOT summed per
+ * section, which is what inflated the duration on the topic page. Exported for unit
+ * testing. Returns 0 for a topic with no curated resources.
+ */
+export function topicEstimatedHours(map: ResourceMap, topicSlug: string): number {
+  const minutes = resolveResources(map, topicSlug, '_default').reduce(
+    (sum, r) => sum + r.estimatedMinutes,
+    0,
+  )
+  return Math.round((minutes / 60) * 10) / 10
+}
+
 class ValidationError extends Error {
   constructor(public readonly errors: string[]) {
     super(`${errors.length} validation error(s)`)
@@ -542,14 +557,17 @@ export async function applyPlan(plan: SeedPlan): Promise<ApplyStats> {
     // were seeded before descriptions existed (same fix as resourceList below).
     const { description, descriptionShort } = resolveTopicDescription(slug)
     if (!description) missingDescriptionSlugs.push(slug)
+    // estimatedHours is derived from curated resources, so it also lives in $set —
+    // NOT $setOnInsert — so re-seeding backfills topics seeded before it was
+    // computed (they were written with a hardcoded 0).
+    const estimatedHours = topicEstimatedHours(plan.resources, slug)
     const topic = await MasterTopic.findOneAndUpdate(
       { slug },
       {
-        $set: { description, descriptionShort },
+        $set: { description, descriptionShort, estimatedHours },
         $setOnInsert: {
           name: t.name,
           slug,
-          estimatedHours: 0,
           iconUrl: '',
           isPublished: true,
           dependsOn: { requiredTopicIds: [], requiredBranchIds: [] },
