@@ -31,9 +31,9 @@ export const submitAndGradeQuiz = async (
   answers: SubmitAttemptSchema['answers'],
   userId: string,
 ) => {
-  if (!answers || answers.length === 0) {
-    throw new ApiError(400, 'Answers array cannot be empty', 'EMPTY_ANSWERS')
-  }
+  // An empty answers array is valid (e.g. the quiz timer expires before the learner
+  // answers anything): every question is graded as unanswered → 0% → fail, and the
+  // attempt is still closed with a cooldown so the normal retry flow works.
   const session = await startSession()
   session.startTransaction()
   try {

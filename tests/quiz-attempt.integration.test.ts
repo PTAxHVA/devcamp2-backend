@@ -101,4 +101,40 @@ describe('quiz attempt (integration)', () => {
     expect(start2.status).toBe(200)
     expect(start2.body.data.quizAttempt.attemptId).toBeTruthy()
   })
+
+  it('accepts an empty submission (timeout with no answers) as a closed 0% fail', async () => {
+    const token = await register('empty@example.com')
+    const r = await seedRoadmap('Frontend Empty')
+    await enroll(token, r.roadmapId, r.branchId)
+    const { quizId } = await seedFillBlankQuiz(r.topicIds[0]!)
+
+    const start = await request(app)
+      .post(`${base}/quizzes/${quizId}/start`)
+      .set('Authorization', `Bearer ${token}`)
+    const attemptId = start.body.data.quizAttempt.attemptId as string
+
+    // A timed-out attempt with nothing answered submits []. It must be accepted and
+    // graded 0% (fail) — not rejected as 400 — so the attempt is closed with a cooldown.
+    const submit = await request(app)
+      .post(`${base}/attempts/${attemptId}/submit`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ answers: [] })
+
+    expect(submit.status).toBe(200)
+    expect(submit.body.data.isPassed).toBe(false)
+    expect(submit.body.data.score).toBe(0)
+    expect(submit.body.data.cooldownUntil).toBeTruthy()
+
+    // The failed attempt is closed server-side (submittedAt set) — not left open to resume.
+    const closed = await QuizAttempt.findById(attemptId).lean()
+    expect(closed?.submittedAt).toBeTruthy()
+    expect(closed?.isPassed).toBe(false)
+
+    // The attempt is closed; retrying immediately hits the cooldown, not a resume loop.
+    const retry = await request(app)
+      .post(`${base}/quizzes/${quizId}/start`)
+      .set('Authorization', `Bearer ${token}`)
+    expect(retry.status).toBe(409)
+    expect(retry.body.error.code).toBe('COOLDOWN_ACTIVE')
+  })
 })

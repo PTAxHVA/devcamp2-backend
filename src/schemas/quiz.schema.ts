@@ -21,7 +21,8 @@ export const submitAttemptSchema = z.object({
           },
         ),
     )
-    .min(1)
+    // Allow an empty array: a timed-out attempt with no answers submits [] so the
+    // backend can grade it 0% (fail), close the attempt, and start the retry cooldown.
     .refine(
       (answers) => {
         const ids = answers.map((a) => a.questionId)
