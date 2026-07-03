@@ -1,5 +1,6 @@
 import z from 'zod'
 import { SkillLevel } from '../types/enums.js'
+import { strongPassword } from './auth.schema.js'
 
 export const updateProfileSchema = z.object({
   username: z.string().optional(),
@@ -9,7 +10,9 @@ export const updateProfileSchema = z.object({
 export const updateAccountCredentialsSchema = z.object({
   email: z.string().email().optional(),
   currentPassword: z.string().min(1, 'Current password is required'),
-  password: z.string().min(8).optional(),
+  // Same strong policy as signup/reset so an authenticated change can't downgrade
+  // to a weak password (login stays min(8) for legacy accounts).
+  password: strongPassword.optional(),
 })
 
 export const deactivateAccountSchema = z.object({

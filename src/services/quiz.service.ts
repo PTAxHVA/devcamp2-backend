@@ -32,6 +32,13 @@ export const getQuizBySectionId = async (sectionId: string, userId: string) => {
   return quizDetails
 }
 
+// Longest an *unsubmitted* attempt can live before a new start treats it as
+// abandoned and resets it. The FE quiz timer is 10 min; a 2-min grace covers
+// clock skew / throttled tabs. Without this, a 0-answer timeout (FE bounces back
+// without submitting) leaves an attempt that every future start would resume
+// forever (NEW-10 soft-loop).
+const QUIZ_ATTEMPT_MAX_AGE_MS = 12 * 60 * 1000
+
 export const startQuizAttempt = async (quizId: string, userId: string) => {
   const session = await startSession()
   session.startTransaction()
@@ -63,8 +70,13 @@ export const startQuizAttempt = async (quizId: string, userId: string) => {
     let quizAttempt
 
     if (attemptExists) {
-      if (!attemptExists.submittedAt) {
-        // Surface the existing attempt id so the client can resume it (GET /attempts/:id).
+      const isExpiredUnsubmitted =
+        !attemptExists.submittedAt &&
+        Date.now() - new Date(attemptExists.startedAt).getTime() > QUIZ_ATTEMPT_MAX_AGE_MS
+
+      if (!attemptExists.submittedAt && !isExpiredUnsubmitted) {
+        // In-progress attempt still within the time budget — surface its id so the
+        // client can resume it (GET /attempts/:id).
         throw new ApiError(409, 'Quiz already started', 'QUIZ_ALREADY_STARTED', {
           attemptId: attemptExists._id,
         })
