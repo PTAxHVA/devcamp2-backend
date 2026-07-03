@@ -38,3 +38,7 @@ coverage
 /fetch-ids.ts
 /get-user.ts
 /check-resources.ts
+/check-progress.ts
+/check-active.ts
+/fetch-dashboard.ts
+/test-weekly.ts
