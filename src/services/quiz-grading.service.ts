@@ -116,7 +116,10 @@ export const submitAndGradeQuiz = async (
 
     const totalQuestions = questions.length
     const score = totalQuestions > 0 ? (totalCorrect / totalQuestions) * 100 : 0
-    const isPassed = score >= quiz.minPassScore
+    // An empty submission (0 answers) must never pass: guard on answers.length so a
+    // timed-out attempt with nothing answered is always a clean 0% fail, independent of
+    // how minPassScore is configured (the model permits 0).
+    const isPassed = answers.length > 0 && score >= quiz.minPassScore
 
     quizAttempt.score = score
     quizAttempt.isPassed = isPassed
