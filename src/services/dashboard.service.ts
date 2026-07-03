@@ -131,11 +131,16 @@ export const getDashboardAnalytics = async (userId: string) => {
   })
 
   // Sections completed per day this week (Mon→Sun, UTC+7). Drives the dashboard
-  // Weekly Progress chart and the real streak activity dots. Only completed
-  // sections with a completedAt count.
-  const weeklyProgress = buildWeeklyProgress(
-    sectionProgresses.filter((p) => p.isCompleted).map((p) => p.completedAt),
-  )
+  // Weekly Progress chart and the real streak activity dots. A shared master topic
+  // has one completed-progress row per enrolled roadmap (same sectionId), so dedupe
+  // by sectionId to count each finished section once, not once per roadmap.
+  const completedAtBySection = new Map<string, Date | null>()
+  for (const p of sectionProgresses) {
+    if (!p.isCompleted) continue
+    const key = p.sectionId.toString()
+    if (!completedAtBySection.has(key)) completedAtBySection.set(key, p.completedAt)
+  }
+  const weeklyProgress = buildWeeklyProgress([...completedAtBySection.values()])
 
   // "Completed Topics" tile (H5): a topic is done when it has PUBLISHED sections
   // and every one is completed. Counted against published sections only (matching
@@ -156,12 +161,15 @@ export const getDashboardAnalytics = async (userId: string) => {
     const id = p.userTopicId.toString()
     completedSectionsByUserTopic.set(id, (completedSectionsByUserTopic.get(id) ?? 0) + 1)
   }
-  let completedTopics = 0
+  // Dedupe by master topic: a topic shared across two roadmaps (F18) is one
+  // completed topic, not two, even though it has one UserTopic per roadmap.
+  const completedMasterTopics = new Set<string>()
   for (const t of userTopics) {
     const total = publishedSectionsByTopic.get(t.topicId.toString()) ?? 0
     const done = completedSectionsByUserTopic.get(t._id.toString()) ?? 0
-    if (total > 0 && done >= total) completedTopics++
+    if (total > 0 && done >= total) completedMasterTopics.add(t.topicId.toString())
   }
+  const completedTopics = completedMasterTopics.size
 
   // "Quiz Avg" tile (H5): mean of the best score per attempted quiz (0-100),
   // or null when the learner has no submitted attempts yet (FE shows "--").

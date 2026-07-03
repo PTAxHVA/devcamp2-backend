@@ -13,6 +13,7 @@ import { RoadmapSource, TopicStatus, EditAction } from '../types/enums.js'
 import type { CreateRoadmapSchema, UpdateRoadmapSchema } from '../schemas/roadmap.schema.js'
 import { resolveBranchTopicOrder, assertPrerequisiteOrder } from './roadmap-topic-resolver.js'
 import { buildRoadmapGraph, type GraphTopicInput } from './roadmap-graph.js'
+import { backfillSharedTopicProgress } from './shared-topic-progress.service.js'
 
 // F18: a learner may keep at most this many roadmaps active at once.
 const MAX_ACTIVE_ROADMAPS = 2
@@ -138,6 +139,15 @@ export const createUserRoadmap = async (userId: string, body: CreateRoadmapSchem
       orderIndex: index,
     }))
     await UserTopic.insertMany(userTopics, { session })
+
+    // If any of these topics were already completed in the learner's other active
+    // roadmap (shared master topic, F18), mirror that completed progress onto the
+    // new UserTopics now so this roadmap isn't stale until a re-quiz.
+    const createdUserTopics = await UserTopic.find({ userRoadmapId: userRoadmap._id })
+      .select('_id topicId')
+      .session(session)
+      .lean()
+    await backfillSharedTopicProgress(userId, createdUserTopics, session)
 
     await session.commitTransaction()
 
@@ -525,6 +535,18 @@ export const editUserRoadmap = async (
         })),
         { session },
       )
+
+      // A newly added topic may already be completed in the learner's other active
+      // roadmap (shared master topic, F18) — mirror that completed progress onto the
+      // new UserTopics so the edit doesn't reset shared progress to zero.
+      const addedUserTopics = await UserTopic.find({
+        userRoadmapId: userRoadmap._id,
+        topicId: { $in: addTopicIds.map((id) => new Types.ObjectId(id)) },
+      })
+        .select('_id topicId')
+        .session(session)
+        .lean()
+      await backfillSharedTopicProgress(userId, addedUserTopics, session)
     }
 
     // Re-index every remaining topic by canonical order.

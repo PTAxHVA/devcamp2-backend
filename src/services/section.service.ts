@@ -6,22 +6,44 @@ import { Section } from '../models/section.model.js'
 import { Quiz } from '../models/quiz.model.js'
 import { UserRoadmap } from '../models/user-roadmap.model.js'
 
-export const verifyTopicEnrollment = async (topicId: string, userId: string) => {
-  const userRoadmap = await UserRoadmap.find({ userId, isActive: true }).select('_id').lean()
-  if (userRoadmap.length === 0) {
+/**
+ * Every active UserTopic for a master topic across the learner's active roadmaps.
+ * A shared topic (F18 "add another role" enrols the same master topic in >1 roadmap)
+ * has one UserTopic per roadmap. Ordered by createdAt so single-doc reads are
+ * deterministic (earliest enrollment) instead of relying on Mongo's natural order.
+ */
+export const getEnrolledUserTopicsForTopic = async (topicId: string, userId: string) => {
+  const userRoadmaps = await UserRoadmap.find({ userId, isActive: true }).select('_id').lean()
+  if (userRoadmaps.length === 0) {
     throw new ApiError(404, 'User roadmap not found', 'USER_ROADMAP_NOT_FOUND')
   }
 
-  const userTopic = await UserTopic.findOne({
+  const userTopics = await UserTopic.find({
     topicId,
-    userRoadmapId: { $in: userRoadmap.map((r) => r._id) },
+    userRoadmapId: { $in: userRoadmaps.map((r) => r._id) },
   })
     .select('_id')
+    .sort({ createdAt: 1 })
     .lean()
-  if (!userTopic) {
+  if (userTopics.length === 0) {
     throw new ApiError(404, 'User topic not found', 'USER_TOPIC_NOT_FOUND')
   }
 
+  return userTopics
+}
+
+// Single-enrollment check for read paths (section detail). Returns the earliest
+// enrollment deterministically; after quiz grading mirrors progress across every
+// roadmap sharing a topic, any of them carries the same section progress.
+// getEnrolledUserTopicsForTopic already throws when the learner has no matching
+// enrollment, so this guard is unreachable at runtime — but keep it: under
+// noUncheckedIndexedAccess it narrows the destructured element from `T | undefined`
+// to `T`, so the return type stays non-optional for callers.
+export const verifyTopicEnrollment = async (topicId: string, userId: string) => {
+  const [userTopic] = await getEnrolledUserTopicsForTopic(topicId, userId)
+  if (!userTopic) {
+    throw new ApiError(404, 'User topic not found', 'USER_TOPIC_NOT_FOUND')
+  }
   return userTopic
 }
 

@@ -19,7 +19,9 @@ export const getTopicById = async (topicId: string, userId: string) => {
   const userTopic = await UserTopic.findOne({
     userRoadmapId: { $in: userRoadmap.map((r) => r._id) },
     topicId,
-  }).lean()
+  })
+    .sort({ createdAt: 1 })
+    .lean()
   if (!userTopic) {
     throw new ApiError(404, 'User topic not found', 'USER_TOPIC_NOT_FOUND')
   }

@@ -7,7 +7,7 @@ import { QuizAttemptAnswer } from '../models/quiz-attempt-answer.model.js'
 import { Quiz } from '../models/quiz.model.js'
 import { Section } from '../models/section.model.js'
 import { ApiError } from '../utils/api-error.js'
-import { verifyTopicEnrollment } from './section.service.js'
+import { getEnrolledUserTopicsForTopic } from './section.service.js'
 import { startSession } from 'mongoose'
 import { UserProfile } from '../models/user-profile.model.js'
 
@@ -137,31 +137,38 @@ export const submitAndGradeQuiz = async (
       throw new ApiError(404, 'Section not found', 'SECTION_NOT_FOUND')
     }
 
-    const userTopic = await verifyTopicEnrollment(section.topicId.toString(), userId)
+    // A shared master topic (F18 "add another role") has one UserTopic per roadmap.
+    // Mirror this section's progress to EVERY enrolled roadmap that contains the topic
+    // so one quiz pass keeps progress in sync across all of them — not just an
+    // arbitrarily-picked roadmap. Single-roadmap learners get exactly one iteration.
+    const userTopics = await getEnrolledUserTopicsForTopic(section.topicId.toString(), userId)
+    const progressCompletedAt = new Date()
 
-    const currentProgress = await UserSectionProgress.findOne({
-      userTopicId: userTopic._id,
-      sectionId: quiz.sectionId,
-    }).session(session)
-    if (currentProgress) {
-      if (isPassed && !currentProgress.isCompleted) {
-        currentProgress.isCompleted = true
-        currentProgress.completedAt = new Date()
-        await currentProgress.save({ session })
+    for (const userTopic of userTopics) {
+      const currentProgress = await UserSectionProgress.findOne({
+        userTopicId: userTopic._id,
+        sectionId: quiz.sectionId,
+      }).session(session)
+      if (currentProgress) {
+        if (isPassed && !currentProgress.isCompleted) {
+          currentProgress.isCompleted = true
+          currentProgress.completedAt = progressCompletedAt
+          await currentProgress.save({ session })
+        }
+      } else {
+        await UserSectionProgress.create(
+          [
+            {
+              userTopicId: userTopic._id,
+              sectionId: quiz.sectionId,
+              isCompleted: isPassed,
+              startedAt: quizAttempt.startedAt,
+              completedAt: isPassed ? progressCompletedAt : null,
+            },
+          ],
+          { session },
+        )
       }
-    } else {
-      await UserSectionProgress.create(
-        [
-          {
-            userTopicId: userTopic._id,
-            sectionId: quiz.sectionId,
-            isCompleted: isPassed,
-            startedAt: quizAttempt.startedAt,
-            completedAt: isPassed ? new Date() : null,
-          },
-        ],
-        { session },
-      )
     }
 
     if (isPassed) {
