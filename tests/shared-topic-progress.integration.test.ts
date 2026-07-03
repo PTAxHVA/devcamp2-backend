@@ -125,6 +125,45 @@ describe('shared-topic progress sync (SYNC-01, integration)', () => {
     expect(beTopic.sectionCompleted).toBe(1)
     expect(feTopic.status).toBe('completed')
     expect(beTopic.status).toBe('completed')
+
+    // Dashboard must count the shared topic ONCE, not once per roadmap: one pass of
+    // one section = completedTopics 1 and a single weekly-progress tick.
+    const dash = await request(app).get(`${base}/dashboard`).set('Authorization', `Bearer ${token}`)
+    expect(dash.status).toBe(200)
+    expect(dash.body.data.stats.completedTopics).toBe(1)
+    const weekTotal = (dash.body.data.weeklyProgress as number[]).reduce((a, b) => a + b, 0)
+    expect(weekTotal).toBe(1)
+  })
+
+  it('backfills a completed shared topic when the second roadmap is added later', async () => {
+    const token = await register('sync01-backfill@example.com')
+
+    const topic = await MasterTopic.create({
+      name: 'Shared Later',
+      slug: 'shared-later',
+      estimatedHours: 2,
+      isPublished: true,
+    })
+    const topicId = topic._id.toString()
+    const fe = await seedRoadmapForTopic('FE Backfill', topicId)
+    const be = await seedRoadmapForTopic('BE Backfill', topicId)
+    const { quizId, questionId } = await seedFillBlankQuiz(topicId, 'backfill-s1')
+
+    // Enroll ONLY the first roadmap and complete the shared section there.
+    const feEnroll = await enroll(token, fe.roadmapId, fe.branchId)
+    const feUserRoadmapId = feEnroll.body.data._id as string
+    await passQuiz(token, quizId, questionId)
+
+    // Add the second roadmap AFTER the pass — it must already report the shared topic
+    // as completed via enroll-time backfill, without re-taking the quiz.
+    const beEnroll = await enroll(token, be.roadmapId, be.branchId)
+    const beUserRoadmapId = beEnroll.body.data._id as string
+
+    const feTopic = await roadmapTopic(token, feUserRoadmapId, topicId)
+    const beTopic = await roadmapTopic(token, beUserRoadmapId, topicId)
+    expect(feTopic.sectionCompleted).toBe(1)
+    expect(beTopic.sectionCompleted).toBe(1)
+    expect(beTopic.status).toBe('completed')
   })
 
   it('leaves single-roadmap grading unchanged (no regression)', async () => {

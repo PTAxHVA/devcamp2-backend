@@ -35,6 +35,10 @@ export const getEnrolledUserTopicsForTopic = async (topicId: string, userId: str
 // Single-enrollment check for read paths (section detail). Returns the earliest
 // enrollment deterministically; after quiz grading mirrors progress across every
 // roadmap sharing a topic, any of them carries the same section progress.
+// getEnrolledUserTopicsForTopic already throws when the learner has no matching
+// enrollment, so this guard is unreachable at runtime — but keep it: under
+// noUncheckedIndexedAccess it narrows the destructured element from `T | undefined`
+// to `T`, so the return type stays non-optional for callers.
 export const verifyTopicEnrollment = async (topicId: string, userId: string) => {
   const [userTopic] = await getEnrolledUserTopicsForTopic(topicId, userId)
   if (!userTopic) {
