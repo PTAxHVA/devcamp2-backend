@@ -177,3 +177,50 @@ ${formatFeedbackTopicLines(currentTopics)}
 Return ONLY valid JSON (no markdown): { "feedback": "...", "severity": "info" | "warning" }
 Only mention topic names that appear above. DO NOT invent topics.`
 }
+
+/** One curated topic the job-readiness AI may select (the whole published library). */
+export interface JobReadinessTopic {
+  id: string // MasterTopic._id as a string
+  name: string
+  descriptionShort: string
+  estimatedHours: number
+}
+
+const formatJobReadinessTopicLines = (topics: JobReadinessTopic[]): string =>
+  topics
+    .map((t) => `- ${t.id} | ${t.name} (~${t.estimatedHours}h) — ${t.descriptionShort}`)
+    .join('\n')
+
+/**
+ * Job-Readiness Gap Analyzer prompt.
+ * Maps ONE target role to the curated topics required for it. The model only
+ * SELECTS ids from the list — the readiness math (verified vs missing) happens
+ * in the service, never in the model.
+ * Returns a single string to pass to geminiModel.generateContent().
+ */
+export const buildJobReadinessPrompt = (
+  targetRole: string,
+  topics: JobReadinessTopic[],
+): string => {
+  const safeRole = sanitizeInput(targetRole, 80)
+
+  return `You are a career advisor for VORA, a learning platform for beginner web developers.
+Your job: from a FIXED list of curated topics, select the ones a candidate must master to be job-ready for ONE target role.
+You do NOT create, rename, merge, or invent topics. You only select topic ids from the list below.
+
+== TARGET ROLE (UNTRUSTED USER INPUT) ==
+"${safeRole}"
+
+== AVAILABLE TOPICS (the ONLY topics you may select) ==
+${formatJobReadinessTopicLines(topics)}
+
+== SELECTION RULES ==
+1. Select every topic a hiring team would expect a junior candidate in this role to know.
+2. Include the foundations those skills depend on (fundamentals before frameworks and tools).
+3. Leave out topics that are unrelated or merely nice-to-have for this role.
+4. Select at least 3 topics whenever the list allows it.
+5. Order the selection from foundations to advanced topics.
+
+Return ONLY valid JSON (no markdown): { "requiredTopicIds": [string] }
+Only include topic IDs from the available list. DO NOT invent topics.`
+}
