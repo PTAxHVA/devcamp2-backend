@@ -4,6 +4,7 @@ import { aiRateLimiter, globalAiRateLimiter } from '../../middlewares/rate-limit
 import { authenticate } from '../../middlewares/auth.middleware.js'
 import { validate } from '../../middlewares/validate.middleware.js'
 import {
+  explainMistakesSchema,
   jobReadinessSchema,
   roadmapFeedbackSchema,
   roadmapSuggestSchema,
@@ -39,6 +40,16 @@ route.post(
   globalAiRateLimiter,
   validate(jobReadinessSchema),
   aiController.analyzeJobReadiness,
+)
+
+// On-demand post-quiz mistake review — one Gemini call per learner click.
+route.post(
+  '/explain-mistakes',
+  authenticate,
+  aiRateLimiter,
+  globalAiRateLimiter,
+  validate(explainMistakesSchema),
+  aiController.explainMistakes,
 )
 
 export default route

@@ -22,6 +22,10 @@ export const jobReadinessSchema = z.object({
   role: z.string().trim().min(2, 'Role is required').max(80, 'Role is too long'),
 })
 
+export const explainMistakesSchema = z.object({
+  attemptId: objectId,
+})
+
 export const aiResponseSchema = z.object({
   orderedTopicIds: z.array(z.string()),
   explanation: z.string(),
@@ -32,6 +36,19 @@ export const jobReadinessAiResponseSchema = z.object({
   requiredTopicIds: z.array(z.string()).min(1),
 })
 
+/** Shape Gemini must return for the explain-mistakes prompt (before questionId validation). */
+export const explainMistakesAiResponseSchema = z.object({
+  explanations: z
+    .array(
+      z.object({
+        questionId: z.string(),
+        why: z.string().trim().min(1),
+        reviewHint: z.string().trim().min(1),
+      }),
+    )
+    .min(1),
+})
+
 export const aiFeedbackResponseSchema = z.object({
   feedback: z.string(),
   severity: z.nativeEnum(FeedbackSeverity),
@@ -40,3 +57,4 @@ export const aiFeedbackResponseSchema = z.object({
 export type RoadmapSuggestSchema = z.infer<typeof roadmapSuggestSchema>
 export type RoadmapFeedbackSchema = z.infer<typeof roadmapFeedbackSchema>
 export type JobReadinessSchema = z.infer<typeof jobReadinessSchema>
+export type ExplainMistakesSchema = z.infer<typeof explainMistakesSchema>

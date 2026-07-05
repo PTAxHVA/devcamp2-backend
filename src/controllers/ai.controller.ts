@@ -51,3 +51,15 @@ export const listJobReadinessRoles = async (_req: Request, res: Response, next: 
     next(error)
   }
 }
+
+export const explainMistakes = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { attemptId } = req.body as { attemptId: string }
+    const userId = req.user?.id as string
+
+    const result = await aiService.explainMistakes(userId, attemptId)
+    res.json(ok(result))
+  } catch (error) {
+    next(error)
+  }
+}
