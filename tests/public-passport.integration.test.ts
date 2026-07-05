@@ -59,8 +59,8 @@ const seedPassportRoadmap = async () => {
   await BranchTopic.create({ branchId: branch._id, topicId: topicB._id, orderIndex: 1 })
   const a1 = await seedSectionQuiz(topicA._id.toString(), 'pp-a1')
   const a2 = await seedSectionQuiz(topicA._id.toString(), 'pp-a2')
-  await seedSectionQuiz(topicB._id.toString(), 'pp-b1')
-  return { roadmapId: roadmap._id.toString(), branchId: branch._id.toString(), a1, a2 }
+  const b1 = await seedSectionQuiz(topicB._id.toString(), 'pp-b1')
+  return { roadmapId: roadmap._id.toString(), branchId: branch._id.toString(), a1, a2, b1 }
 }
 
 const passQuiz = async (token: string, quizId: string, questionId: string) => {
@@ -86,7 +86,7 @@ const seedVerifiedOwner = async () => {
   await passQuiz(token, r.a1.quizId, r.a1.questionId)
   await passQuiz(token, r.a2.quizId, r.a2.questionId)
   const enabled = await setPassport(token, { isPublic: true })
-  return { token, shareToken: enabled.body.data.shareToken as string }
+  return { token, shareToken: enabled.body.data.shareToken as string, b1: r.b1 }
 }
 
 describe('verified skill passport (GET /p/:shareToken + /me/passport)', () => {
@@ -105,7 +105,9 @@ describe('verified skill passport (GET /p/:shareToken + /me/passport)', () => {
     expect(data.username).toBe('passport-owner')
     expect(data.level).toBe('BEGINNER')
     expect(data.streak).toBe(1) // both passes happened today
-    expect(data.roadmaps).toEqual([{ name: 'Frontend Passport' }])
+    expect(data.roadmaps).toEqual([
+      { name: 'Frontend Passport', topicsCount: 2, verifiedCount: 1, isCompleted: false },
+    ])
     expect(data.verifiedTopics).toEqual([{ name: 'React Basics', masteryPct: 100 }])
     expect(data.completedCount).toBe(1)
     expect(data.totalCount).toBe(2) // CSS Layout enrolled but NOT verified
@@ -177,6 +179,18 @@ describe('verified skill passport (GET /p/:shareToken + /me/passport)', () => {
       .get(`${base}/me/passport`)
       .set('Authorization', `Bearer ${token}`)
     expect(settings.body.data).toMatchObject({ isPublic: true, shareToken: newToken })
+  })
+
+  it('marks a roadmap completed (public certificate) once every topic is verified', async () => {
+    const { token, shareToken, b1 } = await seedVerifiedOwner()
+    await passQuiz(token, b1.quizId, b1.questionId) // finish the remaining topic
+
+    const res = await request(app).get(`${base}/p/${shareToken}`)
+    expect(res.status).toBe(200)
+    expect(res.body.data.completedCount).toBe(2)
+    expect(res.body.data.roadmaps).toEqual([
+      { name: 'Frontend Passport', topicsCount: 2, verifiedCount: 2, isCompleted: true },
+    ])
   })
 
   it('serves an empty passport safely for a learner with no roadmaps yet', async () => {

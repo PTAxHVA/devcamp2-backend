@@ -149,7 +149,9 @@ export const updateAccountCredentials = async (
 
     const hashedPassword = password ? await hashPassword(password) : userCredentials.passwordHash
 
-    const updatePayload: any = { updatedAt: Date.now() }
+    const updatePayload: { updatedAt: number; email?: string; passwordHash?: string } = {
+      updatedAt: Date.now(),
+    }
     if (normalizeEmail) updatePayload.email = normalizeEmail
     if (password) updatePayload.passwordHash = hashedPassword
 

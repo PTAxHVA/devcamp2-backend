@@ -32,13 +32,20 @@ const passportNotFound = () => new ApiError(404, 'Passport not found', 'PASSPORT
  * Read-only. Never includes email or raw user ids.
  */
 export const getPublicPassport = async (shareToken: string) => {
-  const profile = await UserProfile.findOne({ shareToken, isPublic: true }).lean()
+  // Every query below projects ONLY the fields the aggregation needs (e.g. no
+  // Section.resourceList payloads), and the data volume is naturally bounded by
+  // the 2-roadmap cap × the curated topic library — keeps one public hit cheap.
+  const profile = await UserProfile.findOne({ shareToken, isPublic: true })
+    .select('userId level streak lastActivityDate longestStreak')
+    .lean()
   if (!profile) throw passportNotFound()
 
   const user = await User.findById(profile.userId).select('username isActive').lean()
   if (!user || user.isActive === false) throw passportNotFound()
 
-  const userRoadmaps = await UserRoadmap.find({ userId: profile.userId, isActive: true }).lean()
+  const userRoadmaps = await UserRoadmap.find({ userId: profile.userId, isActive: true })
+    .select('roadmapId')
+    .lean()
   const roadmapDocs = await MasterRoadmap.find({
     _id: { $in: userRoadmaps.map((r) => r.roadmapId) },
   })
@@ -47,12 +54,18 @@ export const getPublicPassport = async (shareToken: string) => {
 
   const userTopics = await UserTopic.find({
     userRoadmapId: { $in: userRoadmaps.map((r) => r._id) },
-  }).lean()
+  })
+    .select('userRoadmapId topicId')
+    .lean()
   const masterTopicIds = [...new Set(userTopics.map((t) => t.topicId.toString()))]
 
   const [sections, sectionProgresses] = await Promise.all([
-    Section.find({ topicId: { $in: masterTopicIds } }).lean(),
-    UserSectionProgress.find({ userTopicId: { $in: userTopics.map((t) => t._id) } }).lean(),
+    Section.find({ topicId: { $in: masterTopicIds } })
+      .select('topicId isPublished')
+      .lean(),
+    UserSectionProgress.find({ userTopicId: { $in: userTopics.map((t) => t._id) } })
+      .select('userTopicId sectionId isCompleted')
+      .lean(),
   ])
 
   // Published sections only — same basis as the dashboard tile and topic view.
@@ -101,13 +114,37 @@ export const getPublicPassport = async (shareToken: string) => {
     }))
     .sort((a, b) => a.name.localeCompare(b.name))
 
+  // Per-roadmap completion for the public certificate: a roadmap earns one when
+  // EVERY topic it contains is quiz-verified (shared-topic verification counts
+  // for every roadmap that includes the topic, mirroring progress sync).
+  const roadmapNameById = new Map(roadmapDocs.map((r) => [r._id.toString(), r.roleName]))
+  const topicsByUserRoadmap = new Map<string, Set<string>>()
+  for (const t of userTopics) {
+    const rId = t.userRoadmapId.toString()
+    const topicIds = topicsByUserRoadmap.get(rId) ?? new Set<string>()
+    topicIds.add(t.topicId.toString())
+    topicsByUserRoadmap.set(rId, topicIds)
+  }
+  const roadmaps = userRoadmaps
+    .map((r) => {
+      const topicIds = topicsByUserRoadmap.get(r._id.toString()) ?? new Set<string>()
+      const verifiedCount = [...topicIds].filter((id) => verifiedTopicIds.has(id)).length
+      return {
+        name: roadmapNameById.get(r.roadmapId.toString()) ?? 'Roadmap',
+        topicsCount: topicIds.size,
+        verifiedCount,
+        isCompleted: topicIds.size > 0 && verifiedCount === topicIds.size,
+      }
+    })
+    .sort((a, b) => a.name.localeCompare(b.name))
+
   return {
     username: user.username,
     level: profile.level,
     streak: calculateCurrentStreak(profile.streak || 0, profile.lastActivityDate),
     longestStreak: profile.longestStreak || 0,
     verifiedTopics,
-    roadmaps: roadmapDocs.map((r) => ({ name: r.roleName })),
+    roadmaps,
     completedCount: verifiedTopics.length,
     totalCount: masterTopicIds.length,
   }
