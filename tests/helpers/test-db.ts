@@ -8,6 +8,10 @@ let mongod: MongoMemoryReplSet | null = null
 export const connectTestDb = async (): Promise<void> => {
   mongod = await MongoMemoryReplSet.create({ replSet: { count: 1 } })
   await mongoose.connect(mongod.getUri())
+  // Wait for every model's background index build before any test runs: an
+  // in-flight createIndex can hold the collection lock just long enough to
+  // abort a test transaction (5ms txn lock budget) as a transient error.
+  await Promise.all(Object.values(mongoose.connection.models).map((model) => model.init()))
 }
 
 export const disconnectTestDb = async (): Promise<void> => {
