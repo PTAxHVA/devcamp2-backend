@@ -19,6 +19,14 @@ export const deactivateAccountSchema = z.object({
   currentPassword: z.string().min(1, 'Current password is required'),
 })
 
+// Verified Skill Passport visibility. `regenerate` mints a fresh share token
+// (old link stops working) and only makes sense while turning/keeping it public.
+export const updatePassportSchema = z.object({
+  isPublic: z.boolean(),
+  regenerate: z.boolean().optional(),
+})
+
 export type UpdateProfileSchema = z.infer<typeof updateProfileSchema>
 export type UpdateAccountCredentialsSchema = z.infer<typeof updateAccountCredentialsSchema>
 export type DeactivateAccountSchema = z.infer<typeof deactivateAccountSchema>
+export type UpdatePassportSchema = z.infer<typeof updatePassportSchema>

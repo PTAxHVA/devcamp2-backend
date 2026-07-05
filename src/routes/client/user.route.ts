@@ -5,6 +5,7 @@ import { validate } from '../../middlewares/validate.middleware.js'
 import {
   deactivateAccountSchema,
   updateAccountCredentialsSchema,
+  updatePassportSchema,
   updateProfileSchema,
 } from '../../schemas/profile.schema.js'
 
@@ -27,5 +28,12 @@ route.patch(
 )
 route.get('/streak', authenticate, userController.getUserStreak)
 route.get('/progress', authenticate, userController.getUserProgress)
+route.get('/passport', authenticate, userController.getPassportSettings)
+route.patch(
+  '/passport',
+  authenticate,
+  validate(updatePassportSchema),
+  userController.updatePassportSettings,
+)
 
 export default route

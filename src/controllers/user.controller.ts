@@ -87,3 +87,27 @@ export const deactivateAccount = async (req: Request, res: Response, next: NextF
     next(error)
   }
 }
+
+export const getPassportSettings = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.user?.id as string
+
+    const passportSettings = await userService.getPassportSettings(userId)
+
+    res.json(ok(passportSettings))
+  } catch (error) {
+    next(error)
+  }
+}
+
+export const updatePassportSettings = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.user?.id as string
+
+    const passportSettings = await userService.updatePassportSettings(req.body, userId)
+
+    res.json(ok(passportSettings))
+  } catch (error) {
+    next(error)
+  }
+}

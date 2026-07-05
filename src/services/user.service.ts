@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto'
 import { OnboardingQuestionnaire } from '../models/onboarding-questionnaire.model.js'
 import { UserProfile } from '../models/user-profile.model.js'
 import { User } from '../models/user.model.js'
@@ -6,10 +7,12 @@ import {
   UpdateProfileSchema,
   UpdateAccountCredentialsSchema,
   DeactivateAccountSchema,
+  UpdatePassportSchema,
 } from '../schemas/profile.schema.js'
 import { startSession } from 'mongoose'
 import { hashPassword, comparePassword } from '../utils/password.js'
 import { calculateCurrentStreak } from '../utils/streak.util.js'
+import { env } from '../config/env.js'
 
 export const getUser = async (userId: string) => {
   const user = await User.findById(userId).select('username email createdAt isActive').lean()
@@ -211,4 +214,48 @@ export const deactivateAccount = async (userId: string, input: DeactivateAccount
   }
 
   return deactivateAccountDetails
+}
+
+const buildPassportSettings = (profile: { shareToken?: string; isPublic?: boolean }) => {
+  const shareToken = profile.shareToken ?? null
+  return {
+    shareToken,
+    isPublic: profile.isPublic ?? false,
+    publicUrl: shareToken ? `${env.CLIENT_URL}/p/${shareToken}` : null,
+  }
+}
+
+export const getPassportSettings = async (userId: string) => {
+  const profile = await UserProfile.findOne({ userId }).select('shareToken isPublic').lean()
+  if (!profile) {
+    throw new ApiError(404, 'User profile not found', 'USER_PROFILE_NOT_FOUND')
+  }
+
+  return buildPassportSettings(profile)
+}
+
+export const updatePassportSettings = async (input: UpdatePassportSchema, userId: string) => {
+  const profile = await UserProfile.findOne({ userId }).select('shareToken isPublic').lean()
+  if (!profile) {
+    throw new ApiError(404, 'User profile not found', 'USER_PROFILE_NOT_FOUND')
+  }
+
+  // Token is minted on first enable and on explicit regenerate. Disabling keeps
+  // the token so re-enabling restores the SAME public link (revoke = regenerate).
+  const shouldMintToken = input.isPublic && (!profile.shareToken || input.regenerate === true)
+  const update: { isPublic: boolean; shareToken?: string } = { isPublic: input.isPublic }
+  if (shouldMintToken) update.shareToken = randomBytes(16).toString('hex')
+
+  const updatedProfile = await UserProfile.findOneAndUpdate(
+    { userId },
+    { $set: update },
+    { new: true, runValidators: true },
+  )
+    .select('shareToken isPublic')
+    .lean()
+  if (!updatedProfile) {
+    throw new ApiError(404, 'User profile not found', 'USER_PROFILE_NOT_FOUND')
+  }
+
+  return buildPassportSettings(updatedProfile)
 }
