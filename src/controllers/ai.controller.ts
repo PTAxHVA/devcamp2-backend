@@ -31,3 +31,23 @@ export const feedbackRoadmap = async (req: Request, res: Response, next: NextFun
     next(error)
   }
 }
+
+export const analyzeJobReadiness = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { role } = req.body as { role: string }
+    const userId = req.user?.id as string
+
+    const result = await aiService.analyzeJobReadiness(userId, role)
+    res.json(ok(result))
+  } catch (error) {
+    next(error)
+  }
+}
+
+export const listJobReadinessRoles = async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    res.json(ok(aiService.getJobReadinessRoles()))
+  } catch (error) {
+    next(error)
+  }
+}

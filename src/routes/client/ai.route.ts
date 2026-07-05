@@ -3,7 +3,11 @@ import { Router } from 'express'
 import { aiRateLimiter, globalAiRateLimiter } from '../../middlewares/rate-limit.middleware.js'
 import { authenticate } from '../../middlewares/auth.middleware.js'
 import { validate } from '../../middlewares/validate.middleware.js'
-import { roadmapFeedbackSchema, roadmapSuggestSchema } from '../../schemas/ai.schema.js'
+import {
+  jobReadinessSchema,
+  roadmapFeedbackSchema,
+  roadmapSuggestSchema,
+} from '../../schemas/ai.schema.js'
 
 const route = Router()
 
@@ -23,6 +27,18 @@ route.post(
   globalAiRateLimiter,
   validate(roadmapFeedbackSchema),
   aiController.feedbackRoadmap,
+)
+
+// Static role list for the FE picker — no Gemini call, so no AI limiters.
+route.get('/job-readiness/roles', authenticate, aiController.listJobReadinessRoles)
+
+route.post(
+  '/job-readiness',
+  authenticate,
+  aiRateLimiter,
+  globalAiRateLimiter,
+  validate(jobReadinessSchema),
+  aiController.analyzeJobReadiness,
 )
 
 export default route
