@@ -131,12 +131,15 @@ const askGeminiForRequiredIds = async (
   }))
   const prompt = buildJobReadinessPrompt(role, promptTopics)
 
+  let timeoutTimer: NodeJS.Timeout | undefined
   const response = (await Promise.race([
     geminiModel.generateContent(prompt),
-    new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Gemini API timeout')), GEMINI_TIMEOUT_MS),
-    ),
-  ])) as GenerateContentResult
+    new Promise((_, reject) => {
+      timeoutTimer = setTimeout(() => reject(new Error('Gemini API timeout')), GEMINI_TIMEOUT_MS)
+    }),
+    // Clear the timer once the race settles so a fast Gemini answer doesn't
+    // leave a 10s timeout holding the event loop per request.
+  ]).finally(() => clearTimeout(timeoutTimer))) as GenerateContentResult
 
   const rawText = response.response.text()
   if (!rawText) {
@@ -231,7 +234,10 @@ export const analyzeJobReadiness = async (
     .lean()
   const hoursPerWeek = questionnaire?.timePerWeekHours ?? 0
   const missingHours = missing.reduce((sum, t) => sum + t.estimatedHours, 0)
-  const etaWeeks = hoursPerWeek > 0 ? Math.ceil(missingHours / hoursPerWeek) : undefined
+  // Both guards: no hours captured → no ETA; zero-hour missing topics → no
+  // "0 weeks" claim while topics are still missing.
+  const etaWeeks =
+    missingHours > 0 && hoursPerWeek > 0 ? Math.ceil(missingHours / hoursPerWeek) : undefined
 
   return {
     role: targetRole.role,
