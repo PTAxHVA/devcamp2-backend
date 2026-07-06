@@ -116,9 +116,13 @@ export const generateSuggestedRoadmap = async (
   const defaultOrderedTopics = dedupeAndOrderTopics(selectedBranchTopics, masterTopicMap)
   const topics = defaultOrderedTopics
 
+  // `source` lets the FE distinguish a real AI ordering from the degraded
+  // default (mirrors job-readiness / explain-mistakes), so the onboarding
+  // reveal never shows this internal fallback sentence as an "AI reason".
   const fallback = {
     suggestedTopics: defaultOrderedTopics,
     explanation: 'AI is currently not available, showing the default roadmap',
+    source: 'fallback' as const,
   }
 
   const userOnboardingProfile = await OnboardingQuestionnaire.findOne({
@@ -219,6 +223,7 @@ export const generateSuggestedRoadmap = async (
     return {
       suggestedTopics: hydratedTopics,
       explanation: validated.explanation,
+      source: 'ai' as const,
     }
   } catch (error) {
     logger.error({ error }, 'Failed to generate suggested roadmap')
