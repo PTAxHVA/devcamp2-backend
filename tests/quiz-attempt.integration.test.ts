@@ -137,4 +137,71 @@ describe('quiz attempt (integration)', () => {
     expect(retry.status).toBe(409)
     expect(retry.body.error.code).toBe('COOLDOWN_ACTIVE')
   })
+
+  it('COOLDOWN_ACTIVE conflict carries attemptId, cooldownUntil and retryAfterMs (NEW-1)', async () => {
+    const token = await register('new1-details@example.com')
+    const r = await seedRoadmap('Frontend New1')
+    await enroll(token, r.roadmapId, r.branchId)
+    const { quizId } = await seedFillBlankQuiz(r.topicIds[0]!)
+
+    const start = await request(app)
+      .post(`${base}/quizzes/${quizId}/start`)
+      .set('Authorization', `Bearer ${token}`)
+    const attemptId = start.body.data.quizAttempt.attemptId as string
+    await request(app)
+      .post(`${base}/attempts/${attemptId}/submit`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ answers: [] })
+
+    const retry = await request(app)
+      .post(`${base}/quizzes/${quizId}/start`)
+      .set('Authorization', `Bearer ${token}`)
+    expect(retry.status).toBe(409)
+    expect(retry.body.error.code).toBe('COOLDOWN_ACTIVE')
+    const details = retry.body.error.details as {
+      attemptId: string
+      cooldownUntil: string
+      retryAfterMs: number
+    }
+    expect(details.attemptId).toBe(attemptId)
+    expect(new Date(details.cooldownUntil).getTime()).toBeGreaterThan(Date.now())
+    expect(details.retryAfterMs).toBeGreaterThan(0)
+    expect(details.retryAfterMs).toBeLessThanOrEqual(60_000)
+  })
+
+  it('concurrent starts never leak a raw 500 — losers get a resumable 409 (NEW-1)', async () => {
+    const r = await seedRoadmap('Frontend New1Race')
+    const { quizId } = await seedFillBlankQuiz(r.topicIds[0]!)
+
+    // Fresh user per round so every round races the first-start insert path.
+    for (let round = 0; round < 3; round++) {
+      const token = await register(`new1-race-${round}@example.com`)
+      await enroll(token, r.roadmapId, r.branchId)
+
+      const [a, b] = await Promise.all([
+        request(app)
+          .post(`${base}/quizzes/${quizId}/start`)
+          .set('Authorization', `Bearer ${token}`),
+        request(app)
+          .post(`${base}/quizzes/${quizId}/start`)
+          .set('Authorization', `Bearer ${token}`),
+      ])
+
+      for (const res of [a, b]) {
+        expect([200, 409]).toContain(res.status)
+        if (res.status === 409) {
+          expect(['QUIZ_ALREADY_STARTED', 'COOLDOWN_ACTIVE']).toContain(res.body.error.code)
+          // attemptId rides along whenever the loser's re-read caught the winner's
+          // committed attempt; the last-resort stale-read fallthrough omits it.
+          if (res.body.error.details) {
+            expect(res.body.error.details.attemptId).toBeTruthy()
+          }
+        }
+      }
+      // Whatever the race outcome, each round's user ends with exactly ONE attempt
+      // (the unique userId+quizId index deduped the concurrent insert).
+      const attempts = await QuizAttempt.countDocuments({ quizId })
+      expect(attempts).toBe(round + 1)
+    }
+  })
 })

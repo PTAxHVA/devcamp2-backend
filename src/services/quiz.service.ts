@@ -7,6 +7,7 @@ import { QuestionOption } from '../models/question-option.model.js'
 import { Section } from '../models/section.model.js'
 import { verifyTopicEnrollment } from './section.service.js'
 import { QuizAttemptAnswer } from '../models/quiz-attempt-answer.model.js'
+import { isWriteConflictError } from './quiz-grading.service.js'
 
 export const getQuizBySectionId = async (sectionId: string, userId: string) => {
   if (!isValidObjectId(sectionId))
@@ -82,9 +83,13 @@ export const startQuizAttempt = async (quizId: string, userId: string) => {
         })
       }
       if (attemptExists.cooldownUntil && attemptExists.cooldownUntil > new Date()) {
-        // Surface the attempt id so the client can show its result/cooldown screen.
+        // Surface the attempt id so the client can show its result/cooldown screen,
+        // plus the deadline as a server-clock duration (retryAfterMs) so the client
+        // can re-arm its countdown without depending on clock alignment.
         throw new ApiError(409, 'Cooldown period is still active', 'COOLDOWN_ACTIVE', {
           attemptId: attemptExists._id,
+          cooldownUntil: attemptExists.cooldownUntil,
+          retryAfterMs: Math.max(0, attemptExists.cooldownUntil.getTime() - Date.now()),
         })
       }
       attemptExists.startedAt = new Date()
@@ -102,19 +107,9 @@ export const startQuizAttempt = async (quizId: string, userId: string) => {
         quizId,
         startedAt: new Date(),
       })
-      try {
-        await quizAttempt.save({ session })
-      } catch (error) {
-        if (
-          typeof error === 'object' &&
-          error !== null &&
-          'code' in error &&
-          error.code === 11000
-        ) {
-          throw new ApiError(409, 'Quiz already started', 'QUIZ_ALREADY_STARTED')
-        }
-        throw error
-      }
+      // A duplicate-key race here (two first-starts inserting at once) is translated
+      // by the catch below into a resumable 409 that carries the winner's attemptId.
+      await quizAttempt.save({ session })
     }
 
     const questionOptions = await QuestionOption.find({
@@ -143,8 +138,31 @@ export const startQuizAttempt = async (quizId: string, userId: string) => {
     session.endSession()
     return quizDetails
   } catch (error) {
-    await session.abortTransaction()
+    await session.abortTransaction().catch(() => {})
     session.endSession()
+    if (isWriteConflictError(error)) {
+      // Two concurrent starts (double-mounted attempt page, double click) race the
+      // same attempt document; the losing transaction used to leak a raw 500 and
+      // the attempt page rendered empty. Re-read the attempt and answer with the
+      // same resumable 409s the sequential path produces.
+      const existing = await QuizAttempt.findOne({ quizId, userId }).lean()
+      if (existing && !existing.submittedAt) {
+        throw new ApiError(409, 'Quiz already started', 'QUIZ_ALREADY_STARTED', {
+          attemptId: existing._id,
+        })
+      }
+      if (existing?.cooldownUntil && existing.cooldownUntil > new Date()) {
+        throw new ApiError(409, 'Cooldown period is still active', 'COOLDOWN_ACTIVE', {
+          attemptId: existing._id,
+          cooldownUntil: existing.cooldownUntil,
+          retryAfterMs: Math.max(0, existing.cooldownUntil.getTime() - Date.now()),
+        })
+      }
+      // Conflict but the winner hasn't committed yet (re-read saw stale state):
+      // still a concurrency artifact, not a server fault — keep it a retryable
+      // 409 (same shape as the old duplicate-key path) instead of a raw 500.
+      throw new ApiError(409, 'Quiz already started', 'QUIZ_ALREADY_STARTED')
+    }
     throw error
   }
 }
