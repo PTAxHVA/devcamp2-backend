@@ -19,8 +19,16 @@
  *   Phase 4  report               — print apply stats + final DB counts
  *
  * Topics are deduplicated by slug across roadmaps — shared topics
- * (Git, JavaScript Fundamentals, TypeScript, Dev Environment Setup)
- * live as ONE MasterTopic doc but link to multiple branches via BranchTopic.
+ * (Dev Environment Setup, Git, JavaScript Fundamentals, JavaScript Advanced,
+ * TypeScript) live as ONE MasterTopic doc but link to multiple branches via
+ * BranchTopic.
+ *
+ * A SeedJob may declare `forkGroups`: mutually-exclusive branch alternatives
+ * inside one selectionGroup (e.g. Database: MongoDB vs PostgreSQL). Topics a
+ * fork branch claims (by Topic_Name) move OUT of the main branch into that
+ * branch; enrollment composes the main branch + exactly one branch per group.
+ * Fork topics keep their CSV Topic_ID as orderIndex, so any composition reads
+ * in the original CSV order.
  *
  * Usage:
  *   yarn seed              # idempotent upsert (safe to re-run; converges to seed source)
@@ -64,10 +72,27 @@ const DRY_RUN = args.has('--dry-run')
 
 // ------------------------------------------------------------ Config
 
+interface ForkBranchConfig {
+  name: string
+  description: string
+  /** Exact Topic_Name values from this job's CSV that belong to this branch. */
+  topicNames: string[]
+}
+
+interface ForkGroupConfig {
+  /** Label shown to users when choosing between the branches (e.g. 'Database'). */
+  selectionGroup: string
+  /** Listed order = display + default priority: the FIRST branch gets the lowest orderIndex. */
+  branches: ForkBranchConfig[]
+}
+
 interface SeedJob {
   csvPath: string
   roleName: string
+  /** Main branch: every CSV topic not claimed by a fork branch lands here. */
   branchName: string
+  branchDescription?: string
+  forkGroups?: ForkGroupConfig[]
 }
 
 const SEED_JOBS: SeedJob[] = [
@@ -79,7 +104,25 @@ const SEED_JOBS: SeedJob[] = [
   {
     csvPath: join(REPO_ROOT, 'seed-data/backend-content.csv'),
     roleName: 'Backend Web Developer',
-    branchName: 'Node + Express + Mongo',
+    branchName: 'Node + Express Core',
+    branchDescription: 'Core backend path: JavaScript, TypeScript, Node.js, Express and auth.',
+    forkGroups: [
+      {
+        selectionGroup: 'Database',
+        branches: [
+          {
+            name: 'MongoDB',
+            description: 'Document database path — MongoDB with Mongoose.',
+            topicNames: ['MongoDB (with Mongoose)'],
+          },
+          {
+            name: 'PostgreSQL',
+            description: 'Relational database path — PostgreSQL with Prisma.',
+            topicNames: ['PostgreSQL (with Prisma)'],
+          },
+        ],
+      },
+    ],
   },
 ]
 
@@ -131,9 +174,21 @@ interface TopicPlan {
   branchOrders: Map<string, number>
 }
 
+interface BranchPlan {
+  name: string
+  description: string
+  orderIndex: number // 0 = main branch, then 1.. across fork branches in listed order
+  selectionGroup: string | null
+  isMutuallyExclusive: boolean
+  isMandatory: boolean
+  topicSlugs: string[] // ordered by CSV Topic_ID
+}
+
 interface RoadmapPlan {
   job: SeedJob
-  topicSlugs: string[] // ordered list of topic slugs in this roadmap's branch
+  branches: BranchPlan[] // main branch first, then fork branches
+  /** CSV Topic_ID per slug — canonical order used for composition walks. */
+  topicOrderBySlug: Map<string, number>
 }
 
 interface SeedPlan {
@@ -146,6 +201,7 @@ interface ApplyStats {
   topicsUpserted: number
   branchLinksUpserted: number
   branchLinksPruned: number
+  branchesPruned: number
   sectionsUpserted: number
   sectionsPruned: number
   quizzesUpserted: number
@@ -173,8 +229,34 @@ function slugify(text: string): string {
   return out
 }
 
-function branchKeyOf(job: SeedJob): string {
-  return `${job.roleName} :: ${job.branchName}`
+function branchKey(roleName: string, branchName: string): string {
+  return `${roleName} :: ${branchName}`
+}
+
+/**
+ * Every valid branch composition of a roadmap: always-included branches (no
+ * exclusive selectionGroup) + exactly one branch per mutually-exclusive group,
+ * as ordered topic-slug walks. A roadmap without forks yields exactly one walk
+ * (its main branch), which is the pre-fork linear behaviour.
+ */
+function compositionWalks(rm: RoadmapPlan): string[][] {
+  const always = rm.branches.filter((b) => !(b.selectionGroup && b.isMutuallyExclusive))
+  const groups = new Map<string, BranchPlan[]>()
+  for (const b of rm.branches) {
+    if (b.selectionGroup && b.isMutuallyExclusive) {
+      groups.set(b.selectionGroup, [...(groups.get(b.selectionGroup) ?? []), b])
+    }
+  }
+  let combos: BranchPlan[][] = [always]
+  for (const members of groups.values()) {
+    combos = combos.flatMap((combo) => members.map((m) => [...combo, m]))
+  }
+  return combos.map((combo) => {
+    const slugs = [...new Set(combo.flatMap((b) => b.topicSlugs))]
+    return slugs.sort(
+      (a, b) => (rm.topicOrderBySlug.get(a) ?? 0) - (rm.topicOrderBySlug.get(b) ?? 0),
+    )
+  })
 }
 
 function cell(row: Record<string, string | undefined>, key: string): string {
@@ -453,8 +535,6 @@ export async function parseAndValidate(): Promise<SeedPlan> {
     console.log(`    ${rows.length} rows parsed`)
 
     const localTopics = planFromRows(job, rows, allErrors)
-    const branchKey = branchKeyOf(job)
-    const topicSlugs: string[] = []
 
     // Sort topics by their Topic_ID order so the BranchTopic.orderIndex is
     // assigned in the same order users will see them.
@@ -462,8 +542,90 @@ export async function parseAndValidate(): Promise<SeedPlan> {
       ([, a], [, b]) => a.topicOrderIndex - b.topicOrderIndex,
     )
 
+    // Resolve fork groups: each fork branch claims topics (by Topic_Name) out
+    // of the main branch. A topic may belong to at most ONE fork branch.
+    const slugToForkBranch = new Map<string, string>()
+    const forkBranchPlans: BranchPlan[] = []
+    let forkOrderIndex = 1
+    for (const group of job.forkGroups ?? []) {
+      if (group.branches.length < 2) {
+        allErrors.push(`[${job.roleName}] forkGroup "${group.selectionGroup}" needs >= 2 branches`)
+      }
+      for (const fork of group.branches) {
+        const forkSlugs: string[] = []
+        for (const topicName of fork.topicNames) {
+          let slug: string
+          try {
+            slug = slugify(topicName)
+          } catch (e) {
+            allErrors.push(`[${job.roleName}] fork branch "${fork.name}": ${(e as Error).message}`)
+            continue
+          }
+          if (!localTopics.has(slug)) {
+            allErrors.push(
+              `[${job.roleName}] fork branch "${fork.name}": topic "${topicName}" not in CSV`,
+            )
+            continue
+          }
+          const claimedBy = slugToForkBranch.get(slug)
+          if (claimedBy) {
+            allErrors.push(
+              `[${job.roleName}] topic "${topicName}" claimed by two fork branches ` +
+                `("${claimedBy}" and "${fork.name}")`,
+            )
+            continue
+          }
+          slugToForkBranch.set(slug, fork.name)
+          forkSlugs.push(slug)
+        }
+        forkSlugs.sort(
+          (a, b) => localTopics.get(a)!.topicOrderIndex - localTopics.get(b)!.topicOrderIndex,
+        )
+        forkBranchPlans.push({
+          name: fork.name,
+          description: fork.description,
+          orderIndex: forkOrderIndex++,
+          selectionGroup: group.selectionGroup,
+          isMutuallyExclusive: true,
+          isMandatory: false,
+          topicSlugs: forkSlugs,
+        })
+      }
+    }
+
+    const mainTopicSlugs = sortedTopics
+      .map(([slug]) => slug)
+      .filter((slug) => !slugToForkBranch.has(slug))
+    if (mainTopicSlugs.length === 0) {
+      allErrors.push(
+        `[${job.roleName}] fork branches claim every topic — the main branch would be empty`,
+      )
+    }
+    const allBranchPlans: BranchPlan[] = [
+      {
+        name: job.branchName,
+        description: job.branchDescription ?? '',
+        orderIndex: 0,
+        selectionGroup: null,
+        isMutuallyExclusive: false,
+        // The core spine is only marked mandatory once a fork exists, so a
+        // no-fork roadmap (Frontend) keeps its pre-fork data byte-identical.
+        isMandatory: (job.forkGroups?.length ?? 0) > 0,
+        topicSlugs: mainTopicSlugs,
+      },
+      ...forkBranchPlans,
+    ]
+    const branchNames = new Set<string>()
+    for (const bp of allBranchPlans) {
+      if (branchNames.has(bp.name)) {
+        allErrors.push(`[${job.roleName}] duplicate branch name "${bp.name}"`)
+      }
+      branchNames.add(bp.name)
+    }
+
+    const topicOrderBySlug = new Map<string, number>()
     for (const [slug, entry] of sortedTopics) {
-      topicSlugs.push(slug)
+      topicOrderBySlug.set(slug, entry.topicOrderIndex)
       let merged = topics.get(slug)
       if (!merged) {
         merged = entry.plan
@@ -478,7 +640,18 @@ export async function parseAndValidate(): Promise<SeedPlan> {
           }
         }
       }
-      merged.branchOrders.set(branchKey, entry.topicOrderIndex)
+    }
+
+    // Per-branch order map: a topic keeps its CSV Topic_ID as orderIndex in
+    // whichever branch of this roadmap it lives in, so main + one fork branch
+    // composes back into the original CSV order.
+    for (const bp of allBranchPlans) {
+      const key = branchKey(job.roleName, bp.name)
+      for (const slug of bp.topicSlugs) {
+        const entry = localTopics.get(slug)
+        if (!entry) continue
+        topics.get(slug)?.branchOrders.set(key, entry.topicOrderIndex)
+      }
     }
 
     // Sort sections within each topic by their orderIndex for deterministic output.
@@ -486,7 +659,7 @@ export async function parseAndValidate(): Promise<SeedPlan> {
       t.sections.sort((a, b) => a.orderIndex - b.orderIndex)
     }
 
-    roadmaps.push({ job, topicSlugs })
+    roadmaps.push({ job, branches: allBranchPlans, topicOrderBySlug })
   }
 
   const resources = await loadResources(allErrors)
@@ -504,6 +677,7 @@ export async function applyPlan(plan: SeedPlan): Promise<ApplyStats> {
     topicsUpserted: 0,
     branchLinksUpserted: 0,
     branchLinksPruned: 0,
+    branchesPruned: 0,
     sectionsUpserted: 0,
     sectionsPruned: 0,
     quizzesUpserted: 0,
@@ -516,7 +690,7 @@ export async function applyPlan(plan: SeedPlan): Promise<ApplyStats> {
     sectionsWithResources: 0,
   }
 
-  // 2a. Upsert roadmaps + branches
+  // 2a. Upsert roadmaps + branches, then reconcile stale branches per roadmap
   const branchIdByKey = new Map<string, mongoose.Types.ObjectId>()
   for (const rm of plan.roadmaps) {
     const roadmap = await MasterRoadmap.findOneAndUpdate(
@@ -532,20 +706,50 @@ export async function applyPlan(plan: SeedPlan): Promise<ApplyStats> {
     )
     if (!roadmap) throw new Error(`Failed to upsert roadmap ${rm.job.roleName}`)
 
-    const branch = await MasterBranch.findOneAndUpdate(
-      { roadmapId: roadmap._id, name: rm.job.branchName },
-      {
-        $setOnInsert: {
-          roadmapId: roadmap._id,
-          name: rm.job.branchName,
-          description: '',
-          orderIndex: 0,
+    const keepIds: mongoose.Types.ObjectId[] = []
+    for (const bp of rm.branches) {
+      const branch = await MasterBranch.findOneAndUpdate(
+        { roadmapId: roadmap._id, name: bp.name },
+        {
+          // Branch metadata lives in $set (NOT $setOnInsert) so re-seeding
+          // converges branches created before fork groups existed.
+          $set: {
+            description: bp.description,
+            orderIndex: bp.orderIndex,
+            selectionGroup: bp.selectionGroup,
+            isMutuallyExclusive: bp.isMutuallyExclusive,
+            isMandatory: bp.isMandatory,
+          },
+          $setOnInsert: { roadmapId: roadmap._id, name: bp.name },
         },
-      },
-      { upsert: true, returnDocument: 'after' },
-    )
-    if (!branch) throw new Error(`Failed to upsert branch ${rm.job.branchName}`)
-    branchIdByKey.set(branchKeyOf(rm.job), branch._id as mongoose.Types.ObjectId)
+        { upsert: true, returnDocument: 'after' },
+      )
+      if (!branch) throw new Error(`Failed to upsert branch ${bp.name}`)
+      const branchId = branch._id as mongoose.Types.ObjectId
+      branchIdByKey.set(branchKey(rm.job.roleName, bp.name), branchId)
+      keepIds.push(branchId)
+    }
+
+    // Reconcile: a branch no longer in this roadmap's seed source (e.g. renamed
+    // when a fork was introduced) is deleted together with its BranchTopic
+    // links. Runs AFTER the upserts so there is never a zero-branch window.
+    // Safe on prod: no user-side collection stores MasterBranch ids.
+    const staleBranches = await MasterBranch.find({
+      roadmapId: roadmap._id,
+      _id: { $nin: keepIds },
+    })
+      .select('_id name')
+      .lean()
+    if (staleBranches.length > 0) {
+      const staleIds = staleBranches.map((b) => b._id)
+      await BranchTopic.deleteMany({ branchId: { $in: staleIds } })
+      await MasterBranch.deleteMany({ _id: { $in: staleIds } })
+      stats.branchesPruned += staleBranches.length
+      console.log(
+        `  Pruned ${staleBranches.length} stale branch(es) from ${rm.job.roleName}: ` +
+          staleBranches.map((b) => b.name).join(', '),
+      )
+    }
   }
 
   // 2b. Upsert topics (library, dedup by slug)
@@ -587,22 +791,27 @@ export async function applyPlan(plan: SeedPlan): Promise<ApplyStats> {
     console.warn('        Add them to scripts/topic-descriptions.ts')
   }
 
-  // 2b-prereqs. Derive sequential prerequisites: each topic depends on the topic
-  // immediately before it in every branch it belongs to (union across branches).
-  // This is what drives roadmap-viz edges (buildRoadmapGraph) + customize-order
-  // validation + AI suggest/feedback. Topics are shared across roadmaps (Scenario B),
-  // so a cross-branch prerequisite id is simply filtered out per-roadmap downstream
-  // (idSet.has / assertPrerequisiteOrder) — at worst a missing edge, never a wrong one.
+  // 2b-prereqs. Derive sequential prerequisites from every valid COMPOSITION of
+  // a roadmap: its always-included branches + exactly one branch per mutually-
+  // exclusive selectionGroup (compositionWalks). Walking each composition in CSV
+  // order makes the topic right after a fork depend on BOTH alternatives (union);
+  // downstream per-roadmap filtering (idSet.has / assertPrerequisiteOrder) then
+  // reduces that to the branch the user actually enrolled in — at worst a missing
+  // edge, never a wrong one. A roadmap without forks has exactly one composition,
+  // which is the old linear behaviour. This drives roadmap-viz edges
+  // (buildRoadmapGraph) + customize-order validation + AI suggest/feedback.
   // Done as a second pass so every topic's _id is known before we reference it.
   const prereqSlugsByTopic = new Map<string, Set<string>>()
   for (const rm of plan.roadmaps) {
-    for (let i = 1; i < rm.topicSlugs.length; i++) {
-      const cur = rm.topicSlugs[i]
-      const prev = rm.topicSlugs[i - 1]
-      if (cur === undefined || prev === undefined) continue
-      const set = prereqSlugsByTopic.get(cur) ?? new Set<string>()
-      set.add(prev)
-      prereqSlugsByTopic.set(cur, set)
+    for (const walk of compositionWalks(rm)) {
+      for (let i = 1; i < walk.length; i++) {
+        const cur = walk[i]
+        const prev = walk[i - 1]
+        if (cur === undefined || prev === undefined) continue
+        const set = prereqSlugsByTopic.get(cur) ?? new Set<string>()
+        set.add(prev)
+        prereqSlugsByTopic.set(cur, set)
+      }
     }
   }
   // Set requiredTopicIds for EVERY topic (empty for the first in each branch) so the
@@ -622,26 +831,28 @@ export async function applyPlan(plan: SeedPlan): Promise<ApplyStats> {
 
   // 2c. BranchTopic junctions + prune stale per branch
   for (const rm of plan.roadmaps) {
-    const branchKey = branchKeyOf(rm.job)
-    const branchId = branchIdByKey.get(branchKey)
-    if (!branchId) throw new Error(`Missing branchId for ${branchKey}`)
-    const expected: mongoose.Types.ObjectId[] = []
+    for (const bp of rm.branches) {
+      const key = branchKey(rm.job.roleName, bp.name)
+      const branchId = branchIdByKey.get(key)
+      if (!branchId) throw new Error(`Missing branchId for ${key}`)
+      const expected: mongoose.Types.ObjectId[] = []
 
-    for (const slug of rm.topicSlugs) {
-      const topicId = topicIdBySlug.get(slug)
-      const topicPlan = plan.topics.get(slug)
-      if (!topicId || !topicPlan) throw new Error(`Missing topic data for ${slug}`)
-      const orderIndex = topicPlan.branchOrders.get(branchKey) ?? 0
-      await BranchTopic.findOneAndUpdate(
-        { branchId, topicId },
-        { $set: { orderIndex }, $setOnInsert: { branchId, topicId } },
-        { upsert: true, returnDocument: 'after' },
-      )
-      expected.push(topicId)
-      stats.branchLinksUpserted++
+      for (const slug of bp.topicSlugs) {
+        const topicId = topicIdBySlug.get(slug)
+        const topicPlan = plan.topics.get(slug)
+        if (!topicId || !topicPlan) throw new Error(`Missing topic data for ${slug}`)
+        const orderIndex = topicPlan.branchOrders.get(key) ?? 0
+        await BranchTopic.findOneAndUpdate(
+          { branchId, topicId },
+          { $set: { orderIndex }, $setOnInsert: { branchId, topicId } },
+          { upsert: true, returnDocument: 'after' },
+        )
+        expected.push(topicId)
+        stats.branchLinksUpserted++
+      }
+      const pruned = await BranchTopic.deleteMany({ branchId, topicId: { $nin: expected } })
+      stats.branchLinksPruned += pruned.deletedCount ?? 0
     }
-    const pruned = await BranchTopic.deleteMany({ branchId, topicId: { $nin: expected } })
-    stats.branchLinksPruned += pruned.deletedCount ?? 0
   }
 
   // 2d. For each topic: upsert Sections / prune stale / upsert Quiz / Questions / Options
@@ -800,7 +1011,10 @@ async function main() {
       a + t.sections.reduce((b, s) => b + s.questions.reduce((c, q) => c + q.options.length, 0), 0),
     0,
   )
-  const totalBranchLinks = plan.roadmaps.reduce((a, r) => a + r.topicSlugs.length, 0)
+  const totalBranchLinks = plan.roadmaps.reduce(
+    (a, r) => a + r.branches.reduce((b, br) => b + br.topicSlugs.length, 0),
+    0,
+  )
 
   const resourceTopics = Object.keys(plan.resources).length
   const resourceEntries = Object.values(plan.resources).reduce(
@@ -816,6 +1030,17 @@ async function main() {
   console.log(`    Questions:       ${totalQuestions}`)
   console.log(`    Options:         ${totalOptions}`)
   console.log(`    Resource topics: ${resourceTopics} (${resourceEntries} curated entries)`)
+  console.log(`    Branches:`)
+  for (const rm of plan.roadmaps) {
+    const branchSummary = rm.branches
+      .map(
+        (b) =>
+          `${b.name} (${b.topicSlugs.length} topic${b.topicSlugs.length === 1 ? '' : 's'}` +
+          `${b.selectionGroup ? `, group "${b.selectionGroup}"` : ''})`,
+      )
+      .join(' | ')
+    console.log(`      ${rm.job.roleName}: ${branchSummary}`)
+  }
 
   if (DRY_RUN) {
     console.log('\n(dry-run: skipping DB)')
@@ -857,6 +1082,7 @@ async function main() {
   console.log(
     `  BranchTopic links:      ${stats.branchLinksUpserted} upserted, ${stats.branchLinksPruned} pruned`,
   )
+  console.log(`  Stale branches pruned:  ${stats.branchesPruned}`)
   console.log(
     `  Sections:               ${stats.sectionsUpserted} upserted, ${stats.sectionsPruned} pruned`,
   )

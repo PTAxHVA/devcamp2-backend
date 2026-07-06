@@ -6,6 +6,7 @@ import { MasterBranch } from '../models/master-branch.model.js'
 import { BranchTopic, IBranchTopic } from '../models/branch-topic.model.js'
 import { MasterTopic, IMasterTopic } from '../models/master-topic.model.js'
 import { OnboardingQuestionnaire } from '../models/onboarding-questionnaire.model.js'
+import { assertExclusiveBranchSelection } from './roadmap-topic-resolver.js'
 import {
   AvailableTopic,
   buildRoadmapSuggestionPrompt,
@@ -95,6 +96,9 @@ export const generateSuggestedRoadmap = async (
       'MASTER_BRANCH_NOT_FOUND',
     )
   }
+  // Same fork-group rule as enroll: at most one branch per mutually-exclusive
+  // selectionGroup, so suggest can never produce an order enroll would reject.
+  assertExclusiveBranchSelection(selectedMasterBranches)
 
   const selectedBranchTopics = await BranchTopic.find({
     branchId: { $in: selectedMasterBranches.map((branch) => branch._id) },
