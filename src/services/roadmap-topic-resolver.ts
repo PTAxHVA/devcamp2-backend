@@ -26,6 +26,40 @@ export const resolveBranchTopicOrder = async (branchIds: string[]): Promise<stri
   return Array.from(orderByTopic.keys()).sort((a, b) => orderByTopic.get(a)! - orderByTopic.get(b)!)
 }
 
+interface ExclusiveBranchInput {
+  _id: unknown
+  name?: string
+  selectionGroup?: string | null
+  isMutuallyExclusive?: boolean
+}
+
+/**
+ * Guard a branch selection against mutually-exclusive selection groups: at most
+ * ONE branch per group may be selected (e.g. Database: MongoDB vs PostgreSQL).
+ * Branches without a selectionGroup (or not marked exclusive) are unaffected, so
+ * pre-fork roadmaps — one ungrouped branch — pass unchanged. Shared by enroll
+ * (createUserRoadmap) and AI suggest so both entry points agree.
+ */
+export const assertExclusiveBranchSelection = (branches: ExclusiveBranchInput[]): void => {
+  const byGroup = new Map<string, string[]>()
+  for (const branch of branches) {
+    if (!branch.selectionGroup || !branch.isMutuallyExclusive) continue
+    const ids = byGroup.get(branch.selectionGroup) ?? []
+    ids.push(String(branch._id))
+    byGroup.set(branch.selectionGroup, ids)
+  }
+  for (const [selectionGroup, branchIds] of byGroup) {
+    if (branchIds.length > 1) {
+      throw new ApiError(
+        400,
+        `Choose only one branch in the "${selectionGroup}" group`,
+        'BRANCH_GROUP_CONFLICT',
+        { selectionGroup, branchIds },
+      )
+    }
+  }
+}
+
 /**
  * Guard a client-supplied topic order: every prerequisite that is part of this
  * roadmap must come before the topic that depends on it. Mirrors the prerequisite

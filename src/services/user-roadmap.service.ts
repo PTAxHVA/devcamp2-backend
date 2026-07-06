@@ -11,7 +11,11 @@ import { UserSectionProgress } from '../models/user-section-progress.model.js'
 import { RoadmapEditLog } from '../models/roadmap-edit-log.model.js'
 import { RoadmapSource, TopicStatus, EditAction } from '../types/enums.js'
 import type { CreateRoadmapSchema, UpdateRoadmapSchema } from '../schemas/roadmap.schema.js'
-import { resolveBranchTopicOrder, assertPrerequisiteOrder } from './roadmap-topic-resolver.js'
+import {
+  resolveBranchTopicOrder,
+  assertPrerequisiteOrder,
+  assertExclusiveBranchSelection,
+} from './roadmap-topic-resolver.js'
 import { buildRoadmapGraph, type GraphTopicInput } from './roadmap-graph.js'
 import { backfillSharedTopicProgress } from './shared-topic-progress.service.js'
 
@@ -83,7 +87,7 @@ export const createUserRoadmap = async (userId: string, body: CreateRoadmapSchem
     _id: { $in: branchSelections },
     roadmapId: masterRoadmapId,
   })
-    .select('_id')
+    .select('_id name selectionGroup isMutuallyExclusive')
     .lean()
   if (branches.length !== branchSelections.length) {
     throw new ApiError(
@@ -92,6 +96,8 @@ export const createUserRoadmap = async (userId: string, body: CreateRoadmapSchem
       'MASTER_BRANCH_NOT_FOUND',
     )
   }
+  // Mutually-exclusive fork groups (e.g. Database): at most one branch per group.
+  assertExclusiveBranchSelection(branches)
 
   const defaultOrder = await resolveBranchTopicOrder(branches.map((b) => b._id.toString()))
   const validTopicIds = new Set(defaultOrder)

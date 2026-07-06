@@ -40,30 +40,42 @@ export const listMasterRoadmaps = async () => {
   }))
 }
 
-/** Branches of a roadmap, ordered, each annotated with how many topics it links. */
+/**
+ * Branches of a roadmap, ordered, each annotated with how many topics it links
+ * and the ordered topic ids themselves (the FE fork UI maps enrolled topics to
+ * their branch with these — radio preview, path switch, graph indicator).
+ */
 const listBranchesForRoadmap = async (roadmapId: Types.ObjectId | string) => {
   const branches = await MasterBranch.find({ roadmapId }).sort({ orderIndex: 1 }).lean()
   if (branches.length === 0) return []
 
   const branchTopics = await BranchTopic.find({ branchId: { $in: branches.map((b) => b._id) } })
-    .select('branchId')
+    .select('branchId topicId orderIndex')
     .lean()
-  const topicCountByBranch = new Map<string, number>()
+  const topicsByBranch = new Map<string, { topicId: string; orderIndex: number }[]>()
   for (const bt of branchTopics) {
     const id = bt.branchId.toString()
-    topicCountByBranch.set(id, (topicCountByBranch.get(id) ?? 0) + 1)
+    const list = topicsByBranch.get(id) ?? []
+    list.push({ topicId: bt.topicId.toString(), orderIndex: bt.orderIndex })
+    topicsByBranch.set(id, list)
   }
 
-  return branches.map((b) => ({
-    _id: b._id,
-    name: b.name,
-    description: b.description,
-    selectionGroup: b.selectionGroup,
-    isMutuallyExclusive: b.isMutuallyExclusive,
-    isMandatory: b.isMandatory,
-    orderIndex: b.orderIndex,
-    topicCount: topicCountByBranch.get(b._id.toString()) ?? 0,
-  }))
+  return branches.map((b) => {
+    const topics = (topicsByBranch.get(b._id.toString()) ?? []).sort(
+      (x, y) => x.orderIndex - y.orderIndex,
+    )
+    return {
+      _id: b._id,
+      name: b.name,
+      description: b.description,
+      selectionGroup: b.selectionGroup,
+      isMutuallyExclusive: b.isMutuallyExclusive,
+      isMandatory: b.isMandatory,
+      orderIndex: b.orderIndex,
+      topicCount: topics.length,
+      topicIds: topics.map((t) => t.topicId),
+    }
+  })
 }
 
 const findPublishedRoadmapOrThrow = async (id: string) => {
