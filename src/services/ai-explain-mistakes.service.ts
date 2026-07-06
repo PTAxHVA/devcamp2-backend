@@ -51,6 +51,7 @@ const buildWrongQuestions = (questions: ResultQuestions): MistakeQuestionInput[]
         optionTexts: isMcq ? q.options.map((o) => o.content) : [],
         // MCQ: the correct option's text (Question.correctAnswer only caches the letter).
         correctAnswerText: isMcq ? (correctOption?.content ?? q.correctAnswer) : q.correctAnswer,
+        acceptableAnswerTexts: isMcq ? [] : (q.acceptableAnswers ?? []),
         userAnswerText: userAnswerText || '(no answer)',
       }
     })

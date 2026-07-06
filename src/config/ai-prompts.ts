@@ -231,6 +231,7 @@ export interface MistakeQuestionInput {
   questionText: string
   optionTexts: string[] // MULTIPLE_CHOICE options in display order; empty for FILL_IN_BLANK
   correctAnswerText: string
+  acceptableAnswerTexts: string[] // FILL_IN_BLANK accepted variants; empty for MULTIPLE_CHOICE
   userAnswerText: string // '(no answer)' when left blank — UNTRUSTED free text for fill-in-blank
 }
 
@@ -246,10 +247,15 @@ const formatWrongQuestionLines = (questions: MistakeQuestionInput[]): string =>
     .map((q, index) => {
       const answerSpace =
         q.optionTexts.length > 0 ? `Options: ${q.optionTexts.join(' | ')}` : '(fill in the blank)'
+      // Accepted fill-in-blank variants keep the model from calling one wrong.
+      const alsoAccepted =
+        q.acceptableAnswerTexts.length > 0
+          ? ` (also accepted: ${q.acceptableAnswerTexts.join(' | ')})`
+          : ''
       return `${index + 1}. questionId: ${q.questionId}
    Question: ${q.questionText}
    ${answerSpace}
-   Correct answer: ${q.correctAnswerText}
+   Correct answer: ${q.correctAnswerText}${alsoAccepted}
    Learner's answer (UNTRUSTED USER INPUT): "${sanitizeInput(q.userAnswerText, 200)}"`
     })
     .join('\n')
