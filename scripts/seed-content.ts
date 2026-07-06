@@ -733,7 +733,9 @@ export async function applyPlan(plan: SeedPlan): Promise<ApplyStats> {
     // Reconcile: a branch no longer in this roadmap's seed source (e.g. renamed
     // when a fork was introduced) is deleted together with its BranchTopic
     // links. Runs AFTER the upserts so there is never a zero-branch window.
-    // Safe on prod: no user-side collection stores MasterBranch ids.
+    // Safe on prod: user-side data never READS branch ids — UserRoadmap/UserTopic
+    // hold no branch reference, and OnboardingQuestionnaire.selectedBranchIds is
+    // write-only (no consumer in src/), so a dangling id there is harmless.
     const staleBranches = await MasterBranch.find({
       roadmapId: roadmap._id,
       _id: { $nin: keepIds },
