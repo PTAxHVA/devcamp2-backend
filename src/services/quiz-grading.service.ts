@@ -19,7 +19,8 @@ const FAILED_QUIZ_COOLDOWN_MS = 1 * 60 * 1000
 // Two concurrent submits of the same attempt can trip MongoDB's write conflict
 // (a transient transaction error) or the unique (quizAttemptId, questionId)
 // answer index. Translate both into a clean 409 instead of leaking a raw 500.
-const isWriteConflictError = (error: unknown): boolean => {
+// Exported: startQuizAttempt races the same way (double-mounted attempt page).
+export const isWriteConflictError = (error: unknown): boolean => {
   if (typeof error !== 'object' || error === null) return false
   const err = error as { code?: number; hasErrorLabel?: (label: string) => boolean }
   if (err.code === 112 || err.code === 11000) return true

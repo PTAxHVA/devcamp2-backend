@@ -7,6 +7,7 @@ import { UserSectionProgress, IUserSectionProgress } from '../models/user-sectio
 import { QuizAttempt } from '../models/quiz-attempt.model.js'
 import { SkillLevel } from '../types/enums.js'
 import { calculateCurrentStreak, buildWeeklyProgress } from '../utils/streak.util.js'
+import { buildNextUpMap } from '../utils/next-up.util.js'
 
 export const getDashboardAnalytics = async (userId: string) => {
   // Only active roadmaps drive dashboard UI — soft-deleted ones (isActive:false)
@@ -103,7 +104,13 @@ export const getDashboardAnalytics = async (userId: string) => {
     }
   })
 
-  const continueLearningList = userRoadmaps.map((roadmap) => {
+  // BN2b: rows in UserSectionProgress only exist once a quiz was graded, so a
+  // happy-path learner (never failed) had no in-progress row and the Continue
+  // Learning card never rendered. Derive a journey-order "next up" per roadmap
+  // as the fallback; an actual in-progress (failed) section still wins below.
+  const nextUpByRoadmap = buildNextUpMap(userTopics, sections, sectionProgresses)
+
+  const continueLearningEntries = userRoadmaps.map((roadmap) => {
     const rId = roadmap._id.toString()
     const latestProgress = latestProgressPerRoadmap.get(rId)
     let currentSection = null
@@ -122,6 +129,20 @@ export const getDashboardAnalytics = async (userId: string) => {
       }
     }
 
+    if (!currentSection) {
+      const nextUp = nextUpByRoadmap.get(rId)
+      if (nextUp) {
+        currentTopicId = nextUp.topicId
+        currentSection = {
+          sectionId: nextUp.sectionId,
+          name: nextUp.name,
+          slug: nextUp.slug,
+          // Not started yet — this is the derived next step, not a progress row.
+          startedAt: null,
+        }
+      }
+    }
+
     return {
       userRoadmapId: roadmap._id,
       roadmapId: roadmap.roadmapId,
@@ -129,6 +150,22 @@ export const getDashboardAnalytics = async (userId: string) => {
       currentSection,
     }
   })
+
+  // Most recently active roadmap first: the FE card shows the first entry with a
+  // currentSection, so ordering by last graded activity resumes where the learner
+  // actually left off. Roadmaps without any activity keep their enroll order.
+  const lastActivityByRoadmap = new Map<string, number>()
+  for (const p of sectionProgresses) {
+    const rId = userTopicToRoadmap.get(p.userTopicId.toString())
+    if (!rId) continue
+    const at = new Date(p.updatedAt ?? p.startedAt).getTime()
+    if (at > (lastActivityByRoadmap.get(rId) ?? 0)) lastActivityByRoadmap.set(rId, at)
+  }
+  const continueLearningList = continueLearningEntries.sort(
+    (a, b) =>
+      (lastActivityByRoadmap.get(b.userRoadmapId.toString()) ?? 0) -
+      (lastActivityByRoadmap.get(a.userRoadmapId.toString()) ?? 0),
+  )
 
   // Sections completed per day this week (Mon→Sun, UTC+7). Drives the dashboard
   // Weekly Progress chart and the real streak activity dots. A shared master topic
