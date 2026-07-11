@@ -14,7 +14,10 @@ const skipInTest = (): boolean => env.NODE_ENV === 'test'
 
 export const generalRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  // Behind Cloudflare/Render a few clients can share one proxy-IP bucket, so keep
+  // this generous for demo-day traffic. Auth (5/min) and AI (5/min + 14/min global)
+  // have their own stricter limiters, so this ceiling doesn't weaken those paths.
+  max: 400,
   standardHeaders: true,
   legacyHeaders: false,
   skip: skipInTest,
