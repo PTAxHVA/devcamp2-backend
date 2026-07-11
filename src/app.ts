@@ -38,9 +38,11 @@ app.use(
 )
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
-app.use(generalRateLimiter)
 
-// Liveness: process còn sống. Luôn 200 (Render cold-start wake gọi endpoint này).
+// Liveness + readiness đặt TRƯỚC rate limiter và phải bỏ qua nó: Render
+// health-checker ping /health rất thường xuyên (mỗi vài giây khi instance awake),
+// nếu bị đếm chung bucket sẽ vượt limit → 429 → Render đánh instance FAILED rồi
+// restart lặp (flap), làm request người dùng bị reset. Probe không được rate-limit.
 app.get('/health', (_req, res) => {
   res.json({ success: true, data: { status: 'ok' } })
 })
@@ -58,6 +60,9 @@ app.get('/ready', (_req, res) => {
     })
   }
 })
+
+// Rate limiter áp cho toàn bộ API thật bên dưới — KHÔNG áp cho /health + /ready ở trên.
+app.use(generalRateLimiter)
 
 mountRoutes(app)
 
