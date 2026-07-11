@@ -349,5 +349,133 @@
         "estimatedMinutes": 45
       }
     ]
+  },
+  "vue": {
+    "_default": [
+      {
+        "title": "Vue.js Guide: Introduction",
+        "url": "https://vuejs.org/guide/introduction.html",
+        "type": "docs",
+        "provider": "Vue.js",
+        "estimatedMinutes": 60
+      },
+      {
+        "title": "Vue.js Interactive Tutorial",
+        "url": "https://vuejs.org/tutorial/",
+        "type": "interactive",
+        "provider": "Vue.js",
+        "estimatedMinutes": 150
+      },
+      {
+        "title": "Reactivity Fundamentals",
+        "url": "https://vuejs.org/guide/essentials/reactivity-fundamentals.html",
+        "type": "docs",
+        "provider": "Vue.js",
+        "estimatedMinutes": 45
+      },
+      {
+        "title": "Vue Router: Getting Started",
+        "url": "https://router.vuejs.org/guide/",
+        "type": "docs",
+        "provider": "Vue.js",
+        "estimatedMinutes": 90
+      }
+    ]
+  },
+  "angular": {
+    "_default": [
+      {
+        "title": "Angular Essentials",
+        "url": "https://angular.dev/essentials",
+        "type": "docs",
+        "provider": "Angular",
+        "estimatedMinutes": 90
+      },
+      {
+        "title": "Learn Angular (interactive tutorial)",
+        "url": "https://angular.dev/tutorials/learn-angular",
+        "type": "interactive",
+        "provider": "Angular",
+        "estimatedMinutes": 120
+      },
+      {
+        "title": "Dependency Injection Guide",
+        "url": "https://angular.dev/guide/di",
+        "type": "docs",
+        "provider": "Angular",
+        "estimatedMinutes": 80
+      },
+      {
+        "title": "Angular Routing Guide",
+        "url": "https://angular.dev/guide/routing",
+        "type": "docs",
+        "provider": "Angular",
+        "estimatedMinutes": 90
+      }
+    ]
+  },
+  "bootstrap": {
+    "_default": [
+      {
+        "title": "Bootstrap 5 — Getting Started (Introduction)",
+        "url": "https://getbootstrap.com/docs/5.3/getting-started/introduction/",
+        "type": "docs",
+        "provider": "Bootstrap",
+        "estimatedMinutes": 60
+      },
+      {
+        "title": "Bootstrap 5 — Grid System",
+        "url": "https://getbootstrap.com/docs/5.3/layout/grid/",
+        "type": "docs",
+        "provider": "Bootstrap",
+        "estimatedMinutes": 90
+      },
+      {
+        "title": "Bootstrap 5 — Spacing Utilities",
+        "url": "https://getbootstrap.com/docs/5.3/utilities/spacing/",
+        "type": "docs",
+        "provider": "Bootstrap",
+        "estimatedMinutes": 60
+      },
+      {
+        "title": "Bootstrap 5 — Customize with Sass",
+        "url": "https://getbootstrap.com/docs/5.3/customize/sass/",
+        "type": "docs",
+        "provider": "Bootstrap",
+        "estimatedMinutes": 90
+      }
+    ]
+  },
+  "mysql-with-prisma": {
+    "_default": [
+      {
+        "title": "MySQL 8.0 Tutorial: Creating and Using a Database",
+        "url": "https://dev.mysql.com/doc/refman/8.0/en/tutorial.html",
+        "type": "docs",
+        "provider": "MySQL",
+        "estimatedMinutes": 120
+      },
+      {
+        "title": "MySQL 8.0 Reference Manual: CREATE TABLE Statement",
+        "url": "https://dev.mysql.com/doc/refman/8.0/en/create-table.html",
+        "type": "docs",
+        "provider": "MySQL",
+        "estimatedMinutes": 90
+      },
+      {
+        "title": "Prisma ORM Docs: MySQL database connector",
+        "url": "https://www.prisma.io/docs/orm/overview/databases/mysql",
+        "type": "docs",
+        "provider": "Prisma",
+        "estimatedMinutes": 90
+      },
+      {
+        "title": "Prisma ORM Docs: Prisma Client CRUD queries",
+        "url": "https://www.prisma.io/docs/orm/prisma-client/queries/crud",
+        "type": "docs",
+        "provider": "Prisma",
+        "estimatedMinutes": 120
+      }
+    ]
   }
 }

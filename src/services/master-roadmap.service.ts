@@ -108,21 +108,48 @@ export const getMasterRoadmapBranches = async (id: string) => {
 }
 
 /**
- * Public, no-login demo tree (mentor #1). Same { roadmap, topics, edges } graph as
- * GET /roadmaps/:id but with no user progress — status derived from prerequisites
- * only (roots available, the rest locked). Picks the Frontend roadmap, falling back
- * to the first published one.
+ * The default composition of a roadmap: every non-exclusive branch plus the
+ * lowest-orderIndex branch of each mutually-exclusive selectionGroup (mirrors the
+ * FE resolveDefaultBranchSelection). Lets the demo show one clean recommended path
+ * (e.g. React + Tailwind) instead of every fork alternative at once.
  */
-export const getDemoRoadmap = async () => {
-  const roadmap =
-    (await MasterRoadmap.findOne({ isPublished: true, roleName: /frontend/i }).lean()) ??
-    (await MasterRoadmap.findOne({ isPublished: true }).sort({ roleName: 1 }).lean())
-  if (!roadmap) {
-    throw new ApiError(404, 'No published roadmap available for demo', 'DEMO_ROADMAP_NOT_FOUND')
+const resolveDefaultCompositionBranchIds = (
+  branches: {
+    _id: Types.ObjectId
+    selectionGroup?: string | null
+    isMutuallyExclusive?: boolean
+    orderIndex: number
+  }[],
+): Types.ObjectId[] => {
+  const ungrouped = branches.filter((b) => !(b.selectionGroup && b.isMutuallyExclusive))
+  const firstByGroup = new Map<string, (typeof branches)[number]>()
+  for (const b of branches) {
+    if (!(b.selectionGroup && b.isMutuallyExclusive)) continue
+    const cur = firstByGroup.get(b.selectionGroup)
+    if (!cur || b.orderIndex < cur.orderIndex) firstByGroup.set(b.selectionGroup, b)
   }
+  return [...ungrouped, ...firstByGroup.values()].map((b) => b._id)
+}
 
-  const branches = await MasterBranch.find({ roadmapId: roadmap._id }).select('_id').lean()
-  const branchTopics = await BranchTopic.find({ branchId: { $in: branches.map((b) => b._id) } })
+/**
+ * Build a { roadmap, topics, edges } graph for a roadmap, status derived from
+ * prerequisites only — NO user progress. `branchScope`:
+ *  - 'all'     → every parallel branch's topics (Customize "show all branches" view)
+ *  - 'default' → only the default composition (the demo's one clean recommended path)
+ */
+const buildMasterRoadmapGraph = async (
+  roadmap: { _id: Types.ObjectId; roleName: string; description?: string | null },
+  branchScope: 'all' | 'default' = 'all',
+) => {
+  const branches = await MasterBranch.find({ roadmapId: roadmap._id })
+    .select('_id selectionGroup isMutuallyExclusive orderIndex')
+    .lean()
+  const scopedBranchIds =
+    branchScope === 'default'
+      ? resolveDefaultCompositionBranchIds(branches)
+      : branches.map((b) => b._id)
+
+  const branchTopics = await BranchTopic.find({ branchId: { $in: scopedBranchIds } })
     .select('topicId orderIndex')
     .lean()
 
@@ -175,6 +202,33 @@ export const getDemoRoadmap = async () => {
     },
     topics: graph.topics,
     edges: graph.edges,
-    isDemo: true,
   }
+}
+
+/**
+ * Public, no-login demo tree (mentor #1). Picks the Frontend roadmap, falling back
+ * to the first published one, then builds ONE clean recommended path (the default
+ * composition — no fork alternatives), so the public preview stays readable.
+ */
+export const getDemoRoadmap = async () => {
+  const roadmap =
+    (await MasterRoadmap.findOne({ isPublished: true, roleName: /frontend/i }).lean()) ??
+    (await MasterRoadmap.findOne({ isPublished: true }).sort({ roleName: 1 }).lean())
+  if (!roadmap) {
+    throw new ApiError(404, 'No published roadmap available for demo', 'DEMO_ROADMAP_NOT_FOUND')
+  }
+  const graph = await buildMasterRoadmapGraph(roadmap, 'default')
+  return { ...graph, isDemo: true }
+}
+
+/**
+ * Full all-branches graph for a specific published roadmap — same
+ * { roadmap, topics, edges } shape as the demo tree, with no user progress. Powers
+ * the Customize editor's "show every parallel branch" view (the FE overlays the
+ * learner's enrolled topics to highlight the chosen branch and ghost the rest,
+ * mapping topics to branches via GET /master-roadmaps/:id/branches topicIds).
+ */
+export const getMasterRoadmapGraph = async (id: string) => {
+  const roadmap = await findPublishedRoadmapOrThrow(id)
+  return buildMasterRoadmapGraph(roadmap, 'all')
 }

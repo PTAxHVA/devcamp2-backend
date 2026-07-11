@@ -47,16 +47,19 @@ describe('seed estimatedHours — derived from curated resources (in-memory Mong
     const token = signup.body.data.token as string
 
     const roadmap = await MasterRoadmap.findOne({ roleName: 'Frontend Web Developer' }).lean()
-    const branch = await MasterBranch.findOne({ name: 'React + Tailwind' }).lean()
     expect(roadmap, 'seeded FE roadmap').not.toBeNull()
-    expect(branch, 'seeded FE branch').not.toBeNull()
+    const branches = await MasterBranch.find({ roadmapId: roadmap!._id }).lean()
+    // Valid fork selection: mandatory core + one framework + one styling.
+    const pick = (name: string) => branches.find((b) => b.name === name)
+    const branchSelections = [pick('Frontend Core'), pick('React'), pick('Tailwind CSS')]
+    expect(branchSelections.every(Boolean), 'seeded FE fork branches').toBe(true)
 
     const enroll = await request(app)
       .post(`${base}/roadmaps`)
       .set('Authorization', `Bearer ${token}`)
       .send({
         masterRoadmapId: roadmap!._id.toString(),
-        branchSelections: [branch!._id.toString()],
+        branchSelections: branchSelections.map((b) => b!._id.toString()),
       })
     expect([200, 201]).toContain(enroll.status)
 

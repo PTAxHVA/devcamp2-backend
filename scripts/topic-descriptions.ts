@@ -92,6 +92,27 @@ export const TOPIC_DESCRIPTIONS: Record<string, TopicDescription> = {
       'Let users sign up and log in securely, then control what each user is allowed to access. Learn password hashing, JWT tokens, and protecting routes by role.',
     descriptionShort: 'Secure login, JWT sessions, and role-based access.',
   },
+  vue: {
+    description:
+      'Vue is a beginner-friendly JavaScript framework for building user interfaces using declarative templates and automatic reactivity. This topic teaches Vue 3 with the Composition API and script setup: reactivity, template directives, components, state, and routing.',
+    descriptionShort: 'Build reactive user interfaces with Vue 3 and the Composition API.',
+  },
+  angular: {
+    description:
+      'Angular is a TypeScript-based frontend framework by Google for building single-page applications from reusable components, using templates with data binding, dependency injection, and a built-in router.',
+    descriptionShort: "Google's TypeScript framework for building component-based web apps.",
+  },
+  bootstrap: {
+    description:
+      "Bootstrap is the world's most popular component-based CSS framework: a 12-column responsive grid, ready-made components (buttons, cards, navbars, modals), and utility classes you drop straight into your HTML. It is the styling alternative to Tailwind, favoring prebuilt semantic components over atomic utilities.",
+    descriptionShort:
+      'Component-based CSS framework with a 12-column grid, prebuilt components, and utilities.',
+  },
+  'mysql-with-prisma': {
+    description:
+      'Learn the relational database model with MySQL — tables, SQL CRUD, joins, constraints and indexes — then use it from TypeScript with the Prisma ORM (provider "mysql", migrations, and the Prisma Client).',
+    descriptionShort: 'Relational data with MySQL and the Prisma ORM.',
+  },
 }
 
 /**

@@ -99,7 +99,45 @@ const SEED_JOBS: SeedJob[] = [
   {
     csvPath: join(REPO_ROOT, 'seed-data/frontend-content.csv'),
     roleName: 'Frontend Web Developer',
-    branchName: 'React + Tailwind',
+    branchName: 'Frontend Core',
+    branchDescription: 'Core frontend path: dev setup, HTML, CSS, Git, JavaScript and TypeScript.',
+    forkGroups: [
+      {
+        selectionGroup: 'UI Framework',
+        branches: [
+          {
+            name: 'React',
+            description: 'Component-based UI library — React with Next.js.',
+            topicNames: ['React', 'Next.js'],
+          },
+          {
+            name: 'Vue',
+            description: 'Progressive framework — Vue 3 with the Composition API.',
+            topicNames: ['Vue'],
+          },
+          {
+            name: 'Angular',
+            description: 'Full-featured framework — Angular with TypeScript.',
+            topicNames: ['Angular'],
+          },
+        ],
+      },
+      {
+        selectionGroup: 'Styling',
+        branches: [
+          {
+            name: 'Tailwind CSS',
+            description: 'Utility-first styling with Tailwind CSS.',
+            topicNames: ['Tailwind CSS'],
+          },
+          {
+            name: 'Bootstrap',
+            description: 'Component-based styling with Bootstrap 5.',
+            topicNames: ['Bootstrap'],
+          },
+        ],
+      },
+    ],
   },
   {
     csvPath: join(REPO_ROOT, 'seed-data/backend-content.csv'),
@@ -119,6 +157,11 @@ const SEED_JOBS: SeedJob[] = [
             name: 'PostgreSQL',
             description: 'Relational database path — PostgreSQL with Prisma.',
             topicNames: ['PostgreSQL (with Prisma)'],
+          },
+          {
+            name: 'MySQL',
+            description: 'Relational database path — MySQL with Prisma.',
+            topicNames: ['MySQL (with Prisma)'],
           },
         ],
       },

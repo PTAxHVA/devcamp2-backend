@@ -118,6 +118,16 @@ export interface RoadmapFeedbackInput {
   action: 'add' | 'remove' // what the user just did in the customize editor
   editedTopic: FeedbackTopic // the topic being added or removed (curated content)
   currentTopics: FeedbackTopic[] // the OTHER topics currently in the user's roadmap (curated content)
+  /**
+   * Set when the ADDED topic belongs to a mutually-exclusive branch that conflicts
+   * with a branch the learner already has (e.g. adding Vue while on React). Drives a
+   * "two paths at once" risk warning; undefined for a normal, non-conflicting edit.
+   */
+  branchConflict?: {
+    group: string // selectionGroup label, e.g. "UI Framework"
+    currentBranchName: string // the sibling branch already enrolled, e.g. "React"
+    addedBranchName: string // the branch just added, e.g. "Vue"
+  }
 }
 
 /** Render the roadmap's current topics as compact lines: name + what it needs (curated, trusted). */
@@ -138,7 +148,7 @@ const formatFeedbackTopicLines = (topics: FeedbackTopic[]): string => {
  * Returns a single string to pass to geminiModel.generateContent().
  */
 export const buildRoadmapFeedbackPrompt = (input: RoadmapFeedbackInput): string => {
-  const { roadmapRole, learnerGoal, action, editedTopic, currentTopics } = input
+  const { roadmapRole, learnerGoal, action, editedTopic, currentTopics, branchConflict } = input
 
   const actionWord = action === 'add' ? 'ADDED' : 'REMOVED'
   const editedPrereqs =
@@ -148,6 +158,17 @@ export const buildRoadmapFeedbackPrompt = (input: RoadmapFeedbackInput): string 
     targetRole: sanitizeInput(roadmapRole),
     learnerGoal: sanitizeInput(learnerGoal, 200),
   }
+
+  const conflictSection = branchConflict
+    ? `
+
+== EXCLUSIVE PATH CONFLICT ==
+The learner now has TWO alternatives from the same "${branchConflict.group}" choice at once: "${branchConflict.currentBranchName}" (already in the roadmap) and "${branchConflict.addedBranchName}" (just added). This choice is meant to be an either/or — learners usually go deeper faster by finishing one before starting the other.`
+    : ''
+
+  const conflictSeverityRule = branchConflict
+    ? `\n- ADDED a topic that starts a SECOND path in the same either/or "${branchConflict.group}" choice (see EXCLUSIVE PATH CONFLICT) → "warning"; note that learning "${branchConflict.currentBranchName}" and "${branchConflict.addedBranchName}" at once can spread focus thin, and it is usually better to finish one first.`
+    : ''
 
   return `You are a curriculum advisor for VORA, a learning platform for beginner web developers.
 A learner is editing their personalized roadmap. Give ONE short, friendly note about the SINGLE edit below.
@@ -163,9 +184,9 @@ Action: ${actionWord} the topic "${editedTopic.name}" — ${editedTopic.descript
 Prerequisites of "${editedTopic.name}": ${editedPrereqs}
 
 == OTHER TOPICS CURRENTLY IN THE ROADMAP ==
-${formatFeedbackTopicLines(currentTopics)}
+${formatFeedbackTopicLines(currentTopics)}${conflictSection}
 
-== HOW TO JUDGE SEVERITY ==
+== HOW TO JUDGE SEVERITY ==${conflictSeverityRule}
 - ADDED a topic but one or more of its prerequisites are NOT in the roadmap above → "warning"; gently name the missing prerequisite.
 - REMOVED a topic that another topic still needs (listed under "needs") → "warning"; name those dependent topics.
 - Otherwise → "info"; one short, encouraging or neutral note (e.g. it fits their goal, or it is safe to remove).

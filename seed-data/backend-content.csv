@@ -2417,3 +2417,171 @@ async function canEditPost(user, postId) {
 - Use a transactional email service (Resend, Postmark, SES) — not raw SMTP
 - Template the email; include the user's name, link, and expiry
 - Don't include the raw token in logs","mc","When a user requests password reset for an email that DOESN'T exist, what should the API return?","404 Not Found","200 OK (same as success) — don't leak which emails are registered (enumeration)","401","Error message","B","","typed","Type the Node module name (lowercase, 6 letters) used to generate cryptographically random bytes for reset tokens:","","","","","crypto","","mc","Should the reset token be stored RAW or HASHED in the database?","Raw — easy to compare","HASHED — if DB leaks, attackers can't use the tokens. Compare hash(received) == stored.","Encrypted","Plain text","B","","mc","After a successful password reset, what's recommended?","Do nothing","Invalidate all existing sessions/refresh tokens — force re-login everywhere (in case the account was compromised)","Hide the user","Delete their data","B","","typed","Type the typical password-reset token expiry duration (1 word + 'hour', e.g. '1 hour' as just the number, lowercase 1 character):","","","","","1","1 hour|one hour","Topic 8 batch v1"
+"6","MySQL (with Prisma)","6.1","Relational model & tables","MySQL is a **relational database**: data lives in **tables** made of **rows** (records) and **columns** (fields). Unlike MongoDB, which stores flexible **documents**, every row in a MySQL table follows the same fixed **schema** — the same columns, in the same order, each with a declared **type**.
+
+You create a table with `CREATE TABLE`, giving each column a name and a data type:
+
+```sql
+CREATE TABLE users (
+  id         INT          NOT NULL AUTO_INCREMENT,
+  email      VARCHAR(255) NOT NULL,
+  full_name  VARCHAR(100),
+  is_active  BOOLEAN      DEFAULT TRUE,
+  created_at DATETIME,
+  PRIMARY KEY (id)
+);
+```
+
+Common beginner types:
+- **INT** — whole numbers (counts, ids)
+- **VARCHAR(n)** — variable-length text up to n characters (names, emails)
+- **DATETIME** — a date + time value
+- **BOOLEAN** — true/false (a synonym for `TINYINT(1)`; 0 = false, nonzero = true)
+
+Two ideas make each row identifiable:
+- **PRIMARY KEY** — a column (usually `id`) that **uniquely** identifies a row; it can't be NULL or duplicated.
+- **AUTO_INCREMENT** — MySQL fills the column with the next number automatically (1, 2, 3, …), so you never set `id` by hand.
+
+Together, `id INT NOT NULL AUTO_INCREMENT` plus `PRIMARY KEY (id)` gives every new user a unique, ever-increasing id. Prefer `VARCHAR` over fixed-width `CHAR` when text length varies.","mc","In a relational database like MySQL, data is organized into...","documents grouped into collections","tables made of rows and columns","plain key-value pairs","nested JSON trees","B","","typed","Type the two-word SQL statement used to create a new table.","","","","","CREATE TABLE","create table","mc","Which column setting makes MySQL automatically fill in the next number (1, 2, 3, …) for each new row?","PRIMARY KEY","NOT NULL","AUTO_INCREMENT","DEFAULT","C","","mc","Which data type best stores an email address such as ""sam@example.com""?","INT","BOOLEAN","DATETIME","VARCHAR(255)","D","","typed","Type the two-word constraint that names the column uniquely identifying each row in a table.","","","","","PRIMARY KEY","primary key","mysql-with-prisma batch"
+"6","MySQL (with Prisma)","6.2","SQL CRUD","**CRUD** = Create, Read, Update, Delete — the four things you do with rows. MySQL uses four SQL statements.
+
+**Read** — `SELECT` picks columns; `WHERE` filters which rows come back:
+
+```sql
+SELECT id, email FROM users WHERE is_active = TRUE;
+SELECT * FROM users WHERE id = 1;   -- * means every column
+```
+
+**Create** — `INSERT INTO` adds a new row. List the columns, then the matching `VALUES`:
+
+```sql
+INSERT INTO users (email, full_name)
+VALUES ('sam@example.com', 'Sam Lee');
+```
+You skip `id` because AUTO_INCREMENT fills it.
+
+**Update** — `UPDATE ... SET` changes columns in existing rows; `WHERE` says which:
+
+```sql
+UPDATE users SET full_name = 'Sam L.' WHERE id = 1;
+```
+
+**Delete** — `DELETE FROM` removes the rows that match `WHERE`:
+
+```sql
+DELETE FROM users WHERE id = 1;
+```
+
+**Danger — always put a `WHERE` on UPDATE and DELETE.** With no `WHERE`, the statement hits **every row** in the table:
+
+```sql
+UPDATE users SET is_active = FALSE;  -- deactivates ALL users!
+DELETE FROM users;                   -- empties the whole table!
+```
+
+Write the `WHERE` first, then the change. `SELECT` only reads, so it is safe to run freely; the other three modify data.","typed","Type the SQL keyword that reads (retrieves) rows from a table.","","","","","SELECT","select","mc","Which statement adds a brand-new row to a table?","ADD ROW users","INSERT INTO users","CREATE users","PUT INTO users","B","","mc","What does `DELETE FROM users;` do when it has no WHERE clause?","Deletes only the first row","Raises a syntax error","Deletes every row in the users table","Deletes the table itself","C","","mc","You want to rename exactly one user. Which statement is correct and safe?","UPDATE users SET full_name = 'Amy';","UPDATE users SET full_name = 'Amy' WHERE id = 5;","SET users full_name = 'Amy' WHERE id = 5;","CHANGE users full_name = 'Amy';","B","","typed","Type the clause keyword you add to UPDATE or DELETE so it targets only specific rows instead of all of them.","","","","","WHERE","where","mysql-with-prisma batch"
+"6","MySQL (with Prisma)","6.3","Joins & relationships","Real apps split data across tables and **link** them. A `users` table and a `posts` table relate through a **FOREIGN KEY** — a column in `posts` that points at a `users` row:
+
+```sql
+CREATE TABLE posts (
+  id      INT NOT NULL AUTO_INCREMENT,
+  user_id INT NOT NULL,
+  title   VARCHAR(200),
+  PRIMARY KEY (id),
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+```
+
+This is a **one-to-many** relationship: one user has many posts, but each post belongs to exactly one user (via `user_id`).
+
+To read from both tables at once, use a **JOIN** with an `ON` condition that matches the key columns:
+
+```sql
+SELECT users.full_name, posts.title
+FROM users
+INNER JOIN posts ON posts.user_id = users.id;
+```
+
+- **INNER JOIN** — returns only rows that **match in both** tables. A user with no posts is left out.
+- **LEFT JOIN** — returns **all rows from the left table** (`users`), plus matching right-table rows. Where there is no match, the right table's columns come back as **NULL**:
+
+```sql
+SELECT users.full_name, posts.title
+FROM users
+LEFT JOIN posts ON posts.user_id = users.id;
+-- users with zero posts still appear; posts.title is NULL for them
+```
+
+The `ON` clause names the columns that connect the tables. Use **INNER JOIN** when you only want matched pairs, and **LEFT JOIN** when you want every left-table row even if it has no match.","typed","Type the two-word constraint keyword that links a column to the primary key of another table.","","","","","FOREIGN KEY","foreign key","mc","One user can have many posts, but each post belongs to exactly one user. This relationship is called...","many-to-many","one-to-one","one-to-many","a self-join","C","","mc","An INNER JOIN between users and posts returns...","all users, even those with no posts","only users that have at least one matching post","every user combined with every post, unconditionally","only the columns from the users table","B","","mc","With `LEFT JOIN posts ON posts.user_id = users.id`, what happens to a user who has no posts?","The user row is skipped entirely","The user still appears, with the posts columns set to NULL","MySQL raises an error","The user's id becomes 0","B","","typed","Type the keyword that introduces a JOIN's matching condition, as in `... JOIN posts ___ posts.user_id = users.id`.","","","","","ON","on","mysql-with-prisma batch"
+"6","MySQL (with Prisma)","6.4","Constraints & indexes","**Constraints** are rules the database enforces on a column so bad data can't get in:
+
+- **NOT NULL** — the column must always have a value; an insert that omits it fails.
+- **UNIQUE** — no two rows may share the same value (great for emails / usernames).
+- **DEFAULT** — if no value is given, MySQL uses this one.
+
+```sql
+CREATE TABLE users (
+  id         INT          NOT NULL AUTO_INCREMENT,
+  email      VARCHAR(255) NOT NULL UNIQUE,
+  role       VARCHAR(20)  DEFAULT 'member',
+  created_at DATETIME     DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id)
+);
+```
+
+Here every user must have an `email` (NOT NULL), no two users can reuse one (UNIQUE), and `role` / `created_at` fill themselves in when omitted (DEFAULT).
+
+An **INDEX** is a lookup structure that makes finding rows **much faster** — like the index at the back of a book. Without one, MySQL scans every row; with one, it jumps straight to matches:
+
+```sql
+CREATE INDEX idx_users_email ON users (email);
+CREATE UNIQUE INDEX idx_users_email ON users (email);  -- also enforces uniqueness
+```
+
+**When to add an index:** on columns you frequently **search / filter** in a `WHERE`, or **join on**. PRIMARY KEY and UNIQUE columns are indexed automatically. Don't index everything — each index speeds up reads but slightly slows every insert and update, so index the columns your queries actually use.","mc","Which constraint guarantees that no two rows share the same value in a column (for example, email)?","NOT NULL","UNIQUE","DEFAULT","AUTO_INCREMENT","B","","typed","Type the two-word constraint that forces a column to always have a value (it cannot be NULL).","","","","","NOT NULL","not null","mc","What is the main reason to add an INDEX to a column?","To make queries that search or filter that column much faster","To let the column store more data","To automatically delete old rows","To encrypt the column's values","A","","mc","Which constraint supplies a value automatically when an INSERT leaves the column out?","UNIQUE","PRIMARY KEY","DEFAULT","FOREIGN KEY","C","","typed","Type the two-word command (keyword pair) that creates a new index on a table's column.","","","","","CREATE INDEX","create index","mysql-with-prisma batch"
+"6","MySQL (with Prisma)","6.5","Prisma with MySQL","**Prisma** is a TypeScript **ORM**: instead of writing raw SQL, you describe your data in a `schema.prisma` file and call type-safe methods. Point Prisma at MySQL with a **datasource** block:
+
+```prisma
+datasource db {
+  provider = ""mysql""
+  url      = env(""DATABASE_URL"")
+}
+
+generator client {
+  provider = ""prisma-client-js""
+}
+```
+
+`DATABASE_URL` looks like `mysql://user:pass@host:3306/mydb`. Each table is a **model**:
+
+```prisma
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+}
+```
+
+- `@id` marks the primary key; `@default(autoincrement())` is MySQL's AUTO_INCREMENT.
+- `@unique` adds a UNIQUE constraint; `String?` (the `?`) makes a field optional (nullable).
+
+Turn the schema into real tables with a **migration**:
+
+```bash
+npx prisma migrate dev --name init
+```
+
+This generates the SQL, creates the tables in MySQL, and updates the Prisma Client. Then query in code — no SQL strings:
+
+```ts
+// Read every user (like SELECT * FROM User)
+const users = await prisma.user.findMany();
+
+// Create one (like INSERT INTO User ...)
+await prisma.user.create({
+  data: { email: 'sam@example.com', name: 'Sam' },
+});
+```
+
+Note the model is `User` but the client call is `prisma.user` (camelCase). `findMany()` reads; `create()` / `update()` / `delete()` change data — Prisma writes the MySQL for you.","typed","In a Prisma datasource block, type the exact provider value used for a MySQL database.","","","","","mysql","""mysql""","mc","Which command creates and applies a new migration during development?","npx prisma generate","npx prisma migrate dev","npx prisma db seed","npx prisma studio","B","","mc","What does `prisma.user.findMany()` do?","Deletes all users","Creates one new user","Returns all rows from the User table","Defines the User model","C","","mc","In a Prisma model, which field attribute marks the primary-key field?","@unique","@default(now())","@id","@relation","C","","typed","In a Prisma model, type the function used inside @default(...) that maps to MySQL's AUTO_INCREMENT.","","","","","autoincrement()","autoincrement|@default(autoincrement())","mysql-with-prisma batch"
