@@ -241,4 +241,21 @@ describe('seed fork groups (in-memory Mongo, real CSVs)', () => {
     expect(res.status).toBe(404)
     expect(res.body.error.code).toBe('MASTER_ROADMAP_NOT_FOUND')
   })
+
+  // The public demo shows ONE clean recommended path (default composition), not every
+  // fork alternative — otherwise the no-login preview would be a tangle after reseed.
+  it('GET /master-roadmaps/demo shows only the default composition (no fork alternatives)', async () => {
+    const res = await request(app).get('/api/v1/client/master-roadmaps/demo')
+    expect(res.status).toBe(200)
+    expect(res.body.data.isDemo).toBe(true)
+    const names = new Set(res.body.data.topics.map((t: { name: string }) => t.name))
+    // Default composition = core + React (+ Next.js) + Tailwind; the alternatives are excluded.
+    expect(names.has('React')).toBe(true)
+    expect(names.has('Tailwind CSS')).toBe(true)
+    expect(names.has('Vue')).toBe(false)
+    expect(names.has('Angular')).toBe(false)
+    expect(names.has('Bootstrap')).toBe(false)
+    // core (7) + React + Next.js + Tailwind CSS = 10
+    expect(res.body.data.topics).toHaveLength(10)
+  })
 })
