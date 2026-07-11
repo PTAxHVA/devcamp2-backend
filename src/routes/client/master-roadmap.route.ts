@@ -10,5 +10,8 @@ router.get('/', masterRoadmapController.listMasterRoadmaps)
 router.get('/demo', masterRoadmapController.getDemoRoadmap)
 router.get('/:id', masterRoadmapController.getMasterRoadmapById)
 router.get('/:id/branches', masterRoadmapController.getMasterRoadmapBranches)
+// Full all-branches graph ({ roadmap, topics, edges }) for the Customize editor's
+// "show every parallel branch" view. Same class of public curated data as above.
+router.get('/:id/graph', masterRoadmapController.getMasterRoadmapGraph)
 
 export default router

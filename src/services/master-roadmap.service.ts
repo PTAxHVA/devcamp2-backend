@@ -108,19 +108,16 @@ export const getMasterRoadmapBranches = async (id: string) => {
 }
 
 /**
- * Public, no-login demo tree (mentor #1). Same { roadmap, topics, edges } graph as
- * GET /roadmaps/:id but with no user progress — status derived from prerequisites
- * only (roots available, the rest locked). Picks the Frontend roadmap, falling back
- * to the first published one.
+ * Build the full { roadmap, topics, edges } graph for a roadmap: every branch's
+ * topics (deduped across branches, smallest orderIndex kept), status derived from
+ * prerequisites only — NO user progress. Shared by the public demo tree and the
+ * authed all-branches graph (Customize shows every parallel branch at once).
  */
-export const getDemoRoadmap = async () => {
-  const roadmap =
-    (await MasterRoadmap.findOne({ isPublished: true, roleName: /frontend/i }).lean()) ??
-    (await MasterRoadmap.findOne({ isPublished: true }).sort({ roleName: 1 }).lean())
-  if (!roadmap) {
-    throw new ApiError(404, 'No published roadmap available for demo', 'DEMO_ROADMAP_NOT_FOUND')
-  }
-
+const buildMasterRoadmapGraph = async (roadmap: {
+  _id: Types.ObjectId
+  roleName: string
+  description?: string | null
+}) => {
   const branches = await MasterBranch.find({ roadmapId: roadmap._id }).select('_id').lean()
   const branchTopics = await BranchTopic.find({ branchId: { $in: branches.map((b) => b._id) } })
     .select('topicId orderIndex')
@@ -175,6 +172,32 @@ export const getDemoRoadmap = async () => {
     },
     topics: graph.topics,
     edges: graph.edges,
-    isDemo: true,
   }
+}
+
+/**
+ * Public, no-login demo tree (mentor #1). Picks the Frontend roadmap, falling back
+ * to the first published one, then builds its all-branches graph (no user progress).
+ */
+export const getDemoRoadmap = async () => {
+  const roadmap =
+    (await MasterRoadmap.findOne({ isPublished: true, roleName: /frontend/i }).lean()) ??
+    (await MasterRoadmap.findOne({ isPublished: true }).sort({ roleName: 1 }).lean())
+  if (!roadmap) {
+    throw new ApiError(404, 'No published roadmap available for demo', 'DEMO_ROADMAP_NOT_FOUND')
+  }
+  const graph = await buildMasterRoadmapGraph(roadmap)
+  return { ...graph, isDemo: true }
+}
+
+/**
+ * Full all-branches graph for a specific published roadmap — same
+ * { roadmap, topics, edges } shape as the demo tree, with no user progress. Powers
+ * the Customize editor's "show every parallel branch" view (the FE overlays the
+ * learner's enrolled topics to highlight the chosen branch and ghost the rest,
+ * mapping topics to branches via GET /master-roadmaps/:id/branches topicIds).
+ */
+export const getMasterRoadmapGraph = async (id: string) => {
+  const roadmap = await findPublishedRoadmapOrThrow(id)
+  return buildMasterRoadmapGraph(roadmap)
 }

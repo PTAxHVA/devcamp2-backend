@@ -2758,3 +2758,455 @@ corepack enable
 - `$0` = currently selected element in Elements panel
 - `$_` = last console result
 - Right-click any page element → Inspect to jump to it in Elements","typed","Type the keyboard shortcut (single key, uppercase) used to open browser DevTools in most browsers:","","","","","F12","","mc","Which DevTools panel shows all HTTP requests with status codes and timing?","Elements","Console","Network","Performance","C","","mc","Where do you view `console.log()` output?","Elements panel","Console panel","Sources panel","Network panel","B","","mc","What does Lighthouse audit?","Code style only","Performance, Accessibility, SEO, and Best Practices of a page","Server response only","Database queries","B","","typed","Type the DevTools Console shortcut variable (2 characters including $) that refers to the currently selected element in the Elements panel:","","","","","$0","","Topic 0 batch v4 — prerequisite setup"
+"8","Vue","8.1","Introduction & reactivity","**Vue** is a **JavaScript framework for building user interfaces**. It builds on standard HTML, CSS, and JavaScript and adds two superpowers: **declarative rendering** (you describe what the UI should look like based on your data) and **reactivity** (Vue automatically updates the DOM when that data changes).
+
+Modern Vue 3 uses the **Composition API** inside `<script setup>`. The main tool for reactive state is `ref()`, which wraps any value so Vue can track it:
+
+```js
+import { ref } from 'vue'
+
+const count = ref(0)
+console.log(count.value) // 0 — read/write with .value in JS
+count.value++            // now 1
+```
+
+In **JavaScript code** you read or change a ref through its `.value` property. In the **template**, refs are **auto-unwrapped**, so you just write `{{ count }}` (no `.value`).
+
+There is also `reactive()`, which makes an object itself reactive:
+
+```js
+import { reactive } from 'vue'
+
+const state = reactive({ count: 0 })
+state.count++ // no .value needed
+```
+
+But `reactive()` has real limits: it **only works for object types** (objects, arrays, `Map`, `Set`) — never primitives like numbers or strings — you cannot reassign the whole object, and destructuring breaks reactivity. Because of this, the docs recommend **`ref()` as the primary API** for declaring reactive state.
+
+Why `.value`? Plain JavaScript variables cannot be intercepted, but an object's property can — the `.value` getter/setter is what lets Vue know exactly when the value is read or changed.","mc","Which statement best describes what Vue is?","A styling library that replaces CSS","A JavaScript framework for building user interfaces","A relational database engine","A package manager for Node.js","B","","mc","You need a reactive variable that holds a number and that you can reassign directly. Which API do the Vue docs recommend as the primary choice for declaring reactive state?","reactive()","ref()","watch()","defineProps()","B","","typed","In <script setup> JavaScript code, which property do you use to read or update a ref's value?","","","","","value",".value","mc","Which of these is a real limitation of reactive()?","It only works for object types (objects, arrays, Map, Set), not primitives like numbers or strings","It can only be called inside onMounted()","It must be imported from 'vue-router'","It disables the template compiler","A","","typed","Type the function that wraps any single value in an object with a .value property.","","","","","ref","ref()","vue batch"
+"8","Vue","8.2","Template syntax & directives","Vue templates are HTML with extra powers. The most basic is **text interpolation** using double curly braces (the ""mustache"" syntax):
+
+```vue
+<span>Message: {{ msg }}</span>
+```
+
+**Directives** are special attributes that start with `v-`. The essential ones:
+
+- **`v-bind`** binds an attribute to a JavaScript value; shorthand is `:`
+  ```vue
+  <a :href=""url"">link</a>
+  ```
+- **`v-on`** listens to events; shorthand is `@`
+  ```vue
+  <button @click=""count++"">Add</button>
+  ```
+- **`v-if` / `v-else`** conditionally add or remove elements from the DOM:
+  ```vue
+  <p v-if=""ok"">Yes</p>
+  <p v-else>No</p>
+  ```
+- **`v-for`** renders a list — always add a unique **`:key`**:
+  ```vue
+  <li v-for=""item in items"" :key=""item.id"">{{ item.name }}</li>
+  ```
+- **`v-model`** creates **two-way binding** on form inputs, keeping the input and your state in sync:
+  ```vue
+  <input v-model=""message"" />
+  ```
+
+`v-model` is really **syntax sugar**: on a text input it combines a `:value` binding with an `@input` listener. The `:key` on `v-for` matters because Vue patches lists ""in place"" by default; a stable, unique key lets it **reuse and reorder** DOM nodes correctly instead of scrambling element or input state. Unlike `v-if`, the `v-show` directive always renders the element and only toggles its CSS `display`.","mc","Which is the correct text interpolation syntax to print the value of msg in a Vue template?","{{ msg }}","{ msg }","${ msg }","<< msg >>","A","","mc","You want to bind an <a> element's href attribute to a JavaScript variable named url. Which is correct?","href=""{{ url }}""",":href=""url""","href=""url""","v-href=""url""","B","","mc","What is the difference between v-if and v-show?","They are identical","v-if adds or removes the element from the DOM; v-show keeps it rendered and only toggles the CSS display property","v-if toggles the CSS display property; v-show adds or removes the element from the DOM","v-show is only for loops and v-if is only for forms","B","","typed","Type the directive (including its v- prefix) used to render a list by iterating over an array.","","","","","v-for","","typed","Type the directive that creates two-way data binding between a form input and your state.","","","","","v-model","","vue batch"
+"8","Vue","8.3","Components, props & events","A **Single-File Component (SFC)** is a `.vue` file that keeps one component's markup, logic, and styles together in three blocks — `<template>`, `<script setup>`, and `<style>`:
+
+```vue
+<script setup>
+import { ref } from 'vue'
+const greeting = ref('Hello')
+</script>
+
+<template>
+  <p>{{ greeting }}</p>
+</template>
+
+<style>
+p { color: purple; }
+</style>
+```
+
+Components communicate through **props** (data flowing **down**, parent → child) and **events** (messages flowing **up**, child → parent).
+
+Declare props with the **`defineProps()`** macro — no import needed in `<script setup>`:
+
+```vue
+<script setup>
+const props = defineProps({ title: String })
+</script>
+
+<template>
+  <h2>{{ title }}</h2>
+</template>
+```
+
+A parent passes them like attributes: `<BlogPost :title=""post.title"" />`.
+
+Props are **one-way and read-only** in the child, so the child must not mutate them. To send something back up, declare events with **`defineEmits()`** and call the returned `emit` function:
+
+```vue
+<script setup>
+const emit = defineEmits(['submit'])
+
+function onClick() {
+  emit('submit')
+}
+</script>
+```
+
+The parent listens with `v-on` / `@`:
+
+```vue
+<MyForm @submit=""handleSubmit"" />
+```
+
+Both `defineProps` and `defineEmits` are **compiler macros**, so you use them directly without importing them.","mc","What is a Single-File Component (SFC) in Vue?","A .vue file that contains a component's <template>, <script>, and <style> in one file","A JavaScript file that can only hold a single function","A global CSS stylesheet","A JSON configuration file","A","","typed","In <script setup>, type the compiler macro used to declare the props a component accepts.","","","","","defineProps","defineProps()","typed","In <script setup>, type the compiler macro used to declare the events a component can emit.","","","","","defineEmits","defineEmits()","mc","How does data normally flow between parent and child components in Vue?","Props flow parent to child, and events flow child to parent","Props and events both flow parent to child","Everything is automatically two-way bound","A child can directly reassign its parent's variables","A","","mc","A child runs defineEmits(['submit']) and then emit('submit'). How does the parent listen for that event?","<Child :submit=""handleSubmit"" />","<Child @submit=""handleSubmit"" />","<Child v-model=""submit"" />","<Child v-if=""submit"" />","B","","vue batch"
+"8","Vue","8.4","Composition API & state","The **Composition API** (used inside `<script setup>`) provides small functions for building reactive logic. Three you will reach for constantly:
+
+**`computed()`** creates a value **derived** from other reactive state. It is **cached**: it only re-runs when one of its reactive dependencies changes — unlike a plain method, which runs on every re-render.
+
+```js
+import { ref, computed } from 'vue'
+
+const first = ref('Ada')
+const last = ref('Lovelace')
+const fullName = computed(() => `${first.value} ${last.value}`)
+```
+
+Keep computed getters **side-effect free** — they should only compute and return a value.
+
+**`watch()`** runs a **side effect** (fetching data, logging, etc.) whenever a source changes. Its callback receives the **new** and **old** values:
+
+```js
+import { ref, watch } from 'vue'
+
+const question = ref('')
+watch(question, (newVal, oldVal) => {
+  console.log(`changed from ""${oldVal}"" to ""${newVal}""`)
+})
+```
+
+Rule of thumb: use **`computed`** to *derive* a value, and use **`watch`** to *react* with a side effect.
+
+**Lifecycle hooks** run code at key moments. **`onMounted()`** runs once, **after** the component is mounted to the DOM — a common place to fetch initial data or measure an element:
+
+```js
+import { onMounted } from 'vue'
+
+onMounted(() => {
+  console.log('the component is now mounted!')
+})
+```
+
+Related hooks include `onUpdated()` and `onUnmounted()`. Hooks must be registered **synchronously** during setup.","mc","How does a computed() property differ from calling a regular method in the template?","A computed property is cached and only re-evaluates when its reactive dependencies change","A computed property runs again on every single re-render","A computed property cannot read reactive state","A computed property only works in the Options API","A","","typed","Type the Composition API function used to create a cached value derived from other reactive state.","","","","","computed","computed()","mc","When does the onMounted() lifecycle hook run?","Before the component instance is created","After the component has been mounted to the DOM","Only when the user clicks a button","Every time any ref anywhere in the app changes","B","","typed","Type the lifecycle hook that runs once, right after the component is mounted to the DOM.","","","","","onMounted","onMounted()","mc","You want to run a side effect (such as fetching data) whenever a ref changes, and you need access to both the new and old values. Which API fits best?","computed()","watch()","createWebHistory()","defineProps()","B","","vue batch"
+"8","Vue","8.5","Vue Router basics","**Vue Router** is the official router for Vue single-page apps — it swaps components in and out as the URL changes, with **no full page reload**.
+
+Create the router with **`createRouter()`** and pick a history mode with **`createWebHistory()`** (HTML5 mode = clean URLs, no `#`). The **`routes`** array maps each URL `path` to a `component`:
+
+```js
+import { createRouter, createWebHistory } from 'vue-router'
+import Home from './Home.vue'
+import About from './About.vue'
+
+const routes = [
+  { path: '/', component: Home },
+  { path: '/about', component: About },
+]
+
+export const router = createRouter({
+  history: createWebHistory(),
+  routes,
+})
+```
+
+Register it on the app before mounting:
+
+```js
+import { createApp } from 'vue'
+import App from './App.vue'
+
+createApp(App).use(router).mount('#app')
+```
+
+This globally registers two components:
+
+- **`<router-view>`** — the placeholder that renders whichever component matches the current URL.
+- **`<router-link>`** — a replacement for the `<a>` tag used for navigation. Its **`to`** prop sets the destination, and it changes the URL **without reloading** the page:
+
+```vue
+<nav>
+  <router-link to=""/"">Home</router-link>
+  <router-link to=""/about"">About</router-link>
+</nav>
+
+<router-view />
+```","typed","Type the function imported from vue-router that creates the router instance.","","","","","createRouter","createRouter()","mc","What does createWebHistory() enable?","HTML5 history mode, giving clean URLs without a # hash","A connection to a MongoDB database","Automatic dark-mode styling","Server-side email sending","A","","mc","In the routes array, what does each route object map?","A URL path to the component that should render for it","A CSS class to an HTML element","An event name to a method","A prop to an emitted event","A","","mc","Which component acts as the placeholder that renders the component matching the current URL?","<router-link>","<router-view>","<script setup>","<template>","B","","typed","On a <router-link>, type the prop used to set the destination path (for example <router-link ___=""/about"">).","","","","","to","","vue batch"
+"8","Angular","8.1","Components & standalone","An Angular application is a tree of **components**. A component is a TypeScript class annotated with the **`@Component`** decorator, which attaches three things: a **`selector`** (the custom HTML tag used to place the component), a **template** (the HTML it renders), and optional **styles**.
+
+```ts
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-hello',
+  standalone: true,
+  template: `<h1>Hello, {{ name }}!</h1>`,
+  styles: `h1 { color: purple; }`,
+})
+export class HelloComponent {
+  name = 'Angular';
+}
+```
+
+Use `template` for an inline string or `templateUrl` to point at an external `.html` file. In **modern Angular (v19+)** components are **standalone by default**, so `standalone: true` is optional in new code but you will still see it written out; standalone components pull in what they need through their own `imports` array instead of an NgModule.
+
+An app starts by **bootstrapping** its root component:
+
+```ts
+import { bootstrapApplication } from '@angular/platform-browser';
+import { HelloComponent } from './hello.component';
+
+bootstrapApplication(HelloComponent);
+```
+
+- **`@Component`** turns a class into a component.
+- `selector`, `template`/`templateUrl`, and `styles`/`styleUrl` are its main metadata.
+- The root component passed to `bootstrapApplication` must be standalone.","mc","Which decorator marks a TypeScript class as an Angular component?","@Injectable","@Component","@Directive","@NgModule","B","","mc","In the @Component metadata, which property defines the custom HTML tag used to place the component in a template?","template","selector","imports","providers","B","","mc","In modern Angular (v19+), what is the default value of a component's standalone option?","true","false","'root'","undefined","A","","typed","Type the function (from @angular/platform-browser) that bootstraps a standalone root component:","","","","","bootstrapApplication","","typed","Type the @Component metadata property that holds an inline HTML template written as a string:","","","","","template","","angular batch"
+"8","Angular","8.2","Templates & data binding","Angular templates bind data between the class and the DOM in four ways.
+
+- **Interpolation** `{{ expression }}` renders a value as text.
+- **Property binding** `[property]=""expression""` sets an element or component property.
+- **Event binding** `(event)=""handler()""` runs a method when an event fires.
+- **Two-way binding** `[(ngModel)]=""property""` (the ""banana-in-a-box"" `[()]`) keeps a form field and a class property in sync.
+
+```html
+<p>Hello, {{ name }}!</p>
+<button [disabled]=""isSaving"">Save</button>
+<button (click)=""save()"">Save</button>
+<input [(ngModel)]=""name"" />
+```
+
+Two-way binding with `ngModel` needs the **`FormsModule`** imported from `@angular/forms`:
+
+```ts
+import { Component } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+
+@Component({
+  selector: 'app-form',
+  imports: [FormsModule],
+  template: `<input [(ngModel)]=""name"" /> <p>You typed: {{ name }}</p>`,
+})
+export class FormComponent {
+  name = 'Ada';
+  isSaving = false;
+  save() {}
+}
+```
+
+Read the punctuation as a hint: **`[ ]` flows data into the view**, **`( )` sends events out**, and **`[( )]` does both at once**.","mc","Which syntax renders a component property as dynamic text inside a template (interpolation)?","[name]","{{ name }}","(name)","#name","B","","mc","Which binding runs a method when a user event such as a click occurs?","[disabled]=""save()""","{{ save() }}","(click)=""save()""","[(click)]=""save()""","C","","mc","Two-way binding with [(ngModel)] requires importing which module from @angular/forms?","CommonModule","FormsModule","RouterModule","BrowserModule","B","","typed","Type the directive used inside the banana-in-a-box [( )] for two-way binding on a form input:","","","","","ngModel","[(ngModel)]","typed","Write the variable total wrapped in Angular interpolation so it renders as text:","","","","","{{ total }}","{{total}}","angular batch"
+"8","Angular","8.3","Directives & control flow","**Directives** add behavior to templates. There are two kinds:
+
+- **Structural directives** change the DOM by *adding or removing* elements. The classic ones use a leading asterisk `*`: **`*ngIf`** and **`*ngFor`** (from `@angular/common`).
+- **Attribute directives** change the *appearance or behavior* of an element that already exists, such as `ngClass` and `ngStyle`.
+
+```html
+<!-- Classic structural directives -->
+<p *ngIf=""isLoggedIn"">Welcome back!</p>
+<li *ngFor=""let user of users"">{{ user.name }}</li>
+```
+
+Since **Angular 17** there is also **built-in control flow** written directly in the template — nothing to import:
+
+```html
+@if (isLoggedIn) {
+  <p>Welcome back!</p>
+} @else {
+  <p>Please log in.</p>
+}
+
+@for (user of users; track user.id) {
+  <li>{{ user.name }}</li>
+}
+```
+
+- The asterisk `*` marks a classic structural directive.
+- `@if` / `@else` and `@switch` handle conditionals; `@for` handles loops.
+- Every `@for` **must** include a **`track`** expression (e.g. `track user.id`) so Angular can match data to DOM nodes efficiently.","mc","Which is the classic structural directive that conditionally adds or removes an element from the DOM?","*ngFor","*ngIf","ngClass","ngStyle","B","","mc","In the new built-in @for control-flow block, what must every loop include?","an index variable","a track expression","an @empty block","a CommonModule import","B","","mc","What is the difference between a structural directive and an attribute directive?","Structural directives change appearance; attribute directives add or remove DOM elements","Structural directives add or remove DOM elements; attribute directives change the appearance or behavior of an element","They are two names for the same thing","Attribute directives only work inside standalone components","B","","typed","Type the classic structural directive, including its leading asterisk, used to repeat an element for each item in a list:","","","","","*ngFor","ngFor","typed","Type the new built-in control-flow block (starting with @) used for conditional rendering, the modern replacement for *ngIf:","","","","","@if","if","angular batch"
+"8","Angular","8.4","Services & dependency injection","A **service** is a plain class that holds reusable logic or data — fetching from an API, sharing state — so components stay lean. Mark it with **`@Injectable`** and register it with **`providedIn: 'root'`** to make it a single, app-wide **singleton**:
+
+```ts
+import { Injectable } from '@angular/core';
+
+@Injectable({ providedIn: 'root' })
+export class UserService {
+  getUsers() {
+    return ['Ada', 'Grace'];
+  }
+}
+```
+
+**Dependency injection (DI)** then hands that service to whoever asks for it. You can request it two ways — the **`inject()`** function or a **constructor** parameter:
+
+```ts
+import { Component, inject } from '@angular/core';
+import { UserService } from './user.service';
+
+@Component({ selector: 'app-users', template: `...` })
+export class UsersComponent {
+  // Option 1: the inject() function
+  private users = inject(UserService);
+
+  // Option 2: constructor injection
+  // constructor(private users: UserService) {}
+}
+```
+
+- `@Injectable({ providedIn: 'root' })` gives one shared instance for the whole app.
+- `inject()` works in field initializers and inside the constructor.
+- DI keeps classes decoupled and easy to test.","mc","Which decorator marks a class as a service that Angular can inject?","@Component","@Injectable","@NgModule","@Directive","B","","mc","What does providedIn: 'root' do when passed to @Injectable?","Restricts the service to a single component","Registers the service as one app-wide (singleton) instance","Makes the service available only inside routing","Prevents the service from being injected anywhere","B","","mc","Which function requests a dependency in a field initializer instead of using a constructor parameter?","provide()","inject()","resolve()","useClass()","B","","typed","Type the decorator, including the @, that marks a class as an injectable service:","","","","","@Injectable","Injectable","typed","Complete the metadata so a service is an app-wide singleton: @Injectable({ providedIn: ___ }). Type just the value:","","","","","'root'","root","angular batch"
+"8","Angular","8.5","Routing","The **Angular Router** maps URL paths to components so one page can show different views. Define a **`Routes`** array of `{ path, component }` objects:
+
+```ts
+import { Routes } from '@angular/router';
+import { HomePage } from './home-page';
+import { AboutPage } from './about-page';
+
+export const routes: Routes = [
+  { path: '', component: HomePage },
+  { path: 'about', component: AboutPage },
+];
+```
+
+Register the routes with **`provideRouter(routes)`** when bootstrapping (the modern standalone way; the older NgModule way is `RouterModule.forRoot(routes)`):
+
+```ts
+import { bootstrapApplication } from '@angular/platform-browser';
+import { provideRouter } from '@angular/router';
+import { App } from './app';
+import { routes } from './app.routes';
+
+bootstrapApplication(App, {
+  providers: [provideRouter(routes)],
+});
+```
+
+Then place a **`<router-outlet>`** where the matched component should render, and use **`routerLink`** on links to navigate without a full page reload:
+
+```html
+<nav>
+  <a routerLink=""/"">Home</a>
+  <a routerLink=""/about"">About</a>
+</nav>
+<router-outlet></router-outlet>
+```
+
+- `path: ''` is the default (home) route.
+- `provideRouter` wires the router into a standalone app.
+- `routerLink` replaces `href`, and `<router-outlet>` is where views appear.","mc","Which two properties does a basic Angular route object use?","url and view","path and component","route and page","href and target","B","","mc","Which element marks the place where the router renders the component for the active route?","<router-view>","<ng-outlet>","<router-outlet>","<route-slot>","C","","mc","Which function registers the routes in a standalone app's providers when bootstrapping?","RouterModule.forChild()","provideRouter()","configureRoutes()","createRouter()","B","","typed","Type the directive placed on an <a> tag to navigate to a route instead of using href:","","","","","routerLink","","typed","Type the element tag name (without angle brackets) that marks where the router displays the active route's component:","","","","","router-outlet","<router-outlet>","angular batch"
+"3","Bootstrap","3.1","Setup & the grid system","Bootstrap is a **prebuilt component + utility CSS framework**. Unlike Tailwind (where you compose atomic classes), Bootstrap ships ready-made components plus a **12-column grid**. The fastest setup is the official CDN — one CSS link and one JS bundle (the bundle already includes Popper, and **Bootstrap 5 needs no jQuery**):
+
+```html
+<link href=""https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"" rel=""stylesheet"">
+<script src=""https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js""></script>
+```
+
+Or install with a package manager: `npm install bootstrap@5.3.8`.
+
+The **grid** is Bootstrap's core layout tool and nests three levels: a **`.container`** (or **`.container-fluid`** for full width) wraps one or more **`.row`** elements, and each row holds **columns**. Every row is divided into **12 units**, so `col-6` is half and `col-4` is a third; a bare `.col` splits the space equally. Columns are **mobile-first** — add a breakpoint infix so the layout changes at that width and up:
+
+```html
+<div class=""container"">
+  <div class=""row"">
+    <div class=""col-12 col-md-6"">Left</div>
+    <div class=""col-12 col-md-6"">Right</div>
+  </div>
+</div>
+```
+
+Key classes:
+- `.container`, `.container-fluid`, `.container-{sm…xxl}`
+- `.row` — direct child of a container, parent of the columns
+- `.col`, `.col-6`, `.col-md-4` — the number is out of 12
+- Breakpoints: `sm ≥576px`, `md ≥768px`, `lg ≥992px`, `xl ≥1200px`, `xxl ≥1400px` (extra-small has no infix, `<576px`)","mc","In Bootstrap 5, how many columns does each grid row divide into?","16","10","12","24","C","","mc","Which class makes an element span 4 of 12 columns starting at the medium (≥768px) breakpoint and up?","col-4-md","md-4","col-md-4","column-md-4","C","","mc","What is the minimum viewport width for Bootstrap's `lg` (large) breakpoint?","≥576px","≥768px","≥992px","≥1200px","C","","typed","Type the Bootstrap class that must wrap the columns and sit directly inside a container:","","","","","row","","typed","Type the container class that stays width:100% at every breakpoint (a full-width container):","","","","","container-fluid","","bootstrap batch"
+"3","Bootstrap","3.2","Core components","Bootstrap's biggest win over hand-written CSS is its library of **ready-made components**. The interactive ones (modal, navbar collapse, dropdown) are wired with plain-JavaScript **`data-bs-*` attributes** — you write no JS. Note the `bs`: Bootstrap 4's `data-toggle` became **`data-bs-toggle`** in v5.
+
+**Buttons** combine the base `.btn` with a color variant:
+
+```html
+<button type=""button"" class=""btn btn-primary"">Save</button>
+<button type=""button"" class=""btn btn-outline-danger btn-sm"">Delete</button>
+```
+
+Variants: `.btn-primary`, `.btn-secondary`, `.btn-success`, `.btn-danger`, `.btn-warning`, `.btn-info`, `.btn-light`, `.btn-dark`, `.btn-link`, plus `.btn-outline-*` and sizes `.btn-lg` / `.btn-sm`.
+
+**Cards** are flexible content boxes built from `.card` → `.card-body`, with `.card-title`, `.card-text`, and optional `.card-header`, `.card-footer`, `.card-img-top`:
+
+```html
+<div class=""card"" style=""width: 18rem;"">
+  <div class=""card-body"">
+    <h5 class=""card-title"">Card title</h5>
+    <p class=""card-text"">Some quick example text.</p>
+    <a href=""#"" class=""btn btn-primary"">Go somewhere</a>
+  </div>
+</div>
+```
+
+**Navbar** uses `.navbar` + `.navbar-expand-lg` (it collapses below `lg`), with `.navbar-brand`, `.nav-item`, `.nav-link`, and a `.navbar-toggler` that fires `data-bs-toggle=""collapse""`.
+
+**Modals** open straight from markup — a trigger button needs `data-bs-toggle=""modal""` and `data-bs-target=""#id""`; the dialog is `.modal` → `.modal-dialog` → `.modal-content` with `.modal-header`, `.modal-body`, `.modal-footer`, and any element carrying `data-bs-dismiss=""modal""` closes it.","mc","Which two classes together make a solid, filled primary button?","button primary","btn btn-primary","btn-primary-solid","btn color-primary","B","","mc","Which card class wraps the padded content area that holds the title, text, and buttons?","card-content","card-body","card-inner","card-main","B","","mc","In Bootstrap 5, which attribute pair on a trigger button opens a modal with no custom JavaScript?","data-toggle=""modal"" and data-target=""#id""","data-bs-toggle=""modal"" and data-bs-target=""#id""","data-modal=""open"" and href=""#id""","onclick=""modal('#id')""","B","","typed","Type the button color-variant class (used together with `btn`) for the primary action:","","","","","btn-primary","","typed","Type the navbar class applied to the brand/logo element:","","","","","navbar-brand","","bootstrap batch"
+"3","Bootstrap","3.3","Utilities & spacing","Beyond components, Bootstrap also has **utility classes** — small single-purpose helpers, much like Tailwind — for spacing, layout, and color.
+
+**Spacing** follows the pattern **`{property}{sides}-{size}`**:
+- property: `m` (margin) or `p` (padding)
+- sides: `t` top, `b` bottom, `s` start (left in LTR), `e` end (right in LTR), `x` left+right, `y` top+bottom, or blank for all four sides
+- size: `0`–`5` on a fixed scale (`0`=0, `1`=.25rem, `2`=.5rem, `3`=1rem, `4`=1.5rem, `5`=3rem), plus `auto` (margins only)
+
+```html
+<div class=""mt-3 px-2 mb-0"">Spaced box</div>
+<nav class=""d-flex justify-content-between align-items-center"">…</nav>
+```
+
+So `mt-3` is 1rem top margin, `px-2` is .5rem left/right padding, and `me-auto` (margin-right: auto in LTR) pushes later items to the right.
+
+**Flexbox** utilities: `.d-flex` (or `.d-inline-flex`) turns on flex; then align with `.justify-content-{start|end|center|between|around|evenly}` (main axis) and `.align-items-{start|end|center|baseline|stretch}` (cross axis); set direction with `.flex-row` / `.flex-column`.
+
+**Color** utilities: text with `.text-primary`, `.text-success`, `.text-danger`, `.text-body-secondary`; backgrounds with `.bg-primary`, `.bg-success`, `.bg-light`, `.bg-dark`. Unlike Tailwind's numeric `text-red-500`, Bootstrap colors are **semantic** — primary, success, danger — not a numbered palette.","mc","In Bootstrap spacing utilities, what does `px-3` set?","padding-top and padding-bottom of 1rem","padding-left and padding-right of 1rem","margin on the x-axis of 1rem","padding on all four sides of 1rem","B","","mc","Which class turns an element into a flexbox container?","flex","display-flex","d-flex","flexbox","C","","mc","Which utility sets red 'danger' text color?","text-danger","text-red","color-danger","font-danger","A","","typed","Type the spacing class that adds 1rem of padding on all four sides (spacer size 3):","","","","","p-3","","typed","Type the flexbox utility that centers items along the main axis:","","","","","justify-content-center","","bootstrap batch"
+"3","Bootstrap","3.4","Responsive & customization","Bootstrap is **mobile-first and responsive by default**. A column class with a breakpoint infix only ""kicks in"" at that width and up; **below it the column is full width and stacks vertically**. So `col-md-6` renders as two side-by-side halves on tablets/desktops but a single stacked column on phones — pair it with `col-12` to be explicit:
+
+```html
+<div class=""row"">
+  <div class=""col-12 col-lg-8"">Main</div>
+  <div class=""col-12 col-lg-4"">Sidebar</div>
+</div>
+```
+
+Most **utilities are responsive too** — insert a breakpoint infix: `d-none d-md-block` (hidden on phones, shown as block from `md`), `text-sm-center`, `p-lg-5`.
+
+**Customizing** Bootstrap happens two ways:
+
+1. **Sass** (compile-time): override variables — each carries a `!default` flag — but you must set them **before** importing Bootstrap:
+
+```scss
+$primary: #6f42c1;
+$body-bg: #f8f9fa;
+@import ""bootstrap/scss/bootstrap"";
+```
+
+2. **CSS variables** (runtime): Bootstrap ships custom properties prefixed **`--bs-`**, so you can retheme without recompiling Sass:
+
+```css
+:root { --bs-primary: #6f42c1; }
+a { color: var(--bs-primary); }
+```
+
+Key ideas:
+- Columns stack below their breakpoint (mobile-first)
+- Responsive utilities: `d-md-block`, `text-lg-end`, `m-xl-4`
+- Sass: override `$primary`, `$body-bg` **before** `@import ""bootstrap""`
+- CSS vars: `--bs-primary`, `--bs-body-bg`, used via `var(--bs-…)`","mc","A column has only the class `col-md-6`. How does it render on a 400px-wide phone (below 768px)?","hidden","exactly half width","full width, stacking vertically","one-third width","C","","mc","When theming Bootstrap with Sass, where must you set `$primary: #...;`?","after `@import ""bootstrap""`","before importing Bootstrap's variables/files","inside a `:root` block","it cannot be changed","B","","mc","Which is Bootstrap's runtime CSS custom property (variable) for the primary theme color?","--color-primary","$primary","--bs-primary","--bootstrap-primary","C","","typed","Type the responsive display utility that shows an element as `block` from the medium breakpoint up (commonly paired with `d-none`):","","","","","d-md-block","","typed","Type the responsive text-alignment class that centers text from the small breakpoint up:","","","","","text-sm-center","","bootstrap batch"

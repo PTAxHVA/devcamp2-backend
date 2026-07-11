@@ -37,3 +37,12 @@ export const getMasterRoadmapBranches = async (req: Request, res: Response, next
     next(error)
   }
 }
+
+export const getMasterRoadmapGraph = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await masterRoadmapService.getMasterRoadmapGraph(req.params.id as string)
+    res.json(ok(result))
+  } catch (error) {
+    next(error)
+  }
+}

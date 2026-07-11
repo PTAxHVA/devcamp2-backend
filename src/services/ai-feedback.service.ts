@@ -84,6 +84,39 @@ export const feedbackRoadmap = async (userId: string, reqBody: RoadmapFeedbackSc
       .map((id) => idToNameMap.get(id))
       .filter(Boolean) as string[]
 
+  // Branch-conflict (F19 extension): adding a topic from a mutually-exclusive branch
+  // while a sibling branch of the same group is already enrolled (e.g. Vue while on
+  // React). Compares the branch the edited topic belongs to against the branches the
+  // currently-enrolled topics belong to. Only for an 'add' onto an exclusive branch.
+  let branchConflict: RoadmapFeedbackInput['branchConflict']
+  const addedBranch = masterBranches.find(
+    (b) => b._id.toString() === branchTopic.branchId.toString(),
+  )
+  if (action === 'add' && addedBranch?.selectionGroup && addedBranch.isMutuallyExclusive) {
+    const enrolledBranchLinks = await BranchTopic.find({
+      topicId: { $in: userTopics.map((t) => t.topicId) },
+      branchId: { $in: masterBranches.map((b) => b._id) },
+    })
+      .select('branchId')
+      .lean()
+    const branchById = new Map(masterBranches.map((b) => [b._id.toString(), b]))
+    for (const link of enrolledBranchLinks) {
+      const sibling = branchById.get(link.branchId.toString())
+      if (
+        sibling &&
+        sibling.selectionGroup === addedBranch.selectionGroup &&
+        sibling._id.toString() !== addedBranch._id.toString()
+      ) {
+        branchConflict = {
+          group: addedBranch.selectionGroup,
+          currentBranchName: sibling.name,
+          addedBranchName: addedBranch.name,
+        }
+        break
+      }
+    }
+  }
+
   const feedbackInput: RoadmapFeedbackInput = {
     roadmapRole: masterRoadmap.roleName,
     learnerGoal: userOnboardingProfile.goal,
@@ -106,12 +139,17 @@ export const feedbackRoadmap = async (userId: string, reqBody: RoadmapFeedbackSc
           prerequisiteNames: resolveNames(masterTopic.dependsOn?.requiredTopicIds),
         }
       }),
+    branchConflict,
   }
 
   const roadmapFeedbackPrompt = buildRoadmapFeedbackPrompt(feedbackInput)
 
-  const fallbackFeedback =
-    reqBody.action === 'add'
+  const fallbackFeedback = branchConflict
+    ? {
+        feedback: `Learning ${branchConflict.addedBranchName} and ${branchConflict.currentBranchName} at the same time can spread your focus thin — most learners finish one before starting the other.`,
+        severity: FeedbackSeverity.WARNING,
+      }
+    : reqBody.action === 'add'
       ? {
           feedback: 'Please consider topic dependencies and pre-completion before adding.',
           severity: FeedbackSeverity.WARNING,
