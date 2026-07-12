@@ -13,6 +13,8 @@ import { geminiModel } from '../config/gemini.js'
 import { logger } from '../config/logger.js'
 import { RoadmapFeedbackSchema, aiFeedbackResponseSchema } from '../schemas/ai.schema.js'
 import { FeedbackSeverity } from '../types/enums.js'
+import { AiFeedbackTip } from '../models/ai-feedback-tip.model.js'
+import { fillBranchNames, inlineFallback } from '../config/ai-feedback-tips.js'
 
 export const feedbackRoadmap = async (userId: string, reqBody: RoadmapFeedbackSchema) => {
   const { userRoadmapId, action, topicId } = reqBody
@@ -144,22 +146,6 @@ export const feedbackRoadmap = async (userId: string, reqBody: RoadmapFeedbackSc
 
   const roadmapFeedbackPrompt = buildRoadmapFeedbackPrompt(feedbackInput)
 
-  const fallbackFeedback = branchConflict
-    ? {
-        feedback: `Learning ${branchConflict.addedBranchName} and ${branchConflict.currentBranchName} at the same time can spread your focus thin — most learners finish one before starting the other.`,
-        severity: FeedbackSeverity.WARNING,
-      }
-    : reqBody.action === 'add'
-      ? {
-          feedback: 'Please consider topic dependencies and pre-completion before adding.',
-          severity: FeedbackSeverity.WARNING,
-        }
-      : {
-          feedback:
-            "Removing this topic might impact your roadmap's coverage of certain concepts. Please review your roadmap before removing this topic.",
-          severity: FeedbackSeverity.WARNING,
-        }
-
   try {
     const response = (await Promise.race([
       geminiModel.generateContent(roadmapFeedbackPrompt),
@@ -182,9 +168,33 @@ export const feedbackRoadmap = async (userId: string, reqBody: RoadmapFeedbackSc
     return {
       feedback: validated.feedback,
       severity: validated.severity,
+      source: 'ai' as const,
     }
   } catch (error) {
     logger.error({ error }, 'Failed to generate roadmap feedback')
-    return fallbackFeedback
+    const fallback = await resolveFallbackTip(action, branchConflict)
+    return { ...fallback, source: 'fallback' as const }
   }
+}
+
+/**
+ * Resolve the fallback feedback for a failed Gemini call. Reads the curated tip
+ * for this (action, scenario) from the AiFeedbackTip collection first; only when
+ * the collection is empty or unreadable does it use the in-code inlineFallback,
+ * so the endpoint always returns advice and never 500s on an un-seeded DB.
+ */
+async function resolveFallbackTip(
+  action: RoadmapFeedbackInput['action'],
+  branchConflict: RoadmapFeedbackInput['branchConflict'],
+): Promise<{ feedback: string; severity: FeedbackSeverity }> {
+  const scenario = branchConflict ? 'branch-conflict' : 'default'
+  try {
+    const tip = await AiFeedbackTip.findOne({ action, scenario }).lean()
+    if (tip) {
+      return { feedback: fillBranchNames(tip.text, branchConflict), severity: tip.severity }
+    }
+  } catch (error) {
+    logger.error({ error }, 'Failed to load AI feedback tip from DB')
+  }
+  return inlineFallback(action, branchConflict)
 }

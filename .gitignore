@@ -31,6 +31,9 @@ coverage
 .vercel
 .render
 
+# Local tooling / session artifacts (not product code)
+.claude/
+
 # DB backups (mongodump output from `yarn backup` — may contain user data)
 /backups/
 
