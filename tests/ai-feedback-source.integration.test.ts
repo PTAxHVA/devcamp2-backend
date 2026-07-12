@@ -89,6 +89,16 @@ describe('POST /ai/roadmap-feedback — source tagging + DB fallback', () => {
     expect(generateContentMock).toHaveBeenCalledTimes(1)
   })
 
+  // 1b — a well-formed but blank Gemini reply is rejected by the schema → fallback
+  // (so an empty note is never shown as real AI advice).
+  it('degrades to fallback when Gemini returns a blank feedback string', async () => {
+    generateContentMock.mockResolvedValue(geminiJson({ feedback: '   ', severity: 'info' }))
+    const res = await feedback({ action: 'add', topicId: coreTopicId })
+    expect(res.status).toBe(200)
+    expect(res.body.data.source).toBe('fallback')
+    expect(res.body.data.feedback.length).toBeGreaterThan(0)
+  })
+
   // 2 — Gemini fails, DB has a tip.
   it('tags source "fallback" and uses the DB tip when Gemini fails and a tip exists', async () => {
     await seedFeedbackTips()

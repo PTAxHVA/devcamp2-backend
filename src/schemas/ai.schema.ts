@@ -50,7 +50,9 @@ export const explainMistakesAiResponseSchema = z.object({
 })
 
 export const aiFeedbackResponseSchema = z.object({
-  feedback: z.string(),
+  // A blank Gemini reply must not be shown as real AI advice — reject it so the
+  // service degrades to the curated fallback (tagged source:'fallback').
+  feedback: z.string().trim().min(1),
   severity: z.nativeEnum(FeedbackSeverity),
 })
 

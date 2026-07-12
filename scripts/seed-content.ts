@@ -1038,12 +1038,11 @@ export async function applyPlan(plan: SeedPlan): Promise<ApplyStats> {
  */
 export async function seedFeedbackTips(): Promise<number> {
   for (const tip of FEEDBACK_TIPS) {
+    // Upsert keyed on the unique (action, scenario); those fields are applied
+    // automatically on insert from the filter, so no $setOnInsert is needed.
     await AiFeedbackTip.findOneAndUpdate(
       { action: tip.action, scenario: tip.scenario },
-      {
-        $set: { text: tip.text, severity: tip.severity },
-        $setOnInsert: { action: tip.action, scenario: tip.scenario },
-      },
+      { $set: { text: tip.text, severity: tip.severity } },
       { upsert: true, returnDocument: 'after' },
     )
   }

@@ -68,7 +68,9 @@ export const fillBranchNames = (text: string, conflict: BranchConflict): string 
 /**
  * Last-resort advice kept in code so the endpoint still returns a helpful note
  * when BOTH Gemini and the AiFeedbackTip collection are unavailable (e.g. a prod
- * DB seeded before this feature existed). Mirrors the curated tips above.
+ * DB seeded before this feature existed). The branch-conflict wording is shared
+ * with the seeded tip (BRANCH_CONFLICT_TIP); the add/remove defaults are
+ * intentionally terser than the curated FEEDBACK_TIPS as a bare fallback.
  */
 export const inlineFallback = (
   action: FeedbackAction,
