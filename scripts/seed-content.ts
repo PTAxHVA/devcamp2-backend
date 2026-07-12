@@ -60,8 +60,10 @@ import { Section } from '../src/models/section.model.js'
 import { Quiz } from '../src/models/quiz.model.js'
 import { Question } from '../src/models/question.model.js'
 import { QuestionOption } from '../src/models/question-option.model.js'
+import { AiFeedbackTip } from '../src/models/ai-feedback-tip.model.js'
 import { QuestionType } from '../src/types/enums.js'
 import { resolveTopicDescription } from './topic-descriptions.js'
+import { FEEDBACK_TIPS } from '../src/config/ai-feedback-tips.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(__dirname, '..')
@@ -1026,6 +1028,28 @@ export async function applyPlan(plan: SeedPlan): Promise<ApplyStats> {
   return stats
 }
 
+// ------------------------------------------------------------ Feedback tips
+
+/**
+ * Upsert the curated AI-feedback fallback tips (idempotent, by unique
+ * (action, scenario)). They back the roadmap-edit AI feedback endpoint (F19)
+ * when Gemini is unavailable. Kept separate from applyPlan (CSV content) so it
+ * can be seeded and tested on its own. Returns the number of tips upserted.
+ */
+export async function seedFeedbackTips(): Promise<number> {
+  for (const tip of FEEDBACK_TIPS) {
+    await AiFeedbackTip.findOneAndUpdate(
+      { action: tip.action, scenario: tip.scenario },
+      {
+        $set: { text: tip.text, severity: tip.severity },
+        $setOnInsert: { action: tip.action, scenario: tip.scenario },
+      },
+      { upsert: true, returnDocument: 'after' },
+    )
+  }
+  return FEEDBACK_TIPS.length
+}
+
 // ------------------------------------------------------------ Main
 
 async function main() {
@@ -1075,6 +1099,7 @@ async function main() {
   console.log(`    Questions:       ${totalQuestions}`)
   console.log(`    Options:         ${totalOptions}`)
   console.log(`    Resource topics: ${resourceTopics} (${resourceEntries} curated entries)`)
+  console.log(`    Feedback tips:   ${FEEDBACK_TIPS.length} curated`)
   console.log(`    Branches:`)
   for (const rm of plan.roadmaps) {
     const branchSummary = rm.branches
@@ -1121,6 +1146,7 @@ async function main() {
   }
 
   const stats = await applyPlan(plan)
+  const feedbackTipsUpserted = await seedFeedbackTips()
 
   console.log('\n=== Phase 3: apply stats ===')
   console.log(`  Topics upserted:        ${stats.topicsUpserted}`)
@@ -1142,6 +1168,7 @@ async function main() {
   )
   console.log(`  Topics with prereqs:    ${stats.topicsWithPrereqs} (drives roadmap-viz edges)`)
   console.log(`  Sections w/ resources:  ${stats.sectionsWithResources}`)
+  console.log(`  AI feedback tips:       ${feedbackTipsUpserted} upserted`)
 
   console.log('\n=== Phase 4: final DB counts ===')
   const [
