@@ -7,6 +7,10 @@ export interface IUserProfile {
   streak: number
   lastActivityDate: Date | null
   longestStreak: number
+  // Profile avatar as a compact data-URL (client crops to a ~256px square and
+  // caps the size). Absent until the user first uploads → old docs read as "no
+  // avatar" and the UI falls back to a silhouette.
+  avatarUrl?: string
   // Verified Skill Passport (public share page). No default on shareToken: the
   // field must stay ABSENT until the user first enables sharing, so the sparse
   // unique index below never sees two null values. Docs created before this
@@ -29,6 +33,7 @@ const userProfileSchema = new Schema<IUserProfile>(
     streak: { type: Number, default: 0 },
     lastActivityDate: { type: Date, default: null },
     longestStreak: { type: Number, default: 0 },
+    avatarUrl: { type: String },
     shareToken: { type: String },
     isPublic: { type: Boolean, default: false },
   },

@@ -8,6 +8,7 @@ import { QuizAttempt } from '../models/quiz-attempt.model.js'
 import { SkillLevel } from '../types/enums.js'
 import { calculateCurrentStreak, buildWeeklyProgress } from '../utils/streak.util.js'
 import { buildNextUpMap } from '../utils/next-up.util.js'
+import { keepEarlierCompletion } from '../utils/completion.util.js'
 
 export const getDashboardAnalytics = async (userId: string) => {
   // Only active roadmaps drive dashboard UI — soft-deleted ones (isActive:false)
@@ -175,7 +176,14 @@ export const getDashboardAnalytics = async (userId: string) => {
   for (const p of sectionProgresses) {
     if (!p.isCompleted) continue
     const key = p.sectionId.toString()
-    if (!completedAtBySection.has(key)) completedAtBySection.set(key, p.completedAt)
+    if (!completedAtBySection.has(key)) {
+      completedAtBySection.set(key, p.completedAt)
+      continue
+    }
+    completedAtBySection.set(
+      key,
+      keepEarlierCompletion(p.completedAt, completedAtBySection.get(key) ?? null),
+    )
   }
   const weeklyProgress = buildWeeklyProgress([...completedAtBySection.values()])
 

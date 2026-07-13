@@ -36,9 +36,6 @@ app.use(
     },
   }),
 )
-app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
-
 // Liveness + readiness đặt TRƯỚC rate limiter và phải bỏ qua nó: Render
 // health-checker ping /health rất thường xuyên (mỗi vài giây khi instance awake),
 // nếu bị đếm chung bucket sẽ vượt limit → 429 → Render đánh instance FAILED rồi
@@ -61,8 +58,17 @@ app.get('/ready', (_req, res) => {
   }
 })
 
-// Rate limiter áp cho toàn bộ API thật bên dưới — KHÔNG áp cho /health + /ready ở trên.
+// Rate limiter đặt TRƯỚC body parser (nhưng SAU /health + /ready ở trên) để một request
+// vượt limit bị chặn trước khi buffer bất kỳ body nào — kể cả avatar 512 KB trên /me/profile.
 app.use(generalRateLimiter)
+
+// A profile avatar data-URL (capped ~280 KB by the Zod schema) needs a larger body than the
+// ~100 KB default. Scope the 512 KB parser to that route, registered BEFORE the global default
+// parser (it sets `req._body`, so the global parser skips this path); every other route keeps
+// the small default limit.
+app.use('/api/v1/client/me/profile', express.json({ limit: '512kb' }))
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
 
 mountRoutes(app)
 

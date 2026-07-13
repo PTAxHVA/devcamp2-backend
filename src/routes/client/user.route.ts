@@ -28,6 +28,7 @@ route.patch(
 )
 route.get('/streak', authenticate, userController.getUserStreak)
 route.get('/progress', authenticate, userController.getUserProgress)
+route.get('/activity', authenticate, userController.getUserActivity)
 route.get('/passport', authenticate, userController.getPassportSettings)
 route.patch(
   '/passport',
