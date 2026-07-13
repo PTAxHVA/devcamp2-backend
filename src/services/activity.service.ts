@@ -2,15 +2,7 @@ import { UserRoadmap } from '../models/user-roadmap.model.js'
 import { UserTopic } from '../models/user-topic.model.js'
 import { UserSectionProgress } from '../models/user-section-progress.model.js'
 import { buildDailyActivity } from '../utils/streak.util.js'
-
-/** Keep the earliest non-null completion (mirrors isEarlierCompletion in the
- *  backfill service) so a shared section's day-bucket is deterministic regardless
- *  of query order. */
-const keepEarlier = (candidate: Date | null, current: Date | null): Date | null => {
-  if (candidate === null) return current
-  if (current === null) return candidate
-  return candidate.getTime() < current.getTime() ? candidate : current
-}
+import { keepEarlierCompletion } from '../utils/completion.util.js'
 
 /**
  * Daily section-completion series across the learner's ACTIVE roadmaps over the
@@ -45,7 +37,7 @@ export const getActivitySeries = async (userId: string, days: number) => {
       continue
     }
     const current = completedAtBySection.get(key) ?? null
-    completedAtBySection.set(key, keepEarlier(p.completedAt, current))
+    completedAtBySection.set(key, keepEarlierCompletion(p.completedAt, current))
   }
 
   const { series, baseline } = buildDailyActivity([...completedAtBySection.values()], days)
