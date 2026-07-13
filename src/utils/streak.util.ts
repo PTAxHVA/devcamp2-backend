@@ -41,3 +41,37 @@ export const buildWeeklyProgress = (
   }
   return week
 }
+
+/** Sections completed per day over the trailing `days`-day window (oldest→newest),
+ *  bucketed on the UTC+7 day boundary — powers the "View full" activity chart.
+ *  `baseline` = completions strictly BEFORE the window, so the FE cumulative line
+ *  starts from the true lifetime total instead of 0. `now` is injectable for tests. */
+export const buildDailyActivity = (
+  completedAts: (Date | string | null | undefined)[],
+  days: number,
+  now: Date = new Date(),
+): { series: { date: string; count: number }[]; baseline: number } => {
+  const todayNum = getDayNumberUTC7(now)
+  const startNum = todayNum - (days - 1)
+
+  const counts = new Array<number>(days).fill(0)
+  let baseline = 0
+  for (const at of completedAts) {
+    if (!at) continue
+    const dayNum = getDayNumberUTC7(new Date(at))
+    if (dayNum < startNum) baseline += 1
+    else if (dayNum <= todayNum) {
+      const idx = dayNum - startNum
+      counts[idx] = (counts[idx] ?? 0) + 1
+    }
+  }
+
+  const series = counts.map((count, i) => ({
+    // `dayNum * 86_400_000` as a Date is that UTC+7 calendar day at 00:00Z, so the
+    // ISO date slice is the day's label (YYYY-MM-DD) in UTC+7.
+    date: new Date((startNum + i) * 86_400_000).toISOString().slice(0, 10),
+    count,
+  }))
+
+  return { series, baseline }
+}

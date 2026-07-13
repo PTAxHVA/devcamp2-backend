@@ -36,7 +36,10 @@ app.use(
     },
   }),
 )
-app.use(express.json())
+// 512 KB (vs the 100 KB default) so a profile avatar data-URL (capped ~280 KB by
+// the Zod schema) is validated by the schema (clean 400) instead of being rejected
+// by the body parser first. Still a modest ceiling for every other JSON endpoint.
+app.use(express.json({ limit: '512kb' }))
 app.use(express.urlencoded({ extended: true }))
 
 // Liveness + readiness đặt TRƯỚC rate limiter và phải bỏ qua nó: Render

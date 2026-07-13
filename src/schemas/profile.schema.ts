@@ -2,9 +2,17 @@ import z from 'zod'
 import { SkillLevel } from '../types/enums.js'
 import { strongPassword } from './auth.schema.js'
 
+// A base64 image data-URL (png/jpeg/webp). Cap the whole string at ~280k chars
+// (~205 KB decoded) so a huge upload can't be persisted; `null` clears the avatar.
+export const avatarDataUrl = z
+  .string()
+  .regex(/^data:image\/(png|jpe?g|webp);base64,[A-Za-z0-9+/]+=*$/, 'Invalid avatar image')
+  .max(280_000, 'Image too large — please choose a smaller photo')
+
 export const updateProfileSchema = z.object({
   username: z.string().optional(),
   level: z.nativeEnum(SkillLevel).optional(),
+  avatarUrl: avatarDataUrl.nullable().optional(),
 })
 
 export const updateAccountCredentialsSchema = z.object({

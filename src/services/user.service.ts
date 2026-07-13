@@ -20,9 +20,10 @@ export const getUser = async (userId: string) => {
     throw new ApiError(404, 'User not found', 'USER_NOT_FOUND')
   }
 
-  const onboardingStatus = await OnboardingQuestionnaire.findOne({ userId: userId })
-    .select('completed')
-    .lean()
+  const [onboardingStatus, profile] = await Promise.all([
+    OnboardingQuestionnaire.findOne({ userId: userId }).select('completed').lean(),
+    UserProfile.findOne({ userId: userId }).select('avatarUrl').lean(),
+  ])
 
   const userDetails = {
     userId: userId,
@@ -31,6 +32,7 @@ export const getUser = async (userId: string) => {
     createdAt: user.createdAt,
     isActive: user.isActive,
     onboardingStatus: onboardingStatus?.completed ?? false,
+    avatarUrl: profile?.avatarUrl ?? null,
   }
 
   return userDetails
@@ -39,7 +41,7 @@ export const getUser = async (userId: string) => {
 export const getProfile = async (userId: string) => {
   const user = await User.findById(userId).select('username').lean()
   const userProfile = await UserProfile.findOne({ userId })
-    .select('streak level updatedAt lastActivityDate')
+    .select('streak level updatedAt lastActivityDate avatarUrl')
     .lean()
 
   if (!userProfile || !user) {
@@ -53,6 +55,7 @@ export const getProfile = async (userId: string) => {
     username: user.username,
     level: userProfile.level,
     streak: currentStreak,
+    avatarUrl: userProfile.avatarUrl ?? null,
     updatedAt: userProfile.updatedAt,
   }
 }
@@ -61,7 +64,7 @@ export const updateProfile = async (input: UpdateProfileSchema, userId: string) 
   const session = await startSession()
   session.startTransaction()
   try {
-    const { username, level } = input
+    const { username, level, avatarUrl } = input
     const user = await User.findOneAndUpdate(
       { _id: userId },
       { $set: { username: username, updatedAt: Date.now() } },
@@ -75,10 +78,18 @@ export const updateProfile = async (input: UpdateProfileSchema, userId: string) 
 
     const userProfile = await UserProfile.findOneAndUpdate(
       { userId: userId },
-      { $set: { level: level, updatedAt: Date.now() } },
+      {
+        $set: {
+          level: level,
+          updatedAt: Date.now(),
+          // Only touch avatar when the caller sent the field. `null` clears it
+          // (mongoose stores the null); `undefined` is stripped, leaving it as-is.
+          ...(avatarUrl !== undefined ? { avatarUrl } : {}),
+        },
+      },
       { new: true, runValidators: true, session },
     )
-      .select('level streak updatedAt lastActivityDate')
+      .select('level streak updatedAt lastActivityDate avatarUrl')
       .lean()
 
     if (!userProfile) {
@@ -95,6 +106,7 @@ export const updateProfile = async (input: UpdateProfileSchema, userId: string) 
       username: user.username,
       level: userProfile.level,
       streak: currentStreak,
+      avatarUrl: userProfile.avatarUrl ?? null,
       updatedAt: userProfile.updatedAt,
     }
   } catch (error) {

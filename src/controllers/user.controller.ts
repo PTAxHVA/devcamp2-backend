@@ -3,6 +3,12 @@ import * as streakService from '../services/streak.service.js'
 import * as progressService from '../services/progress.service.js'
 import { ok } from '../utils/api-response.js'
 import * as userService from '../services/user.service.js'
+import * as activityService from '../services/activity.service.js'
+
+// View-full activity chart window bounds (days).
+const ACTIVITY_MIN_DAYS = 7
+const ACTIVITY_MAX_DAYS = 90
+const ACTIVITY_DEFAULT_DAYS = 30
 
 export const getUserDetails = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -59,6 +65,20 @@ export const getUserProgress = async (req: Request, res: Response, next: NextFun
     const progress = await progressService.getProgress(userId)
 
     res.json(ok(progress))
+  } catch (error) {
+    next(error)
+  }
+}
+
+export const getUserActivity = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.user?.id as string
+    const requested = Number(req.query.days) || ACTIVITY_DEFAULT_DAYS
+    const days = Math.min(ACTIVITY_MAX_DAYS, Math.max(ACTIVITY_MIN_DAYS, requested))
+
+    const activity = await activityService.getActivitySeries(userId, days)
+
+    res.json(ok(activity))
   } catch (error) {
     next(error)
   }
