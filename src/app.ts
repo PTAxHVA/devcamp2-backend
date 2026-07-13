@@ -36,10 +36,13 @@ app.use(
     },
   }),
 )
-// 512 KB (vs the 100 KB default) so a profile avatar data-URL (capped ~280 KB by
-// the Zod schema) is validated by the schema (clean 400) instead of being rejected
-// by the body parser first. Still a modest ceiling for every other JSON endpoint.
-app.use(express.json({ limit: '512kb' }))
+// A profile avatar data-URL (capped ~280 KB by the Zod schema) needs a larger body
+// than the ~100 KB default. Scope the 512 KB parser to just that route, registered
+// BEFORE the global default parser — it sets `req._body`, so the global parser skips
+// this path. Every other route (including unauthenticated ones) keeps the small
+// default limit, so none can be made to buffer a large body ahead of the rate limiter.
+app.use('/api/v1/client/me/profile', express.json({ limit: '512kb' }))
+app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
 // Liveness + readiness đặt TRƯỚC rate limiter và phải bỏ qua nó: Render

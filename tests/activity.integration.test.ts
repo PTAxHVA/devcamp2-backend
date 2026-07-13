@@ -103,16 +103,42 @@ describe('GET /me/activity', () => {
     expect((res.body.data.series as { count: number }[]).every((p) => p.count === 0)).toBe(true)
   })
 
-  it('clamps the days window to [7, 90]', async () => {
+  it('keeps the earliest completion for a shared section (deterministic bucket)', async () => {
+    const token = await register('act5@example.com')
+    const r1 = await seedRoadmap('FE Act5')
+    const r2 = await seedRoadmap('BE Act5')
+    const e1 = await enroll(token, r1.roadmapId, r1.branchId)
+    const e2 = await enroll(token, r2.roadmapId, r2.branchId)
+    const ut1 = await firstUserTopicId(e1.body.data._id)
+    const ut2 = await firstUserTopicId(e2.body.data._id)
+
+    const shared = new mongoose.Types.ObjectId()
+    // Same section, two roadmaps, DIFFERENT dates: today vs 40 days ago. Earliest wins
+    // → the completion lands in the pre-window baseline, not today's bucket.
+    await complete(ut1, new Date(), shared)
+    await complete(ut2, daysAgo(40), shared)
+
+    const res = await request(app)
+      .get(`${base}/me/activity?days=30`)
+      .set('Authorization', `Bearer ${token}`)
+    expect(res.body.data.baseline).toBe(1)
+    expect(sumCounts(res.body.data.series)).toBe(0)
+  })
+
+  it('clamps + integer-coerces the days window (no 500 on junk input)', async () => {
     const token = await register('act4@example.com')
-    const wide = await request(app)
-      .get(`${base}/me/activity?days=500`)
-      .set('Authorization', `Bearer ${token}`)
-    expect(wide.body.data.series).toHaveLength(90)
-    const narrow = await request(app)
-      .get(`${base}/me/activity?days=1`)
-      .set('Authorization', `Bearer ${token}`)
-    expect(narrow.body.data.series).toHaveLength(7)
+    const call = (q: string) =>
+      request(app).get(`${base}/me/activity${q}`).set('Authorization', `Bearer ${token}`)
+
+    expect((await call('?days=500')).body.data.series).toHaveLength(90)
+    expect((await call('?days=1')).body.data.series).toHaveLength(7)
+    // 0 clamps to the minimum 7 (not the default 30), and a fractional value must not
+    // reach new Array(days) → RangeError → 500.
+    expect((await call('?days=0')).body.data.series).toHaveLength(7)
+    const frac = await call('?days=15.7')
+    expect(frac.status).toBe(200)
+    expect(frac.body.data.series).toHaveLength(15)
+    expect((await call('?days=abc')).body.data.series).toHaveLength(30)
   })
 
   it('requires auth (401)', async () => {

@@ -73,7 +73,11 @@ export const getUserProgress = async (req: Request, res: Response, next: NextFun
 export const getUserActivity = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = req.user?.id as string
-    const requested = Number(req.query.days) || ACTIVITY_DEFAULT_DAYS
+    // Coerce to a finite integer BEFORE clamping: a fractional value would reach
+    // `new Array(days)` in buildDailyActivity and throw a RangeError (500), and
+    // `Number(x) || DEFAULT` wrongly turns days=0 into 30 instead of clamping to 7.
+    const parsed = Number(req.query.days)
+    const requested = Number.isFinite(parsed) ? Math.trunc(parsed) : ACTIVITY_DEFAULT_DAYS
     const days = Math.min(ACTIVITY_MAX_DAYS, Math.max(ACTIVITY_MIN_DAYS, requested))
 
     const activity = await activityService.getActivitySeries(userId, days)

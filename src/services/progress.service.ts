@@ -4,7 +4,9 @@ import { Section } from '../models/section.model.js'
 import { UserSectionProgress } from '../models/user-section-progress.model.js'
 
 export const getProgress = async (userId: string) => {
-  const userRoadmaps = await UserRoadmap.find({ userId }).lean()
+  // Active only — a soft-deleted (unregistered) roadmap must not keep counting toward
+  // the profile's Learning stats. Re-enrolling reactivates it and its progress returns.
+  const userRoadmaps = await UserRoadmap.find({ userId, isActive: true }).lean()
 
   if (userRoadmaps.length === 0) return []
 
