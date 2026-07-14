@@ -27,6 +27,7 @@ export interface IMasterTopic {
   slug: string
   description: string
   descriptionShort: string
+  whyLearn: string
   estimatedHours: number
   iconUrl: string
   isPublished: boolean
@@ -41,6 +42,7 @@ const masterTopicSchema = new Schema<IMasterTopic>(
     slug: { type: String, required: true, unique: true, trim: true, lowercase: true },
     description: { type: String, default: '' },
     descriptionShort: { type: String, default: '' },
+    whyLearn: { type: String, default: '' },
     estimatedHours: { type: Number, default: 0, min: 0 },
     iconUrl: { type: String, default: '' },
     isPublished: { type: Boolean, default: false, index: true },
