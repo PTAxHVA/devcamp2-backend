@@ -5,8 +5,8 @@
  * these roles and the BE rejects anything else, which keeps the prompt-injection
  * surface near zero and guarantees every role has a curated fallback below.
  *
- * fallbackTopicSlugs = the hand-curated "required topics" used when Gemini is
- * down, times out, or answers garbage. Slugs must match the seed-data topic
+ * fallbackTopicSlugs = the hand-curated "required topics" used when the AI
+ * provider is down, times out, or answers garbage. Slugs must match the seed-data topic
  * names run through scripts/seed-content.ts slugify() (e.g. "Git & GitHub" →
  * "git-github", "Node.js & Express" → "node-js-express"). A slug that no longer
  * resolves is skipped at runtime, so a future reseed cannot break the endpoint.

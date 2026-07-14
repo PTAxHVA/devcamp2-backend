@@ -1,27 +1,27 @@
 import { describe, it, expect, afterEach, vi } from 'vitest'
 import { env } from '../src/config/env.js'
 
-describe('GEMINI_MODEL env config', () => {
+describe('FIREWORKS_MODEL env config', () => {
   afterEach(() => {
     vi.unstubAllEnvs()
     vi.resetModules()
     vi.restoreAllMocks()
   })
 
-  it('defaults to gemini-2.5-flash when the env var is absent', () => {
-    // vitest.config.ts env block deliberately does not set GEMINI_MODEL.
-    expect(env.GEMINI_MODEL).toBe('gemini-2.5-flash')
+  it('defaults to gpt-oss-120b when the env var is absent', () => {
+    // vitest.config.ts env block deliberately does not set FIREWORKS_MODEL.
+    expect(env.FIREWORKS_MODEL).toBe('accounts/fireworks/models/gpt-oss-120b')
   })
 
   it('honors an override from the environment', async () => {
-    vi.stubEnv('GEMINI_MODEL', 'gemini-2.5-flash-lite')
+    vi.stubEnv('FIREWORKS_MODEL', 'accounts/fireworks/models/gpt-oss-20b')
     vi.resetModules()
     const fresh = await import('../src/config/env.js')
-    expect(fresh.env.GEMINI_MODEL).toBe('gemini-2.5-flash-lite')
+    expect(fresh.env.FIREWORKS_MODEL).toBe('accounts/fireworks/models/gpt-oss-20b')
   })
 
   it('rejects an explicitly empty value', async () => {
-    vi.stubEnv('GEMINI_MODEL', '')
+    vi.stubEnv('FIREWORKS_MODEL', '')
     vi.resetModules()
     // env.ts exits the process on invalid env instead of throwing.
     const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {

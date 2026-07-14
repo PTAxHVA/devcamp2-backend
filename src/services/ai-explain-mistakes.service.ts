@@ -1,14 +1,13 @@
-import { GenerateContentResult } from '@google/generative-ai'
 import { Quiz } from '../models/quiz.model.js'
 import { Section } from '../models/section.model.js'
 import { buildExplainMistakesPrompt, MistakeQuestionInput } from '../config/ai-prompts.js'
-import { geminiModel } from '../config/gemini.js'
+import { aiModel, type AiGenerateResult } from '../config/ai-model.js'
 import { logger } from '../config/logger.js'
 import { explainMistakesAiResponseSchema } from '../schemas/ai.schema.js'
 import { QuestionType } from '../types/enums.js'
 import { getAttemptResult } from './quiz-attempt.service.js'
 
-const GEMINI_TIMEOUT_MS = 10_000
+const AI_TIMEOUT_MS = 10_000
 // Defensive cap so an over-chatty model answer can't balloon the payload.
 const MAX_EXPLANATION_CHARS = 400
 
@@ -74,11 +73,11 @@ const loadSectionForQuiz = async (quizId: string) => {
 }
 
 /**
- * Ask Gemini to explain the wrong questions. Throws on timeout, bad JSON, or an
- * answer that does not cover every wrong question — the caller catches and
+ * Ask the AI provider to explain the wrong questions. Throws on timeout, bad JSON,
+ * or an answer that does not cover every wrong question — the caller catches and
  * falls back, so this never surfaces to the user.
  */
-const askGeminiToExplain = async (
+const askAiToExplain = async (
   sectionName: string,
   resources: SectionResourceLink[],
   wrongQuestions: MistakeQuestionInput[],
@@ -91,17 +90,17 @@ const askGeminiToExplain = async (
 
   let timeoutTimer: NodeJS.Timeout | undefined
   const response = (await Promise.race([
-    geminiModel.generateContent(prompt),
+    aiModel.generateContent(prompt),
     new Promise((_, reject) => {
-      timeoutTimer = setTimeout(() => reject(new Error('Gemini API timeout')), GEMINI_TIMEOUT_MS)
+      timeoutTimer = setTimeout(() => reject(new Error('AI provider timeout')), AI_TIMEOUT_MS)
     }),
-    // Clear the timer once the race settles so a fast Gemini answer doesn't
-    // leave a 10s timeout holding the event loop per request.
-  ]).finally(() => clearTimeout(timeoutTimer))) as GenerateContentResult
+    // Clear the timer once the race settles so a fast answer doesn't leave a
+    // 10s timeout holding the event loop per request.
+  ]).finally(() => clearTimeout(timeoutTimer))) as AiGenerateResult
 
   const rawText = response.response.text()
   if (!rawText) {
-    throw new Error('Empty response from Gemini API')
+    throw new Error('Empty response from AI provider')
   }
 
   const cleanedText = rawText
@@ -163,7 +162,7 @@ export const explainMistakes = async (
   }
 
   try {
-    const explanations = await askGeminiToExplain(sectionName, resources, wrongQuestions)
+    const explanations = await askAiToExplain(sectionName, resources, wrongQuestions)
     return { attemptId, sectionName, source: 'ai', explanations, resources }
   } catch (error) {
     logger.error({ error }, 'Mistake-coach AI call failed — using fallback explanations')

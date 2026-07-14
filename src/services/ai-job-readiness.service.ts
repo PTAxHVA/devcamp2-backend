@@ -1,4 +1,3 @@
-import { GenerateContentResult } from '@google/generative-ai'
 import { MasterTopic } from '../models/master-topic.model.js'
 import { Section } from '../models/section.model.js'
 import { UserRoadmap } from '../models/user-roadmap.model.js'
@@ -7,12 +6,12 @@ import { UserSectionProgress } from '../models/user-section-progress.model.js'
 import { OnboardingQuestionnaire } from '../models/onboarding-questionnaire.model.js'
 import { TARGET_ROLES, TargetRole, findTargetRole } from '../config/job-readiness-roles.js'
 import { buildJobReadinessPrompt, JobReadinessTopic } from '../config/ai-prompts.js'
-import { geminiModel } from '../config/gemini.js'
+import { aiModel, type AiGenerateResult } from '../config/ai-model.js'
 import { logger } from '../config/logger.js'
 import { jobReadinessAiResponseSchema } from '../schemas/ai.schema.js'
 import { ApiError } from '../utils/api-error.js'
 
-const GEMINI_TIMEOUT_MS = 10_000
+const AI_TIMEOUT_MS = 10_000
 // Fewer valid ids than this and the AI answer is degenerate → use the curated fallback.
 const MIN_REQUIRED_TOPICS = 3
 
@@ -115,11 +114,11 @@ const loadTopicProgress = async (
 }
 
 /**
- * Ask Gemini which library topics the role requires. Throws on timeout, bad
- * JSON, or a degenerate answer — the caller catches and falls back, so this
+ * Ask the AI provider which library topics the role requires. Throws on timeout,
+ * bad JSON, or a degenerate answer — the caller catches and falls back, so this
  * never surfaces to the user.
  */
-const askGeminiForRequiredIds = async (
+const askAiForRequiredIds = async (
   role: string,
   libraryTopics: LibraryTopic[],
 ): Promise<string[]> => {
@@ -133,17 +132,17 @@ const askGeminiForRequiredIds = async (
 
   let timeoutTimer: NodeJS.Timeout | undefined
   const response = (await Promise.race([
-    geminiModel.generateContent(prompt),
+    aiModel.generateContent(prompt),
     new Promise((_, reject) => {
-      timeoutTimer = setTimeout(() => reject(new Error('Gemini API timeout')), GEMINI_TIMEOUT_MS)
+      timeoutTimer = setTimeout(() => reject(new Error('AI provider timeout')), AI_TIMEOUT_MS)
     }),
-    // Clear the timer once the race settles so a fast Gemini answer doesn't
-    // leave a 10s timeout holding the event loop per request.
-  ]).finally(() => clearTimeout(timeoutTimer))) as GenerateContentResult
+    // Clear the timer once the race settles so a fast answer doesn't leave a
+    // 10s timeout holding the event loop per request.
+  ]).finally(() => clearTimeout(timeoutTimer))) as AiGenerateResult
 
   const rawText = response.response.text()
   if (!rawText) {
-    throw new Error('Empty response from Gemini API')
+    throw new Error('Empty response from AI provider')
   }
 
   const cleanedText = rawText
@@ -192,7 +191,7 @@ export const analyzeJobReadiness = async (
   let source: JobReadinessResult['source'] = 'ai'
   let requiredIds: string[]
   try {
-    requiredIds = await askGeminiForRequiredIds(targetRole.role, libraryTopics)
+    requiredIds = await askAiForRequiredIds(targetRole.role, libraryTopics)
   } catch (error) {
     logger.error({ error }, 'Job-readiness AI call failed — using curated fallback')
     source = 'fallback'

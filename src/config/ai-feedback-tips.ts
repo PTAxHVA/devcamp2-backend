@@ -26,8 +26,8 @@ const BRANCH_CONFLICT_TIP =
   'Learning {addedBranchName} and {currentBranchName} at the same time can spread your focus thin — most learners finish one before starting the other.'
 
 /**
- * Curated advice shown on the roadmap-edit AI feedback endpoint (F19) when Gemini
- * is unavailable (down, rate-limited, or returns garbage). `yarn seed` upserts
+ * Curated advice shown on the roadmap-edit AI feedback endpoint (F19) when the AI
+ * provider is unavailable (down, rate-limited, or returns garbage). `yarn seed` upserts
  * these into the AiFeedbackTip collection; the service reads that collection first
  * and only uses inlineFallback() below when it is empty (e.g. a prod DB not yet
  * re-seeded) — so the endpoint degrades gracefully but never 500s.
@@ -67,7 +67,7 @@ export const fillBranchNames = (text: string, conflict: BranchConflict): string 
 
 /**
  * Last-resort advice kept in code so the endpoint still returns a helpful note
- * when BOTH Gemini and the AiFeedbackTip collection are unavailable (e.g. a prod
+ * when BOTH the AI provider and the AiFeedbackTip collection are unavailable (e.g. a prod
  * DB seeded before this feature existed). The branch-conflict wording is shared
  * with the seeded tip (BRANCH_CONFLICT_TIP); the add/remove defaults are
  * intentionally terser than the curated FEEDBACK_TIPS as a bare fallback.

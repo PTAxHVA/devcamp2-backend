@@ -25,7 +25,7 @@ export const generalRateLimiter = rateLimit({
   keyGenerator: (req) => getRealIp(req),
 })
 
-// Stricter limit for Gemini AI per user
+// Stricter per-user limit for the AI endpoints
 // Keys by user ID (since this is authenticated) or IP as fallback
 export const aiRateLimiter = rateLimit({
   windowMs: 60 * 1000,
@@ -42,7 +42,7 @@ export const aiRateLimiter = rateLimit({
     }),
 })
 
-// Global limiter for Gemini AI (15 RPM free tier)
+// Global limiter across all AI endpoints (protects the shared provider quota)
 export const globalAiRateLimiter = rateLimit({
   windowMs: 60 * 1000,
   limit: 14,

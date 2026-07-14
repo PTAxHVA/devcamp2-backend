@@ -1033,7 +1033,7 @@ export async function applyPlan(plan: SeedPlan): Promise<ApplyStats> {
 /**
  * Upsert the curated AI-feedback fallback tips (idempotent, by unique
  * (action, scenario)). They back the roadmap-edit AI feedback endpoint (F19)
- * when Gemini is unavailable. Kept separate from applyPlan (CSV content) so it
+ * when the AI provider is unavailable. Kept separate from applyPlan (CSV content) so it
  * can be seeded and tested on its own. Returns the number of tips upserted.
  */
 export async function seedFeedbackTips(): Promise<number> {

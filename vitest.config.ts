@@ -13,7 +13,7 @@ export default defineConfig({
       MONGO_URI: 'mongodb://127.0.0.1:27017/vora-test',
       JWT_SECRET: 'test-jwt-secret-min-32-chars-1234567890',
       JWT_EXPIRES_IN: '7d',
-      GEMINI_API_KEY: 'test-gemini-key',
+      FIREWORKS_API_KEY: 'test-fireworks-key',
       RESEND_API_KEY: 'test-resend-key',
       RESEND_FROM_EMAIL: 'noreply@vora.test',
       CLIENT_URL: 'http://localhost:5173',

@@ -1,5 +1,4 @@
 import { isValidObjectId } from 'mongoose'
-import { GenerateContentResult } from '@google/generative-ai'
 import { ApiError } from '../utils/api-error.js'
 import { MasterRoadmap } from '../models/master-roadmap.model.js'
 import { MasterBranch } from '../models/master-branch.model.js'
@@ -13,7 +12,7 @@ import {
   LearnerProfile,
   RoadmapSuggestionInput,
 } from '../config/ai-prompts.js'
-import { geminiModel } from '../config/gemini.js'
+import { aiModel, type AiGenerateResult } from '../config/ai-model.js'
 import { logger } from '../config/logger.js'
 import { aiResponseSchema } from '../schemas/ai.schema.js'
 
@@ -174,13 +173,15 @@ export const generateSuggestedRoadmap = async (
 
   try {
     const response = (await Promise.race([
-      geminiModel.generateContent(roadmapSuggestion),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('Gemini API timeout')), 10_000)),
-    ])) as GenerateContentResult
+      aiModel.generateContent(roadmapSuggestion),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('AI provider timeout')), 10_000),
+      ),
+    ])) as AiGenerateResult
 
     const rawText = response.response.text()
     if (!rawText) {
-      throw new Error('Empty response from Gemini API')
+      throw new Error('Empty response from AI provider')
     }
 
     const cleanedText = rawText
