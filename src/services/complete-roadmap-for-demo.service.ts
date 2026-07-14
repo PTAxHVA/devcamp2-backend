@@ -83,7 +83,7 @@ export const completeRoadmapForDemo = async ({
   const userTopics = await UserTopic.find({
     userRoadmapId: { $in: roadmaps.map((r) => r._id) },
   })
-    .select('_id topicId')
+    .select('_id topicId userRoadmapId')
     .lean()
   stats.topicsProcessed = userTopics.length
   if (userTopics.length === 0) return stats
@@ -127,11 +127,14 @@ export const completeRoadmapForDemo = async ({
       if (state === undefined) {
         stats.rowsInserted += 1
         if (!dryRun) {
-          // $setOnInsert-only upsert: a no-op if the row already exists, so it can
-          // never violate the unique (userTopicId, sectionId) index.
+          // Upsert on the unique (userTopicId, sectionId) key. $set forces completion
+          // even if a not-completed row appeared between the read above and this write
+          // (e.g. a concurrent failed quiz) — so the section can't be reported inserted
+          // yet stay incomplete. startedAt is stamped on insert only, preserving a real
+          // start time. Cannot violate the unique index.
           await UserSectionProgress.updateOne(
             { userTopicId: ut._id, sectionId },
-            { $setOnInsert: { isCompleted: true, startedAt: now, completedAt: now } },
+            { $set: { isCompleted: true, completedAt: now }, $setOnInsert: { startedAt: now } },
             { upsert: true },
           )
         }
@@ -149,10 +152,19 @@ export const completeRoadmapForDemo = async ({
     }
   }
 
-  // Reached only when the account has topics: it is fully complete iff every topic had
-  // published sections to target (topicsWithoutSections === 0). Every published section
-  // of every topic is now completed, so the roadmap reads 100%.
-  stats.fullyComplete = stats.topicsProcessed > 0 && stats.topicsWithoutSections === 0
+  // Fully complete only when EVERY active roadmap has topics AND no topic lacked
+  // published sections (topicsWithoutSections === 0). Checked per-roadmap, not on the
+  // aggregate topic count: a second *empty* active roadmap must not read as 100% off the
+  // back of a completed one (that empty roadmap still fails the FE certificate gate).
+  const topicCountByRoadmap = new Map<string, number>()
+  for (const ut of userTopics) {
+    const key = ut.userRoadmapId.toString()
+    topicCountByRoadmap.set(key, (topicCountByRoadmap.get(key) ?? 0) + 1)
+  }
+  const everyRoadmapHasTopics = roadmaps.every(
+    (r) => (topicCountByRoadmap.get(r._id.toString()) ?? 0) > 0,
+  )
+  stats.fullyComplete = everyRoadmapHasTopics && stats.topicsWithoutSections === 0
 
   return stats
 }

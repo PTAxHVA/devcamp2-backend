@@ -10,13 +10,15 @@
  *
  * SAFE BY DEFAULT: runs as a DRY RUN unless you pass BOTH `--apply` and a matching
  * `--confirm-email=<email>` (double-entry so you can't fabricate progress on the wrong
- * account). Writing while NODE_ENV=production additionally requires `--force`.
+ * account). To --apply, the target must ALSO be listed in the DEMO_ACCOUNT_EMAILS env
+ * (comma-separated allowlist) — a hard backstop against ever touching a real learner.
+ * Writing while NODE_ENV=production additionally requires `--force`.
  *
  * Usage:
- *   # 1) preview (no writes):
+ *   # 1) preview (no writes, no allowlist needed):
  *   yarn complete-demo --email=demo@vora.dev
- *   # 2) apply (double-confirm the exact email):
- *   yarn complete-demo --email=demo@vora.dev --apply --confirm-email=demo@vora.dev
+ *   # 2) apply (double-confirm the exact email + allowlist it):
+ *   DEMO_ACCOUNT_EMAILS=demo@vora.dev yarn complete-demo --email=demo@vora.dev --apply --confirm-email=demo@vora.dev
  *
  * ALWAYS run `yarn backup` first when pointing at prod. Use a throwaway demo account —
  * this inflates progress to 100% and must never touch a real learner's account.
@@ -68,6 +70,20 @@ async function main() {
       console.error(`  yarn complete-demo --email=${email} --apply --confirm-email=${email}`)
       process.exit(1)
     }
+    // Hard allowlist: --apply may only touch an account explicitly named in
+    // DEMO_ACCOUNT_EMAILS (comma-separated). This is the backstop that stops a
+    // fat-fingered real learner's email — even with a matching --confirm-email — from
+    // having its progress/certificates fabricated. Dry-run stays unrestricted (read-only).
+    const allowlist = (process.env.DEMO_ACCOUNT_EMAILS ?? '').split(',').map(norm).filter(Boolean)
+    if (!allowlist.includes(norm(email))) {
+      console.error(`FATAL: "${email}" is not in DEMO_ACCOUNT_EMAILS — refusing to --apply.`)
+      console.error('  This tool must only ever touch a throwaway demo account. Allowlist it,')
+      console.error('  then re-run:')
+      console.error(
+        `    DEMO_ACCOUNT_EMAILS=${email} yarn complete-demo --email=${email} --apply --confirm-email=${email}`,
+      )
+      process.exit(1)
+    }
     if (process.env.NODE_ENV === 'production' && !FORCE) {
       console.error('FATAL: refusing to write with NODE_ENV=production without --force.')
       process.exit(1)
@@ -108,7 +124,7 @@ async function main() {
   if (DRY_RUN) {
     if (stats.fullyComplete) {
       console.log(
-        `\n[DRY RUN] Would bring this account to 100%. Apply with:\n  yarn complete-demo --email=${email} --apply --confirm-email=${email}`,
+        `\n[DRY RUN] Would bring this account to 100%. Apply with:\n  DEMO_ACCOUNT_EMAILS=${email} yarn complete-demo --email=${email} --apply --confirm-email=${email}`,
       )
     } else {
       console.log(

@@ -279,4 +279,24 @@ describe('completeRoadmapForDemo (demo account 100%-complete helper)', () => {
     expect(stats.rowsInserted).toBe(2)
     expect(stats.fullyComplete).toBe(true)
   })
+
+  it('is NOT fullyComplete when a second active roadmap is empty (per-roadmap check)', async () => {
+    // Roadmap A completes fully; roadmap B is active but has no topics. The account is
+    // not 100% (B still fails the certificate gate), so fullyComplete must be false even
+    // though the aggregate topic count is > 0 and no processed topic lacked sections.
+    const { user } = await seedAccount({ topics: 1, publishedPerTopic: 2 })
+    await UserRoadmap.create({
+      userId: user._id,
+      roadmapId: new Types.ObjectId(),
+      sourceType: RoadmapSource.SUGGESTED,
+      isActive: true,
+    })
+
+    const stats = await completeRoadmapForDemo({ email: EMAIL, dryRun: false })
+
+    expect(stats.roadmapsProcessed).toBe(2)
+    expect(stats.topicsProcessed).toBe(1)
+    expect(stats.topicsWithoutSections).toBe(0)
+    expect(stats.fullyComplete).toBe(false)
+  })
 })
