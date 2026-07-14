@@ -24,6 +24,7 @@
     "fix-indexes": "tsx scripts/fix-userroadmap-indexes.ts",
     "backfill:shared-progress": "tsx scripts/backfill-shared-topic-progress.ts",
     "backfill:shared-progress:dry": "tsx scripts/backfill-shared-topic-progress.ts --dry-run",
+    "complete-demo": "tsx scripts/complete-roadmap-for-demo.ts",
     "prepare": "husky"
   },
   "license": "ISC",
