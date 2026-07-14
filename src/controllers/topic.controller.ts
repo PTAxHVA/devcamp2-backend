@@ -12,3 +12,13 @@ export const getTopicById = async (req: Request, res: Response, next: NextFuncti
     next(err)
   }
 }
+
+export const getTopicInfo = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const topicId = req.params.topicId as string
+    const result = await topicService.getTopicInfo(topicId)
+    res.json(ok(result))
+  } catch (err) {
+    next(err)
+  }
+}
