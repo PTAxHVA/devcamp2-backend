@@ -53,3 +53,35 @@ export const getTopicById = async (topicId: string, userId: string) => {
 
   return topicDetails
 }
+
+/**
+ * Pre-enrollment topic info for the onboarding personalized-plan preview: the
+ * curated "why learn this" line + the published section list, WITHOUT requiring
+ * enrollment. getTopicById needs an active UserRoadmap + UserTopic, so it 404s
+ * before the learner enrolls; this endpoint reads the library topic directly.
+ * No user progress — it's read-only content the learner is deciding to commit to.
+ */
+export const getTopicInfo = async (topicId: string) => {
+  if (!isValidObjectId(topicId)) {
+    throw new ApiError(400, 'Invalid topic id', 'INVALID_TOPIC_ID')
+  }
+
+  const topic = await MasterTopic.findById(topicId).lean()
+  if (!topic) {
+    throw new ApiError(404, 'Topic not found', 'TOPIC_NOT_FOUND')
+  }
+
+  const sections = await Section.find({ topicId, isPublished: true })
+    .sort({ orderIndex: 1 })
+    .select('_id name contentOverview orderIndex')
+    .lean()
+
+  return {
+    _id: topic._id,
+    name: topic.name,
+    description: topic.description,
+    whyLearn: topic.whyLearn,
+    estimatedHours: topic.estimatedHours,
+    sectionList: sections,
+  }
+}
