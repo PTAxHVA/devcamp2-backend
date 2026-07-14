@@ -145,13 +145,16 @@ export const feedbackRoadmap = async (userId: string, reqBody: RoadmapFeedbackSc
 
   const roadmapFeedbackPrompt = buildRoadmapFeedbackPrompt(feedbackInput)
 
+  let timeoutTimer: NodeJS.Timeout | undefined
   try {
     const response = (await Promise.race([
       aiModel.generateContent(roadmapFeedbackPrompt),
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('AI provider timeout')), 10_000),
-      ),
-    ])) as AiGenerateResult
+      new Promise((_, reject) => {
+        timeoutTimer = setTimeout(() => reject(new Error('AI provider timeout')), 10_000)
+      }),
+      // Clear the timer once the race settles so a fast answer doesn't leave a
+      // 10s timeout holding the event loop per request.
+    ]).finally(() => clearTimeout(timeoutTimer))) as AiGenerateResult
 
     const rawText = response.response.text()
     if (!rawText) {

@@ -11,12 +11,15 @@ export interface AiGenerateResult {
 }
 
 // Fireworks exposes an OpenAI-compatible API, so the openai SDK is a drop-in.
-// Each AI service already caps its call with a 10s Promise.race, so keep SDK
-// retries low to avoid stacking extra latency on top of that budget.
+// Each AI service caps its call with a 10s Promise.race; the matching request
+// `timeout` bounds the underlying socket so it can't outlive that budget and
+// linger until the SDK default. `maxRetries` stays low to avoid stacking latency.
+const AI_REQUEST_TIMEOUT_MS = 10_000
 const client = new OpenAI({
   apiKey: env.FIREWORKS_API_KEY,
   baseURL: env.FIREWORKS_BASE_URL,
   maxRetries: 1,
+  timeout: AI_REQUEST_TIMEOUT_MS,
 })
 
 export const aiModel = {
