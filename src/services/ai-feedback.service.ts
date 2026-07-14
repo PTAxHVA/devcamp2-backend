@@ -1,5 +1,4 @@
 import { Types } from 'mongoose'
-import { GenerateContentResult } from '@google/generative-ai'
 import { ApiError } from '../utils/api-error.js'
 import { MasterRoadmap } from '../models/master-roadmap.model.js'
 import { MasterBranch } from '../models/master-branch.model.js'
@@ -9,7 +8,7 @@ import { MasterTopic } from '../models/master-topic.model.js'
 import { UserTopic } from '../models/user-topic.model.js'
 import { OnboardingQuestionnaire } from '../models/onboarding-questionnaire.model.js'
 import { buildRoadmapFeedbackPrompt, RoadmapFeedbackInput } from '../config/ai-prompts.js'
-import { geminiModel } from '../config/gemini.js'
+import { aiModel, type AiGenerateResult } from '../config/ai-model.js'
 import { logger } from '../config/logger.js'
 import { RoadmapFeedbackSchema, aiFeedbackResponseSchema } from '../schemas/ai.schema.js'
 import { FeedbackSeverity } from '../types/enums.js'
@@ -146,15 +145,20 @@ export const feedbackRoadmap = async (userId: string, reqBody: RoadmapFeedbackSc
 
   const roadmapFeedbackPrompt = buildRoadmapFeedbackPrompt(feedbackInput)
 
+  let timeoutTimer: NodeJS.Timeout | undefined
   try {
     const response = (await Promise.race([
-      geminiModel.generateContent(roadmapFeedbackPrompt),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('Gemini API timeout')), 10_000)),
-    ])) as GenerateContentResult
+      aiModel.generateContent(roadmapFeedbackPrompt),
+      new Promise((_, reject) => {
+        timeoutTimer = setTimeout(() => reject(new Error('AI provider timeout')), 10_000)
+      }),
+      // Clear the timer once the race settles so a fast answer doesn't leave a
+      // 10s timeout holding the event loop per request.
+    ]).finally(() => clearTimeout(timeoutTimer))) as AiGenerateResult
 
     const rawText = response.response.text()
     if (!rawText) {
-      throw new Error('Empty response from Gemini API')
+      throw new Error('Empty response from AI provider')
     }
 
     const cleanedText = rawText
@@ -178,7 +182,7 @@ export const feedbackRoadmap = async (userId: string, reqBody: RoadmapFeedbackSc
 }
 
 /**
- * Resolve the fallback feedback for a failed Gemini call. Reads the curated tip
+ * Resolve the fallback feedback for a failed AI call. Reads the curated tip
  * for this (action, scenario) from the AiFeedbackTip collection first; only when
  * the collection is empty or unreadable does it use the in-code inlineFallback,
  * so the endpoint always returns advice and never 500s on an un-seeded DB.

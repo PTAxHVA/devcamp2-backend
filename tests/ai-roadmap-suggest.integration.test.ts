@@ -7,16 +7,16 @@ import { MasterBranch } from '../src/models/master-branch.model.js'
 import { MasterTopic } from '../src/models/master-topic.model.js'
 import { BranchTopic } from '../src/models/branch-topic.model.js'
 
-// Intercept every Gemini call so no test ever leaves the process (and so we can
-// simulate outages deterministically).
+// Intercept every AI provider call so no test ever leaves the process (and so we
+// can simulate outages deterministically).
 const { generateContentMock } = vi.hoisted(() => ({ generateContentMock: vi.fn() }))
-vi.mock('../src/config/gemini.js', () => ({
-  geminiModel: { generateContent: generateContentMock },
+vi.mock('../src/config/ai-model.js', () => ({
+  aiModel: { generateContent: generateContentMock },
 }))
 
 const base = '/api/v1/client'
 
-const geminiJson = (payload: unknown) => ({
+const aiJson = (payload: unknown) => ({
   response: { text: () => JSON.stringify(payload) },
 })
 
@@ -75,13 +75,13 @@ describe('POST /ai/roadmap-suggest', () => {
     generateContentMock.mockReset()
   })
 
-  it('tags a real Gemini ordering with source ai and keeps its explanation', async () => {
+  it('tags a real AI ordering with source ai and keeps its explanation', async () => {
     const lib = await seedSuggestLibrary()
     const token = await register('suggest-ai@example.com')
     await saveQuestionnaire(token)
     // AI reorders CSS before HTML (no prerequisites, so any order is valid).
     generateContentMock.mockResolvedValue(
-      geminiJson({
+      aiJson({
         orderedTopicIds: [lib.css, lib.html],
         explanation: 'CSS first suits your visual project goal.',
       }),
@@ -98,11 +98,11 @@ describe('POST /ai/roadmap-suggest', () => {
     ])
   })
 
-  it('degrades to source fallback with the default order when Gemini is down', async () => {
+  it('degrades to source fallback with the default order when the AI provider is down', async () => {
     const lib = await seedSuggestLibrary()
     const token = await register('suggest-down@example.com')
     await saveQuestionnaire(token)
-    generateContentMock.mockRejectedValue(new Error('gemini down'))
+    generateContentMock.mockRejectedValue(new Error('ai provider down'))
 
     const res = await suggest(token, lib.roadmapId, lib.branchId)
     expect(res.status).toBe(200)

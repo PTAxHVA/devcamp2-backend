@@ -10,16 +10,16 @@ import { Question } from '../src/models/question.model.js'
 import { QuestionOption } from '../src/models/question-option.model.js'
 import { QuestionType } from '../src/types/enums.js'
 
-// Intercept every Gemini call so no test ever leaves the process (and so we can
-// simulate outages / uncovered-question answers deterministically).
+// Intercept every AI provider call so no test ever leaves the process (and so we
+// can simulate outages / uncovered-question answers deterministically).
 const { generateContentMock } = vi.hoisted(() => ({ generateContentMock: vi.fn() }))
-vi.mock('../src/config/gemini.js', () => ({
-  geminiModel: { generateContent: generateContentMock },
+vi.mock('../src/config/ai-model.js', () => ({
+  aiModel: { generateContent: generateContentMock },
 }))
 
 const base = '/api/v1/client'
 
-const geminiJson = (payload: unknown) => ({
+const aiJson = (payload: unknown) => ({
   response: { text: () => JSON.stringify(payload) },
 })
 
@@ -152,7 +152,7 @@ describe('POST /ai/explain-mistakes', () => {
       { questionId: quiz.fillId, userInput: 'npm' },
     ])
     generateContentMock.mockResolvedValue(
-      geminiJson({
+      aiJson({
         explanations: [
           {
             questionId: quiz.mcqId,
@@ -192,7 +192,7 @@ describe('POST /ai/explain-mistakes', () => {
     ])
     // The model answers about an invented question only → unusable coverage.
     generateContentMock.mockResolvedValue(
-      geminiJson({
+      aiJson({
         explanations: [{ questionId: fakeId(), why: 'irrelevant', reviewHint: 'irrelevant' }],
       }),
     )
@@ -246,15 +246,15 @@ describe('POST /ai/explain-mistakes', () => {
     expect(generateContentMock).not.toHaveBeenCalled()
   })
 
-  it('degrades to correct answers + curated resources when Gemini is down (200, never 5xx)', async () => {
+  it('degrades to correct answers + curated resources when the AI provider is down (200, never 5xx)', async () => {
     const { token, quiz } = await seedLearner('coach-degrade@example.com', 'Coach Degrade')
     // Timed-out attempt submitted empty (NEW-10 path): both questions unanswered.
     const attemptId = await submitAttempt(token, quiz.quizId, [])
     // Throw synchronously (like a network-level SDK failure): the service's
-    // try/catch treats this exactly like a rejected Gemini call, and no 10s
+    // try/catch treats this exactly like a rejected AI provider call, and no 10s
     // race timer is ever armed, so the suite can't linger on a dangling timeout.
     generateContentMock.mockImplementation(() => {
-      throw new Error('Gemini down (simulated)')
+      throw new Error('AI provider down (simulated)')
     })
 
     const res = await explain(token, attemptId)

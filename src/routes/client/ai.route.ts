@@ -30,7 +30,7 @@ route.post(
   aiController.feedbackRoadmap,
 )
 
-// Static role list for the FE picker — no Gemini call, so no AI limiters.
+// Static role list for the FE picker — no AI provider call, so no AI limiters.
 route.get('/job-readiness/roles', authenticate, aiController.listJobReadinessRoles)
 
 route.post(
@@ -42,7 +42,7 @@ route.post(
   aiController.analyzeJobReadiness,
 )
 
-// On-demand post-quiz mistake review — one Gemini call per learner click.
+// On-demand post-quiz mistake review — one AI provider call per learner click.
 route.post(
   '/explain-mistakes',
   authenticate,

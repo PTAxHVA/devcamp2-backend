@@ -31,12 +31,12 @@ export const aiResponseSchema = z.object({
   explanation: z.string(),
 })
 
-/** Shape Gemini must return for the job-readiness prompt (before id validation). */
+/** Shape the AI must return for the job-readiness prompt (before id validation). */
 export const jobReadinessAiResponseSchema = z.object({
   requiredTopicIds: z.array(z.string()).min(1),
 })
 
-/** Shape Gemini must return for the explain-mistakes prompt (before questionId validation). */
+/** Shape the AI must return for the explain-mistakes prompt (before questionId validation). */
 export const explainMistakesAiResponseSchema = z.object({
   explanations: z
     .array(
@@ -50,7 +50,7 @@ export const explainMistakesAiResponseSchema = z.object({
 })
 
 export const aiFeedbackResponseSchema = z.object({
-  // A blank Gemini reply must not be shown as real AI advice — reject it so the
+  // A blank AI reply must not be shown as real AI advice — reject it so the
   // service degrades to the curated fallback (tagged source:'fallback').
   feedback: z.string().trim().min(1),
   severity: z.nativeEnum(FeedbackSeverity),

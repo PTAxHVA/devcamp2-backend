@@ -1,7 +1,7 @@
 /**
  * Prompt builders for VORA's user-facing AI features.
  * Content owned by the team lead. The AI service interpolates runtime data
- * and calls Gemini (see config/gemini.ts).
+ * and calls the AI provider (see config/ai-model.ts).
  */
 
 /** One curated topic the AI is allowed to order. Resolved from the user's selected branches. */
@@ -55,7 +55,7 @@ const sanitizeInput = (value: string | undefined | null, maxLength = 100): strin
 
 /**
  * F13 — Roadmap Suggestion Engine prompt.
- * Returns a single string to pass to geminiModel.generateContent().
+ * Returns a single string to pass to aiModel.generateContent().
  */
 export const buildRoadmapSuggestionPrompt = (input: RoadmapSuggestionInput): string => {
   const { roadmapRole, selectedBranchNames, profile, availableTopics } = input
@@ -145,7 +145,7 @@ const formatFeedbackTopicLines = (topics: FeedbackTopic[]): string => {
 /**
  * F19 — AI Feedback on Roadmap Edit prompt.
  * One short, non-blocking note when a learner adds/removes a topic in the customize editor.
- * Returns a single string to pass to geminiModel.generateContent().
+ * Returns a single string to pass to aiModel.generateContent().
  */
 export const buildRoadmapFeedbackPrompt = (input: RoadmapFeedbackInput): string => {
   const { roadmapRole, learnerGoal, action, editedTopic, currentTopics, branchConflict } = input
@@ -217,7 +217,7 @@ const formatJobReadinessTopicLines = (topics: JobReadinessTopic[]): string =>
  * Maps ONE target role to the curated topics required for it. The model only
  * SELECTS ids from the list — the readiness math (verified vs missing) happens
  * in the service, never in the model.
- * Returns a single string to pass to geminiModel.generateContent().
+ * Returns a single string to pass to aiModel.generateContent().
  */
 export const buildJobReadinessPrompt = (
   targetRole: string,
@@ -285,7 +285,7 @@ const formatWrongQuestionLines = (questions: MistakeQuestionInput[]): string =>
  * AI Mistake Coach prompt — post-quiz review of the questions a learner got
  * wrong on a submitted attempt. The model only explains the wrong questions
  * listed below; it never regrades and never invents questions or resources.
- * Returns a single string to pass to geminiModel.generateContent().
+ * Returns a single string to pass to aiModel.generateContent().
  */
 export const buildExplainMistakesPrompt = (input: ExplainMistakesInput): string => {
   const { sectionName, resourceTitles, wrongQuestions } = input

@@ -12,7 +12,7 @@ REST API backend cho Personalized Code Learning Platform.
 
 - **Host**: Render (Singapore, free tier). **Auto-deploy** khi merge vào `main`.
 - **Build Command**: `yarn install --production=false && yarn build` (cần `--production=false` để cài devDependencies cho `tsc`). **Start**: `yarn start`.
-- **Env** (Render → Environment): `NODE_ENV=production`, `MONGO_URI`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `GEMINI_API_KEY`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `CLIENT_URL`. KHÔNG set `PORT` (Render tự cấp).
+- **Env** (Render → Environment): `NODE_ENV=production`, `MONGO_URI`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `FIREWORKS_API_KEY`, `FIREWORKS_MODEL`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `CLIENT_URL`. KHÔNG set `PORT` (Render tự cấp).
 - Free tier ngủ sau ~15 phút không request → request đầu mất ~50s (cold start); gọi `/health` để đánh thức.
 
 ## Tech Stack
@@ -23,7 +23,7 @@ REST API backend cho Personalized Code Learning Platform.
 - **JWT (jsonwebtoken) + bcrypt** — auth
 - **Helmet + CORS + express-rate-limit** — security
 - **pino + pino-pretty** — logging
-- **Google Gemini AI** — F9 Socratic hints
+- **Fireworks AI** (openai SDK, OpenAI-compatible) — user-facing AI features; model chọn qua `FIREWORKS_MODEL`
 - **tsx** — dev runner
 - **ESLint + Prettier + Husky + commitlint + lint-staged**
 - **Yarn 1.22 + Node 22 + Corepack**
@@ -34,7 +34,7 @@ REST API backend cho Personalized Code Learning Platform.
 - Yarn (enable qua Corepack: `corepack enable`)
 - Git
 - MongoDB Atlas account (https://cloud.mongodb.com)
-- Google AI Studio account cho Gemini (https://aistudio.google.com)
+- Fireworks AI account cho LLM (https://app.fireworks.ai)
 
 ## Quickstart
 
@@ -44,7 +44,7 @@ cd devcamp2-backend
 corepack enable
 yarn install
 cp .env.example .env
-# Sửa .env: MONGO_URI, JWT_SECRET (>=32 chars), GEMINI_API_KEY
+# Sửa .env: MONGO_URI, JWT_SECRET (>=32 chars), FIREWORKS_API_KEY
 yarn dev
 ```
 
@@ -72,7 +72,7 @@ curl http://localhost:5000/health
 
 ```
 src/
-├── config/       # env, database, logger, gemini
+├── config/       # env, database, logger, ai-model
 ├── routes/
 │   ├── client/   # /api/v1/client/*
 │   └── admin/    # /api/v1/admin/* (require role='admin')
@@ -94,15 +94,16 @@ src/
 
 ## Env vars
 
-| Var              | Mô tả                     | Required                       |
-| ---------------- | ------------------------- | ------------------------------ |
-| `NODE_ENV`       | development / production  | default: development           |
-| `PORT`           | listen port               | default: 5000                  |
-| `MONGO_URI`      | MongoDB connection string | ✅                             |
-| `JWT_SECRET`     | >=32 chars random string  | ✅                             |
-| `JWT_EXPIRES_IN` | token lifetime            | default: 7d                    |
-| `GEMINI_API_KEY` | Google AI Studio API key  | ✅                             |
-| `CLIENT_URL`     | FE origin cho CORS        | default: http://localhost:5173 |
+| Var                 | Mô tả                          | Required                       |
+| ------------------- | ------------------------------ | ------------------------------ |
+| `NODE_ENV`          | development / production       | default: development           |
+| `PORT`              | listen port                    | default: 5000                  |
+| `MONGO_URI`         | MongoDB connection string      | ✅                             |
+| `JWT_SECRET`        | >=32 chars random string       | ✅                             |
+| `JWT_EXPIRES_IN`    | token lifetime                 | default: 7d                    |
+| `FIREWORKS_API_KEY` | Fireworks AI API key           | ✅                             |
+| `FIREWORKS_MODEL`   | Fireworks model id (swappable) | default: gpt-oss-120b          |
+| `CLIENT_URL`        | FE origin cho CORS             | default: http://localhost:5173 |
 
 Generate JWT secret:
 

@@ -9,16 +9,16 @@ import { MasterTopic } from '../src/models/master-topic.model.js'
 import { AiFeedbackTip } from '../src/models/ai-feedback-tip.model.js'
 import { parseAndValidate, applyPlan, seedFeedbackTips } from '../scripts/seed-content.js'
 
-// Intercept every Gemini call so a test can simulate success (source 'ai') or an
-// outage (source 'fallback') deterministically, and never leave the process.
+// Intercept every AI provider call so a test can simulate success (source 'ai') or
+// an outage (source 'fallback') deterministically, and never leave the process.
 const { generateContentMock } = vi.hoisted(() => ({ generateContentMock: vi.fn() }))
-vi.mock('../src/config/gemini.js', () => ({
-  geminiModel: { generateContent: generateContentMock },
+vi.mock('../src/config/ai-model.js', () => ({
+  aiModel: { generateContent: generateContentMock },
 }))
 
-const geminiJson = (payload: unknown) => ({ response: { text: () => JSON.stringify(payload) } })
-const geminiDown = () => {
-  throw new Error('Gemini down (simulated)')
+const aiJson = (payload: unknown) => ({ response: { text: () => JSON.stringify(payload) } })
+const aiDown = () => {
+  throw new Error('AI provider down (simulated)')
 }
 
 const base = '/api/v1/client'
@@ -63,7 +63,7 @@ describe('POST /ai/roadmap-feedback — source tagging + DB fallback', () => {
   }, 180000)
   afterAll(disconnectTestDb)
 
-  // Each test owns the tip collection + the mock: no tips and no stubbed Gemini
+  // Each test owns the tip collection + the mock: no tips and no stubbed AI provider
   // unless the test sets them up itself.
   afterEach(async () => {
     await AiFeedbackTip.deleteMany({})
@@ -76,10 +76,10 @@ describe('POST /ai/roadmap-feedback — source tagging + DB fallback', () => {
       .set('Authorization', `Bearer ${token}`)
       .send({ userRoadmapId, ...body })
 
-  // 1 — Gemini OK.
-  it('tags source "ai" and returns Gemini feedback when Gemini succeeds', async () => {
+  // 1 — AI provider OK.
+  it('tags source "ai" and returns AI feedback when the AI provider succeeds', async () => {
     generateContentMock.mockResolvedValue(
-      geminiJson({ feedback: 'Great fit for your goal.', severity: 'info' }),
+      aiJson({ feedback: 'Great fit for your goal.', severity: 'info' }),
     )
     const res = await feedback({ action: 'add', topicId: coreTopicId })
     expect(res.status).toBe(200)
@@ -89,20 +89,20 @@ describe('POST /ai/roadmap-feedback — source tagging + DB fallback', () => {
     expect(generateContentMock).toHaveBeenCalledTimes(1)
   })
 
-  // 1b — a well-formed but blank Gemini reply is rejected by the schema → fallback
+  // 1b — a well-formed but blank AI reply is rejected by the schema → fallback
   // (so an empty note is never shown as real AI advice).
-  it('degrades to fallback when Gemini returns a blank feedback string', async () => {
-    generateContentMock.mockResolvedValue(geminiJson({ feedback: '   ', severity: 'info' }))
+  it('degrades to fallback when the AI provider returns a blank feedback string', async () => {
+    generateContentMock.mockResolvedValue(aiJson({ feedback: '   ', severity: 'info' }))
     const res = await feedback({ action: 'add', topicId: coreTopicId })
     expect(res.status).toBe(200)
     expect(res.body.data.source).toBe('fallback')
     expect(res.body.data.feedback.length).toBeGreaterThan(0)
   })
 
-  // 2 — Gemini fails, DB has a tip.
-  it('tags source "fallback" and uses the DB tip when Gemini fails and a tip exists', async () => {
+  // 2 — AI provider fails, DB has a tip.
+  it('tags source "fallback" and uses the DB tip when the AI provider fails and a tip exists', async () => {
     await seedFeedbackTips()
-    generateContentMock.mockImplementation(geminiDown)
+    generateContentMock.mockImplementation(aiDown)
     const res = await feedback({ action: 'remove', topicId: coreTopicId })
     expect(res.status).toBe(200)
     expect(res.body.data.source).toBe('fallback')
@@ -111,10 +111,10 @@ describe('POST /ai/roadmap-feedback — source tagging + DB fallback', () => {
     expect(res.body.data.severity).toBe(dbTip!.severity)
   })
 
-  // 3 — CRITICAL invariant: Gemini fails AND the tip DB is empty → still 200.
-  it('still returns a fallback (200, never 5xx) when Gemini fails and the tip DB is empty', async () => {
+  // 3 — CRITICAL invariant: the AI provider fails AND the tip DB is empty → still 200.
+  it('still returns a fallback (200, never 5xx) when the AI provider fails and the tip DB is empty', async () => {
     // No seedFeedbackTips() → AiFeedbackTip is empty → in-code inlineFallback.
-    generateContentMock.mockImplementation(geminiDown)
+    generateContentMock.mockImplementation(aiDown)
     const res = await feedback({ action: 'add', topicId: coreTopicId })
     expect(res.status).toBe(200)
     expect(res.body.data.source).toBe('fallback')
@@ -123,9 +123,9 @@ describe('POST /ai/roadmap-feedback — source tagging + DB fallback', () => {
   })
 
   // 3b — never 5xx even if the tip DB query ITSELF throws (belt-and-suspenders
-  // branch of the never-500 invariant): Gemini down AND AiFeedbackTip.findOne errors.
+  // branch of the never-500 invariant): AI provider down AND AiFeedbackTip.findOne errors.
   it('still returns a fallback (200) when the tip DB query throws', async () => {
-    generateContentMock.mockImplementation(geminiDown)
+    generateContentMock.mockImplementation(aiDown)
     const spy = vi.spyOn(AiFeedbackTip, 'findOne').mockImplementationOnce(() => {
       throw new Error('DB read failed (simulated)')
     })
@@ -139,10 +139,10 @@ describe('POST /ai/roadmap-feedback — source tagging + DB fallback', () => {
     }
   })
 
-  // 4 — branch-conflict add, Gemini fails → warning that names both branches.
+  // 4 — branch-conflict add, AI provider fails → warning that names both branches.
   it('uses the branch-conflict tip (names both branches) when adding a conflicting branch', async () => {
     await seedFeedbackTips()
-    generateContentMock.mockImplementation(geminiDown)
+    generateContentMock.mockImplementation(aiDown)
     // Vue while already enrolled on React → exclusive "UI Framework" conflict.
     const res = await feedback({ action: 'add', topicId: vueTopicId })
     expect(res.status).toBe(200)
@@ -154,7 +154,7 @@ describe('POST /ai/roadmap-feedback — source tagging + DB fallback', () => {
 
   // 5 — contract.
   it('always returns the { feedback, severity, source } contract with a valid source', async () => {
-    generateContentMock.mockResolvedValue(geminiJson({ feedback: 'Looks good.', severity: 'info' }))
+    generateContentMock.mockResolvedValue(aiJson({ feedback: 'Looks good.', severity: 'info' }))
     const res = await feedback({ action: 'add', topicId: coreTopicId })
     expect(res.body.success).toBe(true)
     expect(res.body.data).toHaveProperty('feedback')
@@ -162,7 +162,7 @@ describe('POST /ai/roadmap-feedback — source tagging + DB fallback', () => {
     expect(['ai', 'fallback']).toContain(res.body.data.source)
   })
 
-  // 6 — preserved guards (must fire before Gemini is ever called).
+  // 6 — preserved guards (must fire before the AI provider is ever called).
   it('rejects an unauthenticated request (401)', async () => {
     const res = await request(app)
       .post(`${base}/ai/roadmap-feedback`)

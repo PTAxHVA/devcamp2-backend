@@ -45,7 +45,7 @@ describe('roadmap-feedback prompt — branch conflict (unit, no DB)', () => {
   })
 })
 
-describe('POST /ai/roadmap-feedback — branch conflict (in-memory Mongo, Gemini falls back)', () => {
+describe('POST /ai/roadmap-feedback — branch conflict (in-memory Mongo, AI provider falls back)', () => {
   let token: string
   let userRoadmapId: string
 
@@ -86,7 +86,7 @@ describe('POST /ai/roadmap-feedback — branch conflict (in-memory Mongo, Gemini
       .send({ userRoadmapId, action: 'add', topicId: vue!._id.toString() })
     expect(res.status).toBe(200)
     expect(res.body.data.severity).toBe('warning')
-    // No Gemini key in tests → curated fallback, which for a conflict names both branches.
+    // No valid AI key in tests → curated fallback, which for a conflict names both branches.
     expect(res.body.data.feedback).toContain('Vue')
     expect(res.body.data.feedback).toContain('React')
   })

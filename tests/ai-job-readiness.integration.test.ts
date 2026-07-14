@@ -13,17 +13,17 @@ import { Question } from '../src/models/question.model.js'
 import { OnboardingQuestionnaire } from '../src/models/onboarding-questionnaire.model.js'
 import { QuestionType } from '../src/types/enums.js'
 
-// Intercept every Gemini call so no test ever leaves the process (and so we can
-// simulate outages / invented-topic answers deterministically).
+// Intercept every AI provider call so no test ever leaves the process (and so we
+// can simulate outages / invented-topic answers deterministically).
 const { generateContentMock } = vi.hoisted(() => ({ generateContentMock: vi.fn() }))
-vi.mock('../src/config/gemini.js', () => ({
-  geminiModel: { generateContent: generateContentMock },
+vi.mock('../src/config/ai-model.js', () => ({
+  aiModel: { generateContent: generateContentMock },
 }))
 
 const base = '/api/v1/client'
 const ROLE_FE = 'Junior Frontend Developer'
 
-const geminiJson = (payload: unknown) => ({
+const aiJson = (payload: unknown) => ({
   response: { text: () => JSON.stringify(payload) },
 })
 
@@ -134,7 +134,7 @@ describe('POST /ai/job-readiness (+ GET /ai/job-readiness/roles)', () => {
   it('classifies AI-selected topics into verified / in progress / missing', async () => {
     const { token, lib } = await seedLearner('gap-happy@example.com')
     generateContentMock.mockResolvedValue(
-      geminiJson({ requiredTopicIds: [lib.ids.html, lib.ids.css, lib.ids.react] }),
+      aiJson({ requiredTopicIds: [lib.ids.html, lib.ids.css, lib.ids.react] }),
     )
 
     const res = await analyze(token, ROLE_FE)
@@ -156,7 +156,7 @@ describe('POST /ai/job-readiness (+ GET /ai/job-readiness/roles)', () => {
     const { token, lib } = await seedLearner('gap-invented@example.com')
     const invented = fakeId()
     generateContentMock.mockResolvedValue(
-      geminiJson({ requiredTopicIds: [lib.ids.html, lib.ids.css, lib.ids.react, invented] }),
+      aiJson({ requiredTopicIds: [lib.ids.html, lib.ids.css, lib.ids.react, invented] }),
     )
 
     const res = await analyze(token, ROLE_FE)
@@ -171,7 +171,7 @@ describe('POST /ai/job-readiness (+ GET /ai/job-readiness/roles)', () => {
   it('falls back to the curated role map when the AI only returns unknown ids', async () => {
     const { token, lib } = await seedLearner('gap-unknown-ids@example.com')
     generateContentMock.mockResolvedValue(
-      geminiJson({ requiredTopicIds: [fakeId(), fakeId(), fakeId()] }),
+      aiJson({ requiredTopicIds: [fakeId(), fakeId(), fakeId()] }),
     )
 
     const res = await analyze(token, ROLE_FE)
@@ -184,7 +184,7 @@ describe('POST /ai/job-readiness (+ GET /ai/job-readiness/roles)', () => {
     expect(res.body.data.readinessPct).toBe(25) // 1 verified of 4 required
   })
 
-  it('still returns a gap analysis (200, never 5xx) when Gemini is down, with ETA from the questionnaire', async () => {
+  it('still returns a gap analysis (200, never 5xx) when the AI provider is down, with ETA from the questionnaire', async () => {
     const { token, lib } = await seedLearner('gap-degrade@example.com')
     const me = await request(app).get(`${base}/me`).set('Authorization', `Bearer ${token}`)
     await OnboardingQuestionnaire.create({
@@ -192,10 +192,10 @@ describe('POST /ai/job-readiness (+ GET /ai/job-readiness/roles)', () => {
       timePerWeekHours: 3,
     })
     // Throw synchronously (like a network-level SDK failure): the service's
-    // try/catch treats this exactly like a rejected Gemini call, and no 10s
+    // try/catch treats this exactly like a rejected AI provider call, and no 10s
     // race timer is ever armed, so the suite can't linger on a dangling timeout.
     generateContentMock.mockImplementation(() => {
-      throw new Error('Gemini down (simulated)')
+      throw new Error('AI provider down (simulated)')
     })
 
     const res = await analyze(token, ROLE_FE)
