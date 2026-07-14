@@ -31,6 +31,7 @@ describe('topic descriptions — content map (no DB)', () => {
     expect(resolveTopicDescription('not-a-real-topic')).toEqual({
       description: '',
       descriptionShort: '',
+      whyLearn: '',
     })
   })
 

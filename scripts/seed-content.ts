@@ -806,7 +806,7 @@ export async function applyPlan(plan: SeedPlan): Promise<ApplyStats> {
     // Descriptions are authored content (the CSV has no description column).
     // Written via $set — NOT $setOnInsert — so re-seeding backfills topics that
     // were seeded before descriptions existed (same fix as resourceList below).
-    const { description, descriptionShort } = resolveTopicDescription(slug)
+    const { description, descriptionShort, whyLearn } = resolveTopicDescription(slug)
     if (!description) missingDescriptionSlugs.push(slug)
     // estimatedHours is derived from curated resources, so it also lives in $set —
     // NOT $setOnInsert — so re-seeding backfills topics seeded before it was
@@ -815,7 +815,7 @@ export async function applyPlan(plan: SeedPlan): Promise<ApplyStats> {
     const topic = await MasterTopic.findOneAndUpdate(
       { slug },
       {
-        $set: { description, descriptionShort, estimatedHours },
+        $set: { description, descriptionShort, whyLearn, estimatedHours },
         $setOnInsert: {
           name: t.name,
           slug,
